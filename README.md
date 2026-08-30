@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Düzce Radikal (rdkhaber)
 
-## Getting Started
+Türkiye odaklı haber portalı — Next.js 16, Prisma, MySQL. Canlı site: [duzceradikal.com](https://duzceradikal.com)
 
-First, run the development server:
+## Özellikler
+
+- **Haber yönetimi:** makale, kategori, etiket, manşet, son dakika, video, foto galeri
+- **Editör + admin paneli:** rol bazlı (`/admin`, `/editor`), mobil uyumlu arayüz
+- **Okuyucu:** haber gönderimi, ihbar hattı, yorumlar, bülten aboneliği
+- **Haber botu:** kaynak sitelerden kelime eşlemeli içerik çekme
+- **E-posta:** SMTP bülten, şifre sıfırlama, panel gelen/giden kutusu (IMAP)
+- **Reklam:** slot yönetimi, yapışkan alt banner, kule reklamları
+- **SEO:** sitemap, robots, Open Graph, Google Site Kit alanları
+- **WordPress import:** `scripts/import-duzceradikal.ts`
+
+## Teknoloji
+
+| Katman | Stack |
+|--------|--------|
+| Framework | Next.js 16 (App Router), React 19 |
+| Veritabanı | MySQL + Prisma |
+| Auth | Auth.js (NextAuth v5) |
+| UI | Tailwind CSS 4, TipTap editör |
+| E-posta | Nodemailer, IMAP (imapflow + mailparser) |
+
+## Gereksinimler
+
+- Node.js **20+**
+- MySQL 8 (veya Hostinger MySQL)
+
+## Kurulum (geliştirme)
+
+```bash
+git clone https://github.com/ulukaan/rdkhaber.git
+cd rdkhaber
+npm install
+```
+
+`.env` dosyası oluşturun (örnek: `.env.hostinger.example`):
+
+```env
+DATABASE_URL="mysql://USER:PASS@localhost:3306/rdkhaber"
+AUTH_SECRET="uzun-rastgele-metin"
+AUTH_TRUST_HOST=true
+AUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
+
+Veritabanı:
+
+```bash
+npx prisma migrate deploy
+npm run db:seed          # isteğe bağlı örnek veri
+```
+
+Geliştirme sunucusu:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Panel: `/admin` · Site: `/`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Komutlar
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Komut | Açıklama |
+|-------|----------|
+| `npm run dev` | Geliştirme sunucusu |
+| `npm run build` | Production build |
+| `npm run start` | Production sunucu |
+| `npm run import:live` | duzceradikal.com WP API import |
+| `npm run seed:bot-words` | Haber botu kelime listesi |
+| `node scripts/generate-favicon.mjs` | Logodan favicon üret |
 
-## Learn More
+## Proje yapısı
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/
+    (site)/          # Kamuya açık site
+    (auth)/          # Giriş / kayıt
+    admin/           # Yönetim paneli
+    editor/          # Editör paneli
+    api/             # API route'ları
+  actions/           # Server Actions
+  components/        # UI bileşenleri
+  lib/               # Yardımcılar, ayarlar, e-posta
+prisma/              # Şema ve migration'lar
+public/brand/        # Logo ve favicon (deploy-safe)
+scripts/             # Import, deploy yardımcıları
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production deploy (Hostinger)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Kaynak kodu `.deploy` staging'e kopyala ( `node_modules`, `.next`, `public/uploads` hariç )
+2. `.env` → build için `srv2024.hstgr.io` MySQL host
+3. `.env.production.local` → runtime için `localhost` MySQL host
+4. `deploy-rdkhaber.zip` oluştur ve Hostinger Node.js deploy
+5. Önbellek temizle + Node uygulamasını yeniden başlat
 
-## Deploy on Vercel
+**Önemli:** `.env`, `hostinger-env.txt` ve veritabanı şifreleri repoya eklenmez.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Marka varlıkları
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Logo: `public/brand/logo.png`
+- Favicon: `public/brand/favicon.png` ( `node scripts/generate-favicon.mjs` ile yenilenir )
+- Panel ayarlarından logo/favicon URL'si değiştirilebilir; `/uploads/` yolları deploy sonrası `/brand/` yedeğine düşer.
+
+## Lisans
+
+MIT — bkz. [LICENSE](LICENSE)

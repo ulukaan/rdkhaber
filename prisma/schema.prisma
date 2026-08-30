@@ -1,0 +1,386 @@
+// Prisma şeması — RD Haber
+// Hostinger / üretim: MySQL. DATABASE_URL örnek:
+// mysql://USER:PASS@srv2024.hstgr.io:3306/u534260973_rdkhaber
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  USER
+}
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String?  @unique
+  email          String   @unique
+  passwordHash   String
+  role           Role     @default(USER)
+  avatarUrl      String?
+  bio            String?  @db.Text
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  articles       Article[]
+  submissions    NewsSubmission[]
+  comments       Comment[]
+  media          Media[]
+  passwordResets PasswordResetToken[]
+
+  @@index([role])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Category {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String? @db.Text
+  color            String?
+  order            Int      @default(0)
+  parentId         String?
+  parent           Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children         Category[] @relation("CategoryTree")
+  headingH1        String?
+  boxCount         Int      @default(18)
+  photoGallery     Boolean  @default(false)
+  videoGallery     Boolean  @default(false)
+  fixedDesign      Boolean  @default(false)
+  fixedTemplate    String?
+  hoverColor       String?
+  headerTextColor  String?
+  headerHoverColor String?
+  createdAt        DateTime @default(now())
+
+  articles    Article[]
+  botSources  HaberBotSource[]
+
+  @@index([order])
+  @@index([parentId])
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  articles Article[] @relation("ArticleTags")
+}
+
+model Article {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  summary       String        @db.Text
+  content       String        @db.LongText
+  coverImageUrl String?
+  videoUrl      String?       // ulketv tarzı video haberler için
+  status        ArticleStatus @default(DRAFT)
+  isBreaking    Boolean       @default(false)   // Üst Manşet
+  isFeatured    Boolean       @default(false)   // Ana Manşet
+  inSpotlight   Boolean       @default(false)   // Öne Çıkan
+  inFiveHeadline Boolean      @default(false)   // Beşli Manşet
+
+  // KONUMLAR — her vitrin için ayrı görsel. Boşsa coverImageUrl'e düşer.
+  imageMainHeadline String?
+  imageTopHeadline  String?
+  imageSpotlight    String?
+  imageFiveHeadline String?
+  imageSocial       String?
+  imageStory        String?
+
+  // Ek ayarlar
+  videoEmbed    String?       @db.Text
+  redirectUrl   String?
+  sourceName    String?
+  sourceUrl     String?
+  reporterName  String?
+
+  // SEO meta — boşsa başlık/özet kullanılır.
+  seoTitle       String?
+  seoDescription String?      @db.Text
+  seoKeywords    String?
+  headlineKicker String?
+  headlineTitle  String?
+  headlineSub    String?      @db.Text
+  headlineAlign  String       @default("left")
+  headlineImageAlign String   @default("center")
+  viewCount     Int           @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id])
+
+  categoryId    String
+  category      Category      @relation(fields: [categoryId], references: [id])
+
+  tags          Tag[]         @relation("ArticleTags")
+  comments      Comment[]
+  images        ArticleImage[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([isBreaking])
+  @@index([sourceUrl])
+}
+
+/** Haber kapak altı galeri görselleri */
+model ArticleImage {
+  id        String  @id @default(cuid())
+  imageUrl  String
+  caption   String?
+  order     Int     @default(0)
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, order])
+}
+
+// Haber altındaki okuyucu yorumları — yayınlanmadan önce onay gerektirir.
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  authorName  String
+  authorEmail String?
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([approved])
+  @@index([articleId])
+}
+
+// Yüklenen tüm dosyaların kaydı — Medya Kütüphanesi
+model Media {
+  id           String   @id @default(cuid())
+  url          String
+  filename     String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+}
+
+// Foto Galeri — birden çok görselden oluşan haber galerileri
+model Gallery {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  coverImageUrl String?
+  createdAt     DateTime      @default(now())
+
+  images        GalleryImage[]
+}
+
+model GalleryImage {
+  id        String  @id @default(cuid())
+  imageUrl  String
+  caption   String?
+  order     Int     @default(0)
+
+  galleryId String
+  gallery   Gallery @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+
+  @@index([galleryId])
+}
+
+// Statik sayfalar (Hakkımızda, Gizlilik Politikası, Kullanım Şartları vb.)
+model Page {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.LongText
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Reklam alanları — katalog kodu (ör. 152, 1003) position alanında tutulur
+model AdSlot {
+  id        String   @id @default(cuid())
+  name      String
+  position  String
+  imageUrl  String
+  targetUrl String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([position])
+  @@index([position, active])
+}
+
+// İhbar Hattı — kimliğini paylaşmak istemeyen kişilerin gönderdiği ihbarlar
+model Tip {
+  id          String           @id @default(cuid())
+  message     String           @db.Text
+  contactInfo String?          // isteğe bağlı iletişim bilgisi
+  attachmentUrl String?
+  status      SubmissionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+}
+
+// Okuyucu Haberi — "haber gönder" formundan gelen, kaynağı belirli haber önerileri
+model NewsSubmission {
+  id            String           @id @default(cuid())
+  title         String
+  content       String           @db.LongText
+  attachmentUrl String?
+  status        SubmissionStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+
+  submitterId   String?
+  submitter     User?            @relation(fields: [submitterId], references: [id])
+  submitterName String?          // misafir gönderimlerde
+  submitterEmail String?
+}
+
+// Üst menü / footer bağlantıları — Görünüm > Menü
+model NavItem {
+  id       String  @id @default(cuid())
+  location String
+  label    String
+  href     String
+  order    Int     @default(0)
+  visible  Boolean @default(true)
+  parentId String?
+  parent   NavItem?  @relation("NavChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children NavItem[] @relation("NavChildren")
+
+  @@index([location, order])
+  @@index([parentId])
+}
+
+// Tek satırlık site ayarları (key/value)
+model Setting {
+  key   String @id
+  value String @db.LongText
+}
+
+// Auto Haber Bot — sitelerden haber çeker, kelime kalıplarını uygular
+model HaberBotSource {
+  id           String    @id @default(cuid())
+  name         String
+  url          String    @unique
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id])
+  maxItems     Int       @default(10)
+  importStatus String    @default("DRAFT")
+  enabled      Boolean   @default(true)
+  lastFetchedAt DateTime?
+  lastError    String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  logs         HaberBotLog[]
+}
+
+model HaberBotWord {
+  id        String  @id @default(cuid())
+  find      String  @unique
+  replace   String  @default("")
+  active    Boolean @default(true)
+  order     Int     @default(0)
+  createdAt DateTime @default(now())
+}
+
+model HaberBotLog {
+  id        String   @id @default(cuid())
+  sourceId  String?
+  source    HaberBotSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  sourceUrl String
+  title     String
+  status    String
+  message   String?  @db.Text
+  articleId String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sourceId])
+}
+
+// Bülten — abone listesi ve gönderilen bültenler
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  status    String   @default("ACTIVE")
+  source    String   @default("site")
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model NewsletterCampaign {
+  id        String    @id @default(cuid())
+  subject   String
+  preheader String?
+  content   String    @db.LongText
+  status    String    @default("DRAFT")
+  sentAt    DateTime?
+  sentCount Int       @default(0)
+  failCount Int       @default(0)
+  lastError String?   @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Panel e-posta kutusu — IMAP gelen + SMTP giden kayıtları
+model MailboxMessage {
+  id          String   @id @default(cuid())
+  direction   String
+  externalId  String?
+  fromAddress String
+  toAddress   String
+  subject     String
+  bodyHtml    String?  @db.LongText
+  bodyText    String?  @db.LongText
+  isRead      Boolean  @default(false)
+  source      String   @default("imap")
+  createdAt   DateTime @default(now())
+
+  @@unique([direction, externalId])
+  @@index([direction, createdAt])
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="970" height="250" viewBox="0 0 970 250" role="img" aria-label="TarifPark">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e92d28"/>
+      <stop offset="55%" stop-color="#c41f1b"/>
+      <stop offset="55%" stop-color="#fff8f7"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="970" height="250" fill="url(#g)"/>
+  <text x="48" y="100" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800" fill="#fff">TarifPark</text>
+  <text x="48" y="148" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="600" fill="#ffe4e2">Ne pi_irmek istediini bul.</text>
+  <text x="48" y="186" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" fill="#ffd0cc">1.750+ tarif · tek adres</text>
+  <rect x="700" y="95" width="220" height="56" rx="12" fill="#fff"/>
+  <text x="810" y="130" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="#e92d28">Tarifleri Ke_fet ’</text>
+</svg>

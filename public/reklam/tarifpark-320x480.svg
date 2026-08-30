@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="480" viewBox="0 0 320 480" role="img">
+  <rect width="320" height="480" fill="#e92d28"/>
+  <rect x="16" y="16" width="288" height="448" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="2"/>
+  <text x="160" y="134" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#fff">TarifPark</text>
+  <text x="160" y="182" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" fill="#ffe4e2">Ne pisirmek istedigini bul.</text>
+  <rect x="80" y="346" width="160" height="40" rx="8" fill="#fff"/>
+  <text x="160" y="372" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="800" fill="#e92d28">Kesfet</text>
+</svg>
