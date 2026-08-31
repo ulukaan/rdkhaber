@@ -108,6 +108,19 @@ async function main() {
     SELECT \`id\`, \`categoryId\` FROM \`Article\` WHERE \`categoryId\` IS NOT NULL AND \`categoryId\` <> ''
   `).catch(() => {});
 
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS \`ArticleReaction\` (
+      \`id\` VARCHAR(191) NOT NULL,
+      \`articleId\` VARCHAR(191) NOT NULL,
+      \`visitorId\` VARCHAR(191) NOT NULL,
+      \`type\` VARCHAR(32) NOT NULL,
+      \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      UNIQUE INDEX \`ArticleReaction_articleId_visitorId_key\`(\`articleId\`, \`visitorId\`),
+      INDEX \`ArticleReaction_articleId_type_idx\`(\`articleId\`, \`type\`),
+      PRIMARY KEY (\`id\`)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+
   console.log("News essentials tables ready");
 }
 

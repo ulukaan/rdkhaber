@@ -13,7 +13,7 @@ export function BookmarkButton({
 }: {
   articleId: string;
   loginHref?: string;
-  variant?: "meta" | "bar" | "text";
+  variant?: "meta" | "bar" | "tile" | "text" | "icon";
 }) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [saved, setSaved] = useState(false);
@@ -33,7 +33,19 @@ export function BookmarkButton({
 
   const label = saved ? "Kayıtlı" : "Kaydet";
   const className =
-    variant === "bar"
+    variant === "tile"
+      ? cn(
+          "flex min-h-[4.75rem] w-full flex-col items-center justify-center gap-1.5 rounded-lg bg-surface px-1 py-3 text-[11px] font-bold transition-colors",
+          saved ? "bg-brand/10 text-brand" : "text-ink hover:bg-border/60",
+        )
+      : variant === "icon"
+        ? cn(
+            "inline-flex h-8 w-8 items-center justify-center rounded-sm border transition-colors",
+            saved
+              ? "border-brand bg-brand text-white"
+              : "border-border bg-white text-ink hover:border-brand hover:text-brand",
+          )
+        : variant === "bar"
       ? cn(
           "inline-flex h-10 items-center gap-1.5 border px-3.5 text-xs font-bold transition-colors",
           saved
@@ -47,11 +59,28 @@ export function BookmarkButton({
             saved ? "bg-brand text-white" : "bg-white text-ink hover:text-brand",
           );
 
+  const icon = (
+    variant === "tile" ? (
+      <span
+        className={cn(
+          "inline-flex h-8 w-8 items-center justify-center rounded-full border",
+          saved ? "border-brand bg-brand text-white" : "border-border bg-surface text-ink",
+        )}
+      >
+        <Bookmark className={cn("h-3.5 w-3.5", saved && "fill-current")} />
+      </span>
+    ) : (
+      <Bookmark className={cn("h-3.5 w-3.5", saved && variant !== "bar" && "fill-current")} />
+    )
+  );
+
+  const showLabel = variant !== "icon";
+
   if (loggedIn !== true) {
     return (
       <Link href={loginHref} className={className} title="Kaydetmek için giriş yapın">
-        <Bookmark className="h-3.5 w-3.5" />
-        Kaydet
+        {icon}
+        {showLabel ? "Kaydet" : null}
       </Link>
     );
   }
@@ -70,9 +99,10 @@ export function BookmarkButton({
       }
       className={className}
       title={label}
+      aria-label={label}
     >
-      <Bookmark className={cn("h-3.5 w-3.5", saved && variant !== "bar" && "fill-current")} />
-      {label}
+      {icon}
+      {showLabel ? label : null}
     </button>
   );
 }

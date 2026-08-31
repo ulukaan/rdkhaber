@@ -441,8 +441,32 @@ html.article-reading header.sticky {
   animation: article-continue-in 0.45s ease both;
 }
 
+@keyframes reaction-pop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.55) rotate(-12deg);
+  }
+  55% {
+    transform: scale(0.92) rotate(8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.reaction-pop {
+  display: inline-block;
+  animation: reaction-pop 0.48s cubic-bezier(0.22, 1.35, 0.36, 1);
+  transform-origin: center bottom;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .article-continue-item {
+    animation: none;
+  }
+  .reaction-pop {
     animation: none;
   }
 }

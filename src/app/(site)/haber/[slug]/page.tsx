@@ -24,13 +24,14 @@ import { readingTimeMinutes } from "@/lib/utils";
 import { AdUnit } from "@/components/ads/AdUnit";
 import { ArticleMetaBar } from "@/components/news/ArticleMetaBar";
 import { ShareBar } from "@/components/news/ShareBar";
+import { QuickReactionBar } from "@/components/news/QuickReactionBar";
 import { TipCallout } from "@/components/news/TipCallout";
 import { ArticleContinueFeed } from "@/components/news/ArticleContinueFeed";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
 import { ArticleCategoryChrome } from "@/components/news/ArticleCategoryChrome";
 import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { AuthorByline } from "@/components/news/AuthorByline";
-import { sanitizeArticleHtml } from "@/lib/article-html";
+import { articleListenText, sanitizeArticleHtml } from "@/lib/article-html";
 import { authorHref } from "@/lib/authors";
 import { buildNewsArticleJsonLd } from "@/lib/json-ld";
 import { RecordArticleRead } from "@/components/account/RecordArticleRead";
@@ -38,6 +39,8 @@ import { CorrectionBanner } from "@/components/news/CorrectionBanner";
 import { LiveBlogTimeline } from "@/components/news/LiveBlogTimeline";
 import { PushSubscribeButton } from "@/components/pwa/PushSubscribeButton";
 import { categoryHref } from "@/lib/category-path";
+import { sharePostPath } from "@/lib/share-post";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata({
   params,
@@ -47,6 +50,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) return { title: "Haber Bulunamadı" };
+  const shareImage = `${getSiteUrl()}${sharePostPath(article.slug)}`;
   return {
     title: article.seoTitle?.trim() || article.title,
     description: article.seoDescription?.trim() || article.summary,
@@ -58,10 +62,16 @@ export async function generateMetadata({
       type: "article",
       title: article.seoTitle?.trim() || article.title,
       description: article.seoDescription?.trim() || article.summary,
-      images: article.coverImageUrl ? [article.coverImageUrl] : undefined,
+      images: [{ url: shareImage, width: 1080, height: 1350, alt: article.title }],
       publishedTime: article.publishedAt?.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
       authors: [article.author.name],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seoTitle?.trim() || article.title,
+      description: article.seoDescription?.trim() || article.summary,
+      images: [shareImage],
     },
   };
 }
@@ -205,6 +215,11 @@ export default async function ArticlePage({
           shareTitle={article.title}
           viewCount={article.viewCount}
           articleId={article.id}
+          listenText={articleListenText({
+            title: article.title,
+            summary: article.summary,
+            html: article.content,
+          })}
         />
         <RecordArticleRead articleId={article.id} />
         <AdUnit code="1001" />
@@ -250,6 +265,7 @@ export default async function ArticlePage({
             <AdUnit code="1004" />
             <AdUnit code="138" />
 
+            <QuickReactionBar articleId={article.id} />
             <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {article.tags.length > 0 ? (

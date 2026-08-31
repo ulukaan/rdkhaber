@@ -19,6 +19,7 @@ import { FieldGroup, Input, Textarea, Select } from "@/components/ui/FormField";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { MultiImageUploadField } from "@/components/admin/MultiImageUploadField";
 import { PlacementImages } from "@/components/admin/PlacementImages";
+import { SharePostPreview } from "@/components/admin/SharePostPreview";
 import { CategoryCheckboxes } from "@/components/admin/CategoryCheckboxes";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { FormCard, FieldHint } from "@/components/admin/FormCard";
@@ -194,7 +195,7 @@ export function ArticleForm({
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   required
-                  placeholder="Başlığın hemen altında çıkan kısa açıklama"
+                  placeholder="Başlığın hemen altında çıkan kısa açıklama. İkinci cümle paylaşım kartında ‘Neden önemli’ olur."
                 />
                 <p
                   className={cn(
@@ -421,6 +422,8 @@ export function ArticleForm({
               imageStory: defaults?.imageStory,
             }}
           />
+
+          <SharePostPreview slug={defaults?.id ? slug : undefined} title={defaults?.title} />
 
           <FormCard title="Künye" description="Yazar ve haber kaynağı." Icon={UserRound}>
             <div className="flex flex-col gap-4">

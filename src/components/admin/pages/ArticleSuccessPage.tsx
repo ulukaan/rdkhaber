@@ -5,6 +5,7 @@ import { getSiteUrl } from "@/lib/site-url";
 import { formatDate } from "@/lib/utils";
 import { CoverImage } from "@/components/news/CoverImage";
 import { ArticleSuccessActions } from "@/components/admin/ArticleSuccessActions";
+import { SharePostPreview } from "@/components/admin/SharePostPreview";
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Taslak",
@@ -115,6 +116,10 @@ export async function ArticleSuccessPage({
           accent={accent}
         />
       </section>
+
+      <div className="mt-5">
+        <SharePostPreview slug={article.slug} title={article.title} />
+      </div>
     </div>
   );
 }

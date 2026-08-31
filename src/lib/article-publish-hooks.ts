@@ -4,6 +4,7 @@ import { sendBreakingNewsPush } from "@/lib/web-push";
 import { indexArticleInMeilisearch } from "@/lib/search-index";
 import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { notifyAdmins } from "@/lib/notifications";
+import { saveGeneratedSharePost } from "@/lib/save-share-post";
 
 type ArticleRow = {
   id: string;
@@ -26,6 +27,7 @@ export async function onArticlePublished(article: ArticleRow, opts?: { wasPublis
       summary: article.summary,
       isBreaking: article.isBreaking,
     }),
+    saveGeneratedSharePost(article.id),
     article.isBreaking ? sendBreakingNewsPush({ title: article.title, slug: article.slug }) : Promise.resolve(),
     indexArticleInMeilisearch({
       id: article.id,

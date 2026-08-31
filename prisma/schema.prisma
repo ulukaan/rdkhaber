@@ -171,6 +171,7 @@ model Article {
   images        ArticleImage[]
   bookmarks     ArticleBookmark[]
   reads         ArticleRead[]
+  reactions     ArticleReaction[]
   revisions     ArticleRevision[]
   liveUpdates   LiveBlogUpdate[]
   corrections   ArticleCorrection[]
@@ -221,6 +222,20 @@ model ArticleRead {
 
   @@unique([userId, articleId])
   @@index([userId, readAt])
+}
+
+/** Habere hızlı ifade (emoji tepki) — ziyaretçi çerezi ile bir kez. */
+model ArticleReaction {
+  id        String   @id @default(cuid())
+  articleId String
+  visitorId String
+  type      String
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, visitorId])
+  @@index([articleId, type])
 }
 
 /** Üyenin takip ettiği yazarlar */

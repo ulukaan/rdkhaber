@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { CoverImage } from "@/components/news/CoverImage";
 import { VideoEmbed } from "@/components/news/VideoEmbed";
 import { ShareBar } from "@/components/news/ShareBar";
+import { QuickReactionBar } from "@/components/news/QuickReactionBar";
 import { ArticleMetaBar } from "@/components/news/ArticleMetaBar";
 import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { ArticleSidebarPanels } from "@/components/news/ArticleSidebarPanels";
@@ -16,6 +17,7 @@ import { CommentForm } from "@/components/forms/CommentForm";
 import { readingTimeMinutes, formatRelativeTime, cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import { categoryHref } from "@/lib/category-path";
+import { articleListenText } from "@/lib/article-html";
 import { authorHref } from "@/lib/author-path";
 import type { ArticleSummary } from "@/types/article";
 import type { MarketItem } from "@/lib/rates";
@@ -198,6 +200,11 @@ function ContinueArticleBlock({
             shareTitle={article.title}
             viewCount={article.viewCount}
             articleId={article.id}
+            listenText={articleListenText({
+              title: article.title,
+              summary: article.summary,
+              html: article.content,
+            })}
           />
         ) : null}
         <RecordArticleRead articleId={article.id} />
@@ -235,6 +242,7 @@ function ContinueArticleBlock({
               />
             </div>
 
+            <QuickReactionBar articleId={article.id} />
             <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {tags.length > 0 ? (
