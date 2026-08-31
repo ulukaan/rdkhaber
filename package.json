@@ -8,9 +8,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "node scripts/start-hostinger.cjs",
     "lint": "eslint",
-    "postinstall": "prisma generate && node scripts/ensure-mailbox-table.mjs",
+    "postinstall": "prisma generate && node scripts/ensure-mailbox-table.mjs && node scripts/ensure-profile-tables.mjs",
     "seed:ads": "tsx prisma/seed-ads.ts",
     "import:live": "tsx scripts/import-duzceradikal.ts",
     "seed:bot-words": "tsx scripts/seed-haber-bot-words.ts",

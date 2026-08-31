@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
@@ -17,7 +17,7 @@ const statusLabel = {
 };
 
 export default async function MemberSubmissionsPage() {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const rows = await prisma.newsSubmission.findMany({
     where: { submitterId: session.user.id },
     orderBy: { createdAt: "desc" },

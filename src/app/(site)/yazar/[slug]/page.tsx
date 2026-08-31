@@ -13,6 +13,7 @@ import {
 } from "@/lib/authors";
 import { roleLabel } from "@/lib/role";
 import { getSettings } from "@/lib/settings";
+import { FollowAuthorButton } from "@/components/account/FollowAuthorButton";
 
 const PAGE_SIZE = 18;
 
@@ -101,6 +102,7 @@ export default async function AuthorProfilePage({
               <span className="rounded-sm bg-surface px-2.5 py-1 text-ink">
                 {total} haber
               </span>
+              <FollowAuthorButton authorId={author.id} />
               <Link href="/yazarlar" className="text-brand hover:underline">
                 Tüm yazarlar
               </Link>

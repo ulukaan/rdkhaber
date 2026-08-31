@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MemberNewsletterCard } from "@/components/member/MemberNewsletterCard";
@@ -6,7 +6,7 @@ import { MemberNewsletterCard } from "@/components/member/MemberNewsletterCard";
 export const metadata = { title: "E-posta bülteni" };
 
 export default async function MemberNewsletterPage() {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const email = session.user.email ?? "";
   const row = email
     ? await prisma.newsletterSubscriber.findUnique({

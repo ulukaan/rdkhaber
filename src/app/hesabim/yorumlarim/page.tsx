@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/utils";
 export const metadata = { title: "Yorumlarım" };
 
 export default async function MemberCommentsPage() {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const rows = await prisma.comment.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },

@@ -8,8 +8,9 @@ import {
   WhatsAppIcon,
   XIcon,
 } from "@/components/icons/SocialIcons";
+import { BookmarkButton } from "@/components/account/BookmarkButton";
 
-export function ShareBar({ url, title }: { url: string; title: string }) {
+export function ShareBar({ url, title, articleId }: { url: string; title: string; articleId?: string }) {
   const [copied, setCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState(url);
 
@@ -94,6 +95,7 @@ export function ShareBar({ url, title }: { url: string; title: string }) {
             {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
             {copied ? "Kopyalandı" : "Bağlantı"}
           </button>
+          {articleId ? <BookmarkButton articleId={articleId} variant="bar" /> : null}
         </div>
       </div>
     </section>

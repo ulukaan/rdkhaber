@@ -17,7 +17,11 @@ export async function MobileMenuWithSession({ categories, whatsappNumber, social
     ? {
         authenticated: true as const,
         name: session.user.name?.split(" ")[0] ?? "Hesabım",
-        panelHref: panelPathForRole(session.user.role),
+        accountHref: "/hesabim",
+        panelHref:
+          session.user.role === "ADMIN" || session.user.role === "EDITOR"
+            ? panelPathForRole(session.user.role)
+            : undefined,
       }
     : { authenticated: false as const };
 

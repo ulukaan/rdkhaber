@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MemberProfileForm } from "@/components/member/MemberProfileForm";
@@ -6,7 +6,7 @@ import { MemberProfileForm } from "@/components/member/MemberProfileForm";
 export const metadata = { title: "Profil" };
 
 export default async function MemberProfilePage() {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { name: true, email: true, bio: true, avatarUrl: true },

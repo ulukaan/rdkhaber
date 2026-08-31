@@ -11,6 +11,7 @@ import {
   LogOut,
   Search,
   ChevronDown,
+  User,
 } from "lucide-react";
 import { cn, whatsappUrl } from "@/lib/utils";
 import { categoryHref } from "@/lib/category-path";
@@ -32,7 +33,7 @@ import {
 import { TarifParkLink } from "@/components/layout/TarifParkLink";
 
 type AccountInfo =
-  | { authenticated: true; name: string; panelHref: string }
+  | { authenticated: true; name: string; accountHref: string; panelHref?: string }
   | { authenticated: false };
 
 type SocialLink = { href: string; label: string };
@@ -296,24 +297,36 @@ export function MobileMenu({
 
         <div className="shrink-0 border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {account.authenticated ? (
-            <div className="flex items-center gap-2">
-              <Link
-                href={account.panelHref}
-                onClick={close}
-                className="flex min-h-[44px] flex-1 items-center gap-2 rounded-lg bg-surface px-3 text-sm font-semibold text-ink"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                {account.name}
-              </Link>
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="flex h-11 w-11 items-center justify-center rounded-lg bg-surface text-ink-soft"
-                  title="Çıkış Yap"
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Link
+                  href={account.accountHref}
+                  onClick={close}
+                  className="flex min-h-[44px] flex-1 items-center gap-2 rounded-lg bg-surface px-3 text-sm font-semibold text-ink"
                 >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </form>
+                  <User className="h-4 w-4" />
+                  {account.name}
+                </Link>
+                <form action={signOutAction}>
+                  <button
+                    type="submit"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg bg-surface text-ink-soft"
+                    title="Çıkış Yap"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+              {account.panelHref ? (
+                <Link
+                  href={account.panelHref}
+                  onClick={close}
+                  className="flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-ink"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Panel
+                </Link>
+              ) : null}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">

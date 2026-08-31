@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Calendar, Clock, Eye, User } from "lucide-react";
 import { ShareButtons } from "@/components/news/ShareButtons";
+import { BookmarkButton } from "@/components/account/BookmarkButton";
 import { formatNewsDate } from "@/lib/utils";
 
 export function ArticleMetaBar({
@@ -13,6 +14,7 @@ export function ArticleMetaBar({
   shareUrl,
   shareTitle,
   viewCount,
+  articleId,
 }: {
   publishedAt: Date | string;
   minutes: number;
@@ -21,6 +23,7 @@ export function ArticleMetaBar({
   shareUrl: string;
   shareTitle: string;
   viewCount?: number;
+  articleId?: string;
 }) {
   const items = [
     { icon: Calendar, value: formatNewsDate(publishedAt), label: "Yayınlanma", href: null as string | null },
@@ -57,6 +60,7 @@ export function ArticleMetaBar({
           ))}
         </ul>
         <div className="flex items-center gap-2">
+          {articleId ? <BookmarkButton articleId={articleId} /> : null}
           <span className="hidden text-[11px] font-bold uppercase tracking-wide text-ink-soft sm:inline">
             Paylaş
           </span>

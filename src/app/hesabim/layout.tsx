@@ -1,23 +1,36 @@
-import { requireRole } from "@/lib/auth-guard";
-import { PanelShell } from "@/components/admin/PanelShell";
-import { panelPathForRole } from "@/lib/role";
-import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/auth-guard";
+import { Header } from "@/components/layout/Header";
+import { HeaderAdBanner } from "@/components/layout/HeaderAdBanner";
+import { Footer } from "@/components/layout/Footer";
+import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
+import { Container } from "@/components/ui/Container";
+import { AccountNav } from "@/components/account/AccountNav";
+import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-export default async function MemberLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireRole(["USER", "ADMIN", "EDITOR"]);
-  if (session.user.role !== "USER") {
-    redirect(panelPathForRole(session.user.role));
-  }
+  const session = await requireAuth();
+  const settings = await getSettings();
 
   return (
-    <PanelShell role="USER" user={session.user}>
-      {children}
-    </PanelShell>
+    <div className="flex min-h-svh flex-col">
+      <HeaderAdBanner />
+      <Header />
+      <main className="flex-1 bg-surface">
+        <Container className="py-6 sm:py-8">
+          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
+            <AccountNav role={session.user.role} name={session.user.name} />
+            <div className="min-w-0">{children}</div>
+          </div>
+        </Container>
+      </main>
+      <Footer />
+      <WhatsAppFloatButton whatsappNumber={settings.whatsappNumber} />
+    </div>
   );
 }

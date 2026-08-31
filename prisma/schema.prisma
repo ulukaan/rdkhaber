@@ -48,6 +48,10 @@ model User {
   comments       Comment[]
   media          Media[]
   passwordResets PasswordResetToken[]
+  bookmarks      ArticleBookmark[]
+  reads          ArticleRead[]
+  following      AuthorFollow[] @relation("UserFollows")
+  followers      AuthorFollow[] @relation("UserFollowers")
 
   @@index([role])
 }
@@ -151,6 +155,8 @@ model Article {
   tags          Tag[]         @relation("ArticleTags")
   comments      Comment[]
   images        ArticleImage[]
+  bookmarks     ArticleBookmark[]
+  reads         ArticleRead[]
 
   @@index([status, publishedAt])
   @@index([categoryId])
@@ -158,6 +164,49 @@ model Article {
   @@index([status, isFeatured, publishedAt])
   @@index([status, viewCount])
   @@index([sourceUrl])
+}
+
+/** Üyenin kaydettiği haberler */
+model ArticleBookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId, createdAt])
+}
+
+/** Üyenin okuduğu haberler */
+model ArticleRead {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  readAt    DateTime @default(now()) @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId, readAt])
+}
+
+/** Üyenin takip ettiği yazarlar */
+model AuthorFollow {
+  id         String   @id @default(cuid())
+  followerId String
+  authorId   String
+  createdAt  DateTime @default(now())
+
+  follower User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  author   User @relation("UserFollowers", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, authorId])
+  @@index([followerId, createdAt])
+  @@index([authorId])
 }
 
 /** Haber kapak altı galeri görselleri */

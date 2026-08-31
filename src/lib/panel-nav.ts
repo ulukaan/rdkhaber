@@ -155,6 +155,12 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
     );
   }
 
+  groups.push({
+    id: "hesap",
+    label: "Hesabım",
+    items: [{ href: "/hesabim", label: "Sitede profilim", Icon: UserRound }],
+  });
+
   return groups;
 }
 

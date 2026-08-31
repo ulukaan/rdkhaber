@@ -11,6 +11,7 @@ import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { ArticleSidebarPanels } from "@/components/news/ArticleSidebarPanels";
 import { TipCallout } from "@/components/news/TipCallout";
 import { AuthorByline } from "@/components/news/AuthorByline";
+import { RecordArticleRead } from "@/components/account/RecordArticleRead";
 import { CommentForm } from "@/components/forms/CommentForm";
 import { readingTimeMinutes, formatRelativeTime, cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
@@ -194,8 +195,10 @@ function ContinueArticleBlock({
             shareUrl={articleUrl}
             shareTitle={article.title}
             viewCount={article.viewCount}
+            articleId={article.id}
           />
         ) : null}
+        <RecordArticleRead articleId={article.id} />
       </header>
 
       <Container className="py-7">
@@ -230,7 +233,7 @@ function ContinueArticleBlock({
               />
             </div>
 
-            <ShareBar url={articleUrl} title={article.title} />
+            <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {tags.length > 0 ? (
               <div className="mt-6 flex flex-wrap gap-2">

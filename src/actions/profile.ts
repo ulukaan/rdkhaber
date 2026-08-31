@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth } from "@/lib/auth-guard";
 import { profileSchema } from "@/lib/validation";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { unstable_update } from "@/auth";
 
 export async function updateOwnProfileAction(raw: Record<string, unknown>) {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const parsed = profileSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Geçersiz form" };

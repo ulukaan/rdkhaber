@@ -3,7 +3,7 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth-guard";
+import { requireAuth, requireRole } from "@/lib/auth-guard";
 import {
   newsletterCampaignSchema,
   newsletterSmtpSchema,
@@ -81,7 +81,7 @@ export async function unsubscribeNewsletterAction(token: string) {
 }
 
 export async function setMemberNewsletterAction(subscribe: boolean) {
-  const session = await requireRole(["USER"]);
+  const session = await requireAuth();
   const email = normalizeEmail(session.user.email ?? "");
   if (!email) return { error: "Hesap e-postası bulunamadı." };
 

@@ -29,10 +29,7 @@ type Props = {
 
 export function CookieConsent(props: Props) {
   const pathname = usePathname();
-  const panel =
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/editor") ||
-    pathname.startsWith("/hesabim");
+  const panel = pathname.startsWith("/admin") || pathname.startsWith("/editor");
   const [ready, setReady] = useState(false);
   const [consent, setConsent] = useState<ConsentState | null>(null);
   const [open, setOpen] = useState(false);

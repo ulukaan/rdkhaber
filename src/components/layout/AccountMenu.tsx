@@ -24,16 +24,28 @@ export async function AccountMenu() {
     );
   }
 
+  const staff = session.user.role === "ADMIN" || session.user.role === "EDITOR";
+
   return (
     <div className="flex items-center gap-3 text-xs">
       <Link
-        href={panelPathForRole(session.user.role)}
+        href="/hesabim"
         className="flex items-center gap-1.5 font-semibold text-ink hover:text-brand"
-        title={roleLabel(session.user.role)}
+        title="Hesabım"
       >
-        <LayoutDashboard className="h-4 w-4" />
+        <User className="h-4 w-4" />
         {session.user.name?.split(" ")[0] ?? "Hesabım"}
       </Link>
+      {staff ? (
+        <Link
+          href={panelPathForRole(session.user.role)}
+          className="hidden items-center gap-1 font-semibold text-ink-soft hover:text-brand sm:flex"
+          title={roleLabel(session.user.role)}
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Panel
+        </Link>
+      ) : null}
       <form action={signOutAction}>
         <button
           type="submit"

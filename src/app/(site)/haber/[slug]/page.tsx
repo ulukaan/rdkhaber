@@ -30,6 +30,7 @@ import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { AuthorByline } from "@/components/news/AuthorByline";
 import { sanitizeArticleHtml } from "@/lib/article-html";
 import { authorHref } from "@/lib/authors";
+import { RecordArticleRead } from "@/components/account/RecordArticleRead";
 
 export async function generateMetadata({
   params,
@@ -147,7 +148,9 @@ export default async function ArticlePage({
           shareUrl={articleUrl}
           shareTitle={article.title}
           viewCount={article.viewCount}
+          articleId={article.id}
         />
+        <RecordArticleRead articleId={article.id} />
         <AdUnit code="1001" />
       </header>
 
@@ -186,7 +189,7 @@ export default async function ArticlePage({
             <AdUnit code="1004" />
             <AdUnit code="138" />
 
-            <ShareBar url={articleUrl} title={article.title} />
+            <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {article.tags.length > 0 ? (
               <div className="mt-6 flex flex-wrap gap-2">
