@@ -1,15 +1,6 @@
 import { z } from "zod";
-import { parseAttachmentUrls, serializeAttachmentUrls } from "@/lib/attachments";
+import { parseAttachmentUrls } from "@/lib/attachments";
 import { isSafeHttpUrl, isSafeMediaUrl } from "@/lib/safe-url";
-
-const safeAttachmentUrlSchema = z
-  .string()
-  .optional()
-  .transform((value) => {
-    if (!value?.trim()) return undefined;
-    const urls = parseAttachmentUrls(value);
-    return urls.length > 0 ? serializeAttachmentUrls(urls) ?? undefined : undefined;
-  });
 
 const optionalSafeMediaUrl = z
   .string()
@@ -20,6 +11,14 @@ const optionalSafeHttpUrl = z
   .string()
   .optional()
   .refine((value) => !value?.trim() || isSafeHttpUrl(value), "Geçerli http(s) bağlantısı girin");
+
+const optionalAttachmentUrl = z
+  .string()
+  .optional()
+  .refine((value) => {
+    if (!value?.trim()) return true;
+    return parseAttachmentUrls(value).length > 0;
+  }, "Geçersiz ek dosya");
 
 export const loginSchema = z.object({
   email: z.string().email("Geçerli bir e-posta girin"),
@@ -50,7 +49,7 @@ export const resetPasswordSchema = z
 export const tipSchema = z.object({
   message: z.string().min(10, "Lütfen en az 10 karakter yazın"),
   contactInfo: z.string().optional(),
-  attachmentUrl: safeAttachmentUrlSchema,
+  attachmentUrl: optionalAttachmentUrl,
 });
 
 export const contactSchema = z.object({
@@ -65,7 +64,7 @@ export const newsSubmissionSchema = z.object({
   content: z.string().min(20, "İçerik en az 20 karakter olmalı"),
   submitterName: z.string().optional(),
   submitterEmail: z.string().email("Geçerli bir e-posta girin").optional().or(z.literal("")),
-  attachmentUrl: safeAttachmentUrlSchema,
+  attachmentUrl: optionalAttachmentUrl,
 });
 
 export const categorySchema = z.object({

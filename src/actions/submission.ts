@@ -13,6 +13,7 @@ import {
   isImageAttachment,
   isVideoAttachment,
   parseAttachmentUrls,
+  serializeAttachmentUrls,
 } from "@/lib/attachments";
 import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site-url";
@@ -42,7 +43,7 @@ export async function submitNewsAction(values: {
     data: {
       title: parsed.data.title.slice(0, 300),
       content: sanitizeArticleHtml(parsed.data.content).slice(0, 50_000),
-      attachmentUrl: parsed.data.attachmentUrl ?? null,
+      attachmentUrl: serializeAttachmentUrls(parseAttachmentUrls(parsed.data.attachmentUrl)) ?? null,
       submitterId: session?.user?.id,
       submitterName: session?.user?.name ?? (parsed.data.submitterName || null),
       submitterEmail: session?.user?.email ?? (parsed.data.submitterEmail || null),
