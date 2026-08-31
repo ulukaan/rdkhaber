@@ -30,7 +30,8 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 echo "==> npm ci"
-npm ci
+# .env içinde NODE_ENV=production olsa bile build için devDependencies gerekli olabilir
+npm ci --include=dev
 
 echo "==> npm run build"
 npm run build
