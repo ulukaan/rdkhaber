@@ -1,3 +1,7 @@
+function normalizeSiteUrl(raw: string) {
+  return raw.trim().replace(/^['"]|['"]$/g, "").replace(/\/$/, "");
+}
+
 export function getSiteUrl() {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -5,7 +9,7 @@ export function getSiteUrl() {
     process.env.AUTH_URL ||
     process.env.NEXTAUTH_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-  if (raw) return raw.replace(/\/$/, "");
+  if (raw) return normalizeSiteUrl(raw);
   return "http://localhost:3000";
 }
 
