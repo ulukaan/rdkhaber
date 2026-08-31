@@ -121,6 +121,62 @@ export function getMostReadArticles(take = 5) {
   });
 }
 
+type ArticleSummaryRow = Awaited<ReturnType<typeof getMostReadArticles>>[number];
+
+async function fetchPublishedArticlesByIds(ids: string[]): Promise<ArticleSummaryRow[]> {
+  if (ids.length === 0) return [];
+  const articles = await prisma.article.findMany({
+    where: { id: { in: ids }, status: "PUBLISHED" },
+    select: articleSummarySelect,
+  });
+  const byId = new Map(articles.map((article) => [article.id, article]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((article): article is ArticleSummaryRow => Boolean(article));
+}
+
+/** Son N günde yayınlanan haberler — okunma sayısına göre trend */
+export function getTrendingArticles(take = 5, days = 7) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  return prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { gte: since },
+    },
+    orderBy: { viewCount: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
+/** Onaylı yorum sayısına göre en çok tartışılan haberler */
+export async function getMostCommentedArticles(take = 5) {
+  const groups = await prisma.comment.groupBy({
+    by: ["articleId"],
+    where: {
+      approved: true,
+      article: { status: "PUBLISHED" },
+    },
+    _count: { articleId: true },
+    orderBy: { _count: { articleId: "desc" } },
+    take,
+  });
+  return fetchPublishedArticlesByIds(groups.map((group) => group.articleId));
+}
+
+/** Üyelerin en çok kaydettiği haberler */
+export async function getMostBookmarkedArticles(take = 5) {
+  const groups = await prisma.articleBookmark.groupBy({
+    by: ["articleId"],
+    where: { article: { status: "PUBLISHED" } },
+    _count: { articleId: true },
+    orderBy: { _count: { articleId: "desc" } },
+    take,
+  });
+  return fetchPublishedArticlesByIds(groups.map((group) => group.articleId));
+}
+
 export function getVideoArticles(take = 6) {
   return prisma.article.findMany({
     where: { status: "PUBLISHED", videoUrl: { not: null } },

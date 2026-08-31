@@ -41,6 +41,8 @@ export type ContinueArticle = {
 
 type ContinueSidebar = {
   mostRead: ArticleSummary[];
+  trending?: ArticleSummary[];
+  mostCommented?: ArticleSummary[];
   latest: ArticleSummary[];
   parityItems: MarketItem[];
   prayers: PrayerDay | null;
@@ -257,6 +259,8 @@ function ContinueArticleBlock({
             <ArticleSidebarPanels
               related={(article.related ?? []).filter((a) => a.id !== article.id)}
               mostRead={sidebar.mostRead.filter((a) => a.id !== article.id)}
+              trending={(sidebar.trending ?? []).filter((a) => a.id !== article.id)}
+              mostCommented={(sidebar.mostCommented ?? []).filter((a) => a.id !== article.id)}
               latest={sidebar.latest.filter((a) => a.id !== article.id)}
               categoryName={article.category.name}
               categorySlug={article.category.slug}

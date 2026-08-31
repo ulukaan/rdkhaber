@@ -2,7 +2,10 @@ import { getCategoriesWithChildren } from "@/lib/categories";
 import {
   getFeaturedArticles,
   getLatestArticles,
+  getMostBookmarkedArticles,
+  getMostCommentedArticles,
   getMostReadArticles,
+  getTrendingArticles,
   getVideoArticles,
   getArticlesByCategory,
   getEditorArticles,
@@ -57,6 +60,9 @@ export default async function HomePage() {
     featured,
     latest,
     mostRead,
+    trendingWeek,
+    mostCommented,
+    mostBookmarked,
     videos,
     categories,
     gundem,
@@ -75,6 +81,9 @@ export default async function HomePage() {
     getFeaturedArticles(12),
     getLatestArticles(24),
     settings.showMostRead !== "0" ? getMostReadArticles(6) : Promise.resolve([]),
+    settings.showTrendingWeek !== "0" ? getTrendingArticles(6) : Promise.resolve([]),
+    settings.showMostCommented !== "0" ? getMostCommentedArticles(6) : Promise.resolve([]),
+    settings.showMostBookmarked !== "0" ? getMostBookmarkedArticles(6) : Promise.resolve([]),
     settings.showVideos !== "0" ? getVideoArticles(6) : Promise.resolve([]),
     getCategoriesWithChildren(),
     getArticlesByCategory("gundem", 5),
@@ -343,9 +352,47 @@ export default async function HomePage() {
           <AdUnit code="300" className="py-0" />
           {settings.showMostRead !== "0" ? (
             <div className="border border-border bg-white p-4">
-              <SectionHeading title="Çok Okunanlar" className="mb-2" />
+              <SectionHeading title="Çok Okunanlar" href="/enler#cok-okunanlar" className="mb-2" />
               <div>
                 {mostRead.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showTrendingWeek !== "0" && trendingWeek.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading title="Haftanın Trendi" href="/enler#haftanin-trendi" className="mb-2" />
+              <div>
+                {trendingWeek.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showMostCommented !== "0" && mostCommented.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading
+                title="En Çok Yorumlanan"
+                href="/enler#en-cok-yorumlanan"
+                className="mb-2"
+              />
+              <div>
+                {mostCommented.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showMostBookmarked !== "0" && mostBookmarked.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading
+                title="En Çok Kaydedilen"
+                href="/enler#en-cok-kaydedilen"
+                className="mb-2"
+              />
+              <div>
+                {mostBookmarked.map((a, i) => (
                   <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
                 ))}
               </div>
