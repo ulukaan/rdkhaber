@@ -2,6 +2,15 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
+function inCategorySlugs(slugs: string[]) {
+  return {
+    OR: [
+      { category: { slug: { in: slugs } } },
+      { extraCategories: { some: { category: { slug: { in: slugs } } } } },
+    ],
+  };
+}
+
 export const articleSummarySelect = {
   id: true,
   title: true,
@@ -196,7 +205,7 @@ export function getArticlesByCategory(
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
-      category: { slug: { in: slugs } },
+      ...inCategorySlugs(slugs),
       ...(extra?.videoOnly
         ? { AND: [{ videoUrl: { not: null } }, { videoUrl: { not: "" } }] }
         : {}),
@@ -214,6 +223,11 @@ export async function getArticleBySlug(slug: string) {
     include: {
       author: { select: { id: true, name: true, slug: true, avatarUrl: true, bio: true, role: true } },
       category: { select: { name: true, slug: true, color: true } },
+      extraCategories: {
+        select: {
+          category: { select: { name: true, slug: true, color: true } },
+        },
+      },
       tags: { select: { name: true, slug: true } },
       images: {
         orderBy: { order: "asc" },
@@ -312,6 +326,7 @@ export function getArticleForEdit(id: string) {
     include: {
       tags: { select: { name: true } },
       category: { select: { name: true, color: true } },
+      extraCategories: { select: { categoryId: true } },
       images: {
         orderBy: { order: "asc" },
         select: { id: true, imageUrl: true, caption: true, order: true },
@@ -320,11 +335,12 @@ export function getArticleForEdit(id: string) {
   });
 }
 
-export function getRelatedArticles(categorySlug: string, excludeId: string, take = 4) {
+export function getRelatedArticles(categorySlug: string | string[], excludeId: string, take = 4) {
+  const slugs = Array.isArray(categorySlug) ? categorySlug : [categorySlug];
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
-      category: { slug: categorySlug },
+      ...inCategorySlugs(slugs),
       id: { not: excludeId },
     },
     orderBy: { publishedAt: "desc" },

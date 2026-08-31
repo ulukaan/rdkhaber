@@ -15,30 +15,6 @@ import { ShareButtons } from "@/components/news/ShareButtons";
 import { refreshArticleCacheAction } from "@/actions/article";
 import { cn } from "@/lib/utils";
 
-function ActionTile({
-  href,
-  label,
-  Icon,
-  external,
-}: {
-  href: string;
-  label: string;
-  Icon: React.ComponentType<{ className?: string }>;
-  external?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
-      className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-3 text-center transition-colors hover:border-brand/40 hover:bg-white"
-    >
-      <Icon className="h-5 w-5 text-ink-soft" />
-      <span className="text-[11px] font-bold leading-tight text-ink">{label}</span>
-    </Link>
-  );
-}
-
 export function ArticleSuccessActions({
   basePath,
   articleId,
@@ -46,6 +22,7 @@ export function ArticleSuccessActions({
   title,
   shareUrl,
   canView,
+  accent,
 }: {
   basePath: string;
   articleId: string;
@@ -53,6 +30,7 @@ export function ArticleSuccessActions({
   title: string;
   shareUrl: string;
   canView: boolean;
+  accent: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [cacheMsg, setCacheMsg] = useState<string | null>(null);
@@ -85,59 +63,78 @@ export function ArticleSuccessActions({
   };
 
   return (
-    <div className="space-y-4 border-t border-border px-5 py-5 sm:px-8">
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={shareNative}
-          className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-bold text-ink transition-colors hover:border-brand/40 hover:bg-white"
+    <div className="space-y-5 border-t border-border px-5 py-5 sm:px-7">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link
+          href={`${basePath}/${articleId}`}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ backgroundColor: accent }}
         >
-          <Share2 className="h-4 w-4" />
-          Haberi Paylaş
-        </button>
-        <ShareButtons url={shareUrl} title={title} size="sm" />
-        {shareMsg ? <span className="text-xs font-medium text-ink-soft">{shareMsg}</span> : null}
+          <Pencil className="h-4 w-4" />
+          Haberi düzenle
+        </Link>
+        {canView ? (
+          <Link
+            href={`/haber/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-white px-4 text-sm font-bold text-ink transition-colors hover:bg-surface"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Sitede gör
+          </Link>
+        ) : (
+          <span className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-dashed border-border px-4 text-sm font-semibold text-ink-soft">
+            Henüz yayında değil
+          </span>
+        )}
+        <Link
+          href={`${basePath}/yeni`}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-border bg-white px-4 text-sm font-bold text-ink transition-colors hover:bg-surface"
+        >
+          <Plus className="h-4 w-4" />
+          Yeni haber
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        <ActionTile
-          href={`${basePath}/${articleId}`}
-          label="Haberi Düzenle"
-          Icon={Pencil}
-        />
-        <ActionTile
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
+        <Link
           href={`${basePath}/${articleId}#galeri`}
-          label="Haber Galerisi"
-          Icon={Images}
-        />
-        {canView ? (
-          <ActionTile
-            href={`/haber/${slug}`}
-            label="Haberi Görüntüle"
-            Icon={ExternalLink}
-            external
-          />
-        ) : (
-          <div className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface/50 px-3 py-3 text-center opacity-60">
-            <ExternalLink className="h-5 w-5 text-ink-soft" />
-            <span className="text-[11px] font-bold leading-tight text-ink-soft">Henüz yayında değil</span>
-          </div>
-        )}
-        <ActionTile href={`${basePath}/yeni`} label="Yeni Haber Ekle" Icon={Plus} />
-        <ActionTile href={basePath} label="Tüm Haberler" Icon={LayoutGrid} />
+          className="inline-flex items-center gap-1.5 text-ink-soft transition-colors hover:text-ink"
+        >
+          <Images className="h-4 w-4" />
+          Galeri
+        </Link>
+        <Link
+          href={basePath}
+          className="inline-flex items-center gap-1.5 text-ink-soft transition-colors hover:text-ink"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          Tüm haberler
+        </Link>
         <button
           type="button"
           onClick={refreshCache}
           disabled={pending}
-          className={cn(
-            "flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-3 text-center transition-colors hover:border-brand/40 hover:bg-white disabled:opacity-60",
-          )}
+          className="inline-flex items-center gap-1.5 text-ink-soft transition-colors hover:text-ink disabled:opacity-60"
         >
-          <RefreshCw className={cn("h-5 w-5 text-ink-soft", pending && "animate-spin")} />
-          <span className="text-[11px] font-bold leading-tight text-ink">
-            {pending ? "Yenileniyor..." : cacheMsg ?? "Önbelleği Yenile"}
-          </span>
+          <RefreshCw className={cn("h-4 w-4", pending && "animate-spin")} />
+          {pending ? "Yenileniyor..." : cacheMsg ?? "Önbelleği yenile"}
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Paylaş</span>
+        <button
+          type="button"
+          onClick={shareNative}
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs font-bold text-ink transition-colors hover:bg-surface"
+        >
+          <Share2 className="h-3.5 w-3.5" />
+          Bağlantı
+        </button>
+        <ShareButtons url={shareUrl} title={title} size="sm" />
+        {shareMsg ? <span className="text-xs font-medium text-ink-soft">{shareMsg}</span> : null}
       </div>
     </div>
   );

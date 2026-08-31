@@ -19,7 +19,7 @@ export default async function CategoriesPage() {
     prisma.category.findMany({
       orderBy: [{ parentId: "asc" }, { order: "asc" }],
       include: {
-        _count: { select: { articles: true } },
+        _count: { select: { articleLinks: true } },
         parent: { select: { name: true } },
       },
     }),
@@ -70,7 +70,7 @@ export default async function CategoriesPage() {
               </Td>
               <Td className="text-ink-soft">{c.parent?.name ?? "—"}</Td>
               <Td className="text-ink-soft">{c.slug}</Td>
-              <Td>{c._count.articles}</Td>
+              <Td>{c._count.articleLinks}</Td>
               <Td>{c.order}</Td>
               <Td>
                 <CategoryHeaderNavToggle

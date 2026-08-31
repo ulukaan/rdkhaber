@@ -37,6 +37,7 @@ import { RecordArticleRead } from "@/components/account/RecordArticleRead";
 import { CorrectionBanner } from "@/components/news/CorrectionBanner";
 import { LiveBlogTimeline } from "@/components/news/LiveBlogTimeline";
 import { PushSubscribeButton } from "@/components/pwa/PushSubscribeButton";
+import { categoryHref } from "@/lib/category-path";
 
 export async function generateMetadata({
   params,
@@ -76,9 +77,14 @@ export default async function ArticlePage({
 
   incrementViewCount(article.id).catch(() => {});
 
+  const extraCategories = article.extraCategories
+    .map((row) => row.category)
+    .filter((c) => c.slug !== article.category.slug);
+  const relatedSlugs = [article.category.slug, ...extraCategories.map((c) => c.slug)];
+
   const [related, mostRead, trending, mostCommented, settings, latest, breaking, rates, prayers] =
     await Promise.all([
-    getRelatedArticles(article.category.slug, article.id, 6),
+    getRelatedArticles(relatedSlugs, article.id, 6),
     getMostReadArticles(8),
     getTrendingArticles(8),
     getMostCommentedArticles(8),
@@ -158,6 +164,20 @@ export default async function ArticlePage({
             slug={article.category.slug}
             color={article.category.color}
           />
+          {extraCategories.length > 0 ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {extraCategories.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={categoryHref(c.slug)}
+                  className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: c.color || "var(--brand)" }}
+                >
+                  {c.name}
+                </Link>
+              ))}
+            </div>
+          ) : null}
 
           <AdUnit code="131" />
 

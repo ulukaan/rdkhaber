@@ -115,7 +115,8 @@ export const articleSchema = z.object({
     )
     .optional()
     .default([]),
-  categoryId: z.string().min(1, "Kategori seçin"),
+  categoryId: z.string().optional().default(""),
+  categoryIds: z.array(z.string()).optional().default([]),
   tagNames: z.string().optional(),
   status: z.enum(["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED"]),
   isBreaking: z.coerce.boolean().default(false),

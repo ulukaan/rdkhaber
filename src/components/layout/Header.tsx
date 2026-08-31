@@ -61,7 +61,7 @@ export async function Header() {
                 <TarifParkLink />
               </nav>
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-                <ThemeToggle className="hidden sm:inline-flex" />
+                <ThemeToggle />
                 <div className="hidden md:block">
                   <Suspense fallback={null}>
                     <AccountMenu />

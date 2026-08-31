@@ -19,6 +19,7 @@ import { FieldGroup, Input, Textarea, Select } from "@/components/ui/FormField";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { MultiImageUploadField } from "@/components/admin/MultiImageUploadField";
 import { PlacementImages } from "@/components/admin/PlacementImages";
+import { CategoryCheckboxes } from "@/components/admin/CategoryCheckboxes";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { FormCard, FieldHint } from "@/components/admin/FormCard";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +39,7 @@ export type ArticleDefaults = {
   videoEmbed?: string | null;
   galleryImages?: Array<{ url: string; caption: string }>;
   categoryId?: string;
+  categoryIds?: string[];
   tagNames?: string;
   status?: string;
   isBreaking?: boolean;
@@ -110,7 +112,7 @@ export function ArticleForm({
       videoUrl: String(formData.get("videoUrl") ?? ""),
       videoEmbed: String(formData.get("videoEmbed") ?? ""),
       galleryImages: String(formData.get("galleryImages") ?? "[]"),
-      categoryId: String(formData.get("categoryId") ?? ""),
+      categoryIds: formData.getAll("categoryIds").map(String).filter(Boolean),
       tagNames: String(formData.get("tagNames") ?? ""),
       status: String(formData.get("status") ?? "DRAFT"),
       isBreaking: formData.get("isBreaking") === "on",
@@ -134,6 +136,12 @@ export function ArticleForm({
       scheduledAt: String(formData.get("scheduledAt") ?? ""),
       isLiveBlog: formData.get("isLiveBlog") === "on",
     };
+
+    if (raw.categoryIds.length === 0) {
+      setLoading(false);
+      setError("En az bir kategori seçin.");
+      return;
+    }
 
     const result = isEdit
       ? await updateArticleAction(defaults!.id!, raw)
@@ -289,15 +297,11 @@ export function ArticleForm({
           <div className="flex flex-col gap-5 lg:sticky lg:top-16 lg:z-10 lg:max-h-[calc(100dvh-4rem-5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           <FormCard title="Yayın" description="Nerede ve ne zaman çıksın." Icon={LayoutGrid}>
             <div className="flex flex-col gap-4">
-              <FieldGroup label="Kategori" htmlFor="categoryId">
-                <Select id="categoryId" name="categoryId" defaultValue={defaults?.categoryId} required>
-                  <option value="">Kategori seçin</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
+              <FieldGroup label="Kategori">
+                <CategoryCheckboxes
+                  categories={categories}
+                  defaultIds={defaults?.categoryIds?.length ? defaults.categoryIds : defaults?.categoryId ? [defaults.categoryId] : []}
+                />
               </FieldGroup>
 
               <FieldGroup label="Yayın durumu" htmlFor="status">

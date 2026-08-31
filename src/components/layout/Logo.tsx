@@ -2,6 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
+const BRAND_LOGO_DARK = "/brand/logo-dark.png";
+
+function brandDarkLogo(url?: string) {
+  if (!url) return null;
+  const path = url.split("?")[0];
+  if (path === "/brand/logo.png" || path.endsWith("/brand/logo.png")) return BRAND_LOGO_DARK;
+  return null;
+}
+
 export function Logo({
   siteName,
   logoUrl,
@@ -16,6 +25,7 @@ export function Logo({
   const rest = parts.slice(1).join(" ");
 
   if (logoUrl) {
+    const darkSrc = brandDarkLogo(logoUrl);
     return (
       <Link
         href="/"
@@ -26,11 +36,25 @@ export function Logo({
           src={logoUrl}
           alt={siteName}
           fill
-          className="object-contain object-left"
+          className={cn(
+            "object-contain object-left",
+            darkSrc ? "site-logo-light" : "site-logo-invertible",
+          )}
           sizes="144px"
           priority
           unoptimized
         />
+        {darkSrc ? (
+          <Image
+            src={darkSrc}
+            alt=""
+            fill
+            className="site-logo-dark object-contain object-left"
+            sizes="144px"
+            unoptimized
+            aria-hidden
+          />
+        ) : null}
       </Link>
     );
   }

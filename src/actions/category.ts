@@ -130,7 +130,11 @@ export async function updateCategoryAction(id: string, raw: Record<string, unkno
 
 export async function deleteCategoryAction(id: string) {
   await requireRole(["ADMIN"]);
-  const articleCount = await prisma.article.count({ where: { categoryId: id } });
+  const articleCount = await prisma.article.count({
+    where: {
+      OR: [{ categoryId: id }, { extraCategories: { some: { categoryId: id } } }],
+    },
+  });
   if (articleCount > 0) {
     return { error: "Bu kategoride haberler var, önce onları taşıyın veya silin." };
   }

@@ -11,14 +11,14 @@ export async function ArticleBody({ content }: { content: string }) {
   if (paragraphs.length < 2) {
     return (
       <div>
-        <div className={proseClass} dangerouslySetInnerHTML={{ __html: clean }} />
+        <div className={proseClass + " article-html"} dangerouslySetInnerHTML={{ __html: clean }} />
         <AdUnit code="1003" />
       </div>
     );
   }
 
   return (
-    <div className={proseClass}>
+    <div className={proseClass + " article-html"}>
       {paragraphs.map((html, i) => (
         <div key={i}>
           <div dangerouslySetInnerHTML={{ __html: html }} />

@@ -230,7 +230,7 @@ function ContinueArticleBlock({
 
             <div className="mt-7 rounded-none border border-border bg-white px-4 py-6 sm:px-7 sm:py-8">
               <div
-                className={proseClass}
+                className={proseClass + " article-html"}
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
             </div>

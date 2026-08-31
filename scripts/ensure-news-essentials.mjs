@@ -94,6 +94,20 @@ async function main() {
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS \`ArticleCategory\` (
+      \`articleId\` VARCHAR(191) NOT NULL,
+      \`categoryId\` VARCHAR(191) NOT NULL,
+      PRIMARY KEY (\`articleId\`, \`categoryId\`),
+      INDEX \`ArticleCategory_categoryId_idx\`(\`categoryId\`)
+    ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    INSERT IGNORE INTO \`ArticleCategory\` (\`articleId\`, \`categoryId\`)
+    SELECT \`id\`, \`categoryId\` FROM \`Article\` WHERE \`categoryId\` IS NOT NULL AND \`categoryId\` <> ''
+  `).catch(() => {});
+
   console.log("News essentials tables ready");
 }
 

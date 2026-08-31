@@ -164,6 +164,7 @@ export async function approveSubmissionAction(id: string) {
         videoUrl,
         status: "DRAFT",
         categoryId: defaultCategory.id,
+        extraCategories: { create: { categoryId: defaultCategory.id } },
         authorId: session.user.id,
       },
     }),

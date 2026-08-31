@@ -44,7 +44,7 @@ export function HeaderShell({
 
   return (
     <header
-      className={cn("sticky top-0 z-50 bg-white shadow-sm", compact && "header-compact")}
+      className={cn("sticky top-0 z-50 bg-background shadow-sm", compact && "header-compact")}
     >
       {top ? (
         <div className="header-collapse">

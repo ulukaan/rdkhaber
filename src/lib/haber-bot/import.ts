@@ -162,6 +162,7 @@ export async function runHaberBotSource(sourceId: string, authorId: string): Pro
             reporterName: post.author,
             authorId,
             categoryId: source.categoryId,
+            extraCategories: { create: { categoryId: source.categoryId } },
           },
         });
 

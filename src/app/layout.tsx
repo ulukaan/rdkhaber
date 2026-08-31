@@ -89,6 +89,7 @@ export default async function RootLayout({
   return (
     <html
       lang="tr"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       style={
         {
@@ -98,6 +99,12 @@ export default async function RootLayout({
       }
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var p=location.pathname;if(p.indexOf('/admin')===0||p.indexOf('/editor')===0)return;var t=localStorage.getItem('rdk_theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();",
+          }}
+        />
         {customMeta.map((tag, index) => {
           const props: Record<string, string> = {};
           if (tag.name) props.name = tag.name;
