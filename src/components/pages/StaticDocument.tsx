@@ -80,6 +80,7 @@ const LEGAL_NAV = [
   { href: "/sayfa/kunye", label: "Künye" },
   { href: "/sayfa/gizlilik", label: "Gizlilik" },
   { href: "/sayfa/kvkk", label: "KVKK" },
+  { href: "/cerezler", label: "Çerezler" },
   { href: "/sayfa/kullanim-kosullari", label: "Kullanım Şartları" },
   { href: "/iletisim", label: "İletişim" },
 ];

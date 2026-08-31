@@ -7,6 +7,7 @@ import { getCategoriesForNav } from "@/lib/categories";
 import { categoryHref } from "@/lib/category-path";
 import { SocialIcon } from "@/components/icons/SocialIcons";
 import { NewsletterSubscribeForm } from "@/components/forms/NewsletterSubscribeForm";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 
 const linkClass =
   "block text-[13px] leading-6 text-ink-soft transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
@@ -118,8 +119,14 @@ export async function Footer() {
 
         <div className="flex flex-col gap-2 border-t border-border py-5 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
           <p>{copyright}</p>
-          <p>
-            Tasarım: <span className="font-semibold text-ink">Samet Dursun</span>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Link href="/cerezler" className="font-semibold text-ink hover:text-brand">
+              Çerez aydınlatması
+            </Link>
+            <CookieSettingsButton className="font-semibold text-ink hover:text-brand" />
+            <span>
+              Tasarım: <span className="font-semibold text-ink">Samet Dursun</span>
+            </span>
           </p>
         </div>
       </Container>

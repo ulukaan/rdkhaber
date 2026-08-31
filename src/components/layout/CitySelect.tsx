@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { CITIES, CITY_COOKIE } from "@/lib/cities";
+import { readConsentCookie } from "@/lib/cookie-consent";
 
 export function CitySelect({ value }: { value: string }) {
   const router = useRouter();
@@ -17,7 +18,11 @@ export function CitySelect({ value }: { value: string }) {
         aria-label="İl seçimi"
         onChange={(e) => {
           const slug = e.target.value;
-          document.cookie = `${CITY_COOKIE}=${encodeURIComponent(slug)};path=/;max-age=31536000;samesite=lax`;
+          const consent = readConsentCookie();
+          const persist = consent?.preferences === true;
+          document.cookie = persist
+            ? `${CITY_COOKIE}=${encodeURIComponent(slug)};path=/;max-age=31536000;samesite=lax`
+            : `${CITY_COOKIE}=${encodeURIComponent(slug)};path=/;samesite=lax`;
           start(() => router.refresh());
         }}
         className="w-[4.75rem] cursor-pointer appearance-none truncate border-0 bg-transparent py-0 pr-3.5 text-[11px] font-bold text-ink outline-none disabled:opacity-60"

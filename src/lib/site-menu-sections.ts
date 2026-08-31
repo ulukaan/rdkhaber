@@ -43,6 +43,7 @@ export const CORPORATE_LINKS: SiteMenuLink[] = [
   { label: "Künye", href: "/sayfa/kunye" },
   { label: "Gizlilik", href: "/sayfa/gizlilik" },
   { label: "KVKK", href: "/sayfa/kvkk" },
+  { label: "Çerezler", href: "/cerezler" },
   { label: "Kullanım Şartları", href: "/sayfa/kullanim-kosullari" },
 ];
 

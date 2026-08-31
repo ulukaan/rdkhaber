@@ -141,7 +141,8 @@ export async function getDefaultNav(location: NavLocation): Promise<NavLink[]> {
       { label: "Künye", href: "/sayfa/kunye", visible: true, order: 1 },
       { label: "Gizlilik", href: "/sayfa/gizlilik", visible: true, order: 2 },
       { label: "KVKK", href: "/sayfa/kvkk", visible: true, order: 3 },
-      { label: "Kullanım Şartları", href: "/sayfa/kullanim-kosullari", visible: true, order: 4 },
+      { label: "Çerezler", href: "/cerezler", visible: true, order: 4 },
+      { label: "Kullanım Şartları", href: "/sayfa/kullanim-kosullari", visible: true, order: 5 },
     ];
   }
 

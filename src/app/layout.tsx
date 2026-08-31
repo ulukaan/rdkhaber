@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings";
 import { darkenColor } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/site-url";
-import { GoogleAdSense } from "@/components/ads/GoogleAdSense";
+import { CookieConsent } from "@/components/consent/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,7 +80,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         } as React.CSSProperties
       }
     >
-      {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
       <body className="min-h-full flex flex-col">
         {settings.customHeadHtml ? (
           <div hidden dangerouslySetInnerHTML={{ __html: settings.customHeadHtml }} />
@@ -90,9 +88,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {settings.customBodyEndHtml ? (
           <div dangerouslySetInnerHTML={{ __html: settings.customBodyEndHtml }} />
         ) : null}
-        <GoogleAdSense client={adsenseClient} autoAds={adsenseAuto} />
+        <CookieConsent
+          analyticsConfigured={Boolean(gaId || gtmId)}
+          adsConfigured={Boolean(adsenseClient && adsenseAuto)}
+          gaId={gaId}
+          gtmId={gtmId}
+          adsenseClient={adsenseClient}
+          adsenseAuto={adsenseAuto}
+        />
       </body>
-      {!gtmId && gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }
