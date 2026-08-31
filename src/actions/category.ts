@@ -6,6 +6,7 @@ import { categorySchema } from "@/lib/validation";
 import { requireRole } from "@/lib/auth-guard";
 import { slugify } from "@/lib/slug";
 import { categoryHref } from "@/lib/category-path";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
 
 function revalidateCategoryPaths(slug: string) {
   revalidatePath(categoryHref(slug));
@@ -96,7 +97,7 @@ export async function createCategoryAction(raw: Record<string, unknown>) {
   await prisma.category.create({ data });
 
   revalidatePath("/admin/kategoriler");
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/kategori");
   revalidateCategoryPaths(data.slug);
   return { success: true };
@@ -121,7 +122,7 @@ export async function updateCategoryAction(id: string, raw: Record<string, unkno
   });
 
   revalidatePath("/admin/kategoriler");
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/kategori");
   revalidateCategoryPaths(data.slug);
   return { success: true };
@@ -135,7 +136,7 @@ export async function deleteCategoryAction(id: string) {
   }
   const deleted = await prisma.category.delete({ where: { id } });
   revalidatePath("/admin/kategoriler");
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/kategori");
   revalidateCategoryPaths(deleted.slug);
 }

@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/FormField";
 export function ImageUploadField({
   name,
   defaultValue,
+  variant = "cover",
 }: {
   name: string;
   defaultValue?: string | null;
+  variant?: "cover" | "avatar";
 }) {
   const [url, setUrl] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
@@ -38,12 +40,18 @@ export function ImageUploadField({
     <div>
       <input type="hidden" name={name} value={url} />
       {url ? (
-        <div className="relative mb-2 h-40 w-full overflow-hidden rounded border border-border">
+        <div
+          className={
+            variant === "avatar"
+              ? "relative mb-2 h-32 w-32 overflow-hidden rounded-full border border-border bg-surface"
+              : "relative mb-2 h-40 w-full overflow-hidden rounded border border-border"
+          }
+        >
           <Image
             src={url}
             alt="Kapak görseli"
             fill
-            className="object-contain bg-surface"
+            className={variant === "avatar" ? "object-cover" : "object-contain bg-surface"}
             unoptimized
             onError={() => setUrl("")}
           />
@@ -64,7 +72,7 @@ export function ImageUploadField({
         >
           <Upload className="h-5 w-5" />
           <span className="text-xs font-semibold">
-            {uploading ? "Yükleniyor..." : "Görsel Yükle"}
+            {uploading ? "Yükleniyor..." : variant === "avatar" ? "Fotoğraf yükle" : "Görsel Yükle"}
           </span>
         </button>
       )}

@@ -14,7 +14,9 @@ export async function PanelShell({
   children: React.ReactNode;
 }) {
   const [commentBadge, settings] = await Promise.all([
-    prisma.comment.count({ where: { approved: false } }),
+    role === "USER"
+      ? Promise.resolve(0)
+      : prisma.comment.count({ where: { approved: false } }),
     getSettings(),
   ]);
 

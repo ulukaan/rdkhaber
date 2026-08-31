@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/layout/Logo";
 import { getSettings } from "@/lib/settings";
 import { flattenNavLinks, getNavItems } from "@/lib/nav-menu";
-import { prisma } from "@/lib/prisma";
+import { getCategoriesForNav } from "@/lib/categories";
 import { categoryHref } from "@/lib/category-path";
 import { SocialIcon } from "@/components/icons/SocialIcons";
 import { NewsletterSubscribeForm } from "@/components/forms/NewsletterSubscribeForm";
@@ -40,17 +40,14 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 }
 
 export async function Footer() {
-  const [footerNav, serviceNav, corporateNav, settings, categories] = await Promise.all([
+  const [footerNav, serviceNav, corporateNav, settings, allCategories] = await Promise.all([
     getNavItems("footer"),
     getNavItems("footer_services"),
     getNavItems("footer_corporate"),
     getSettings(),
-    prisma.category.findMany({
-      orderBy: { order: "asc" },
-      select: { name: true, slug: true },
-      take: 8,
-    }),
+    getCategoriesForNav(),
   ]);
+  const categories = allCategories.slice(0, 8);
 
   const socials = [
     { url: settings.facebookUrl, label: "Facebook", name: "facebook" as const },

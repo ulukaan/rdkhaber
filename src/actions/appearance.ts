@@ -11,6 +11,7 @@ import {
 } from "@/lib/nav-menu";
 import { setSettings } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
 
 const navLocationSchema = z.enum(["header", "footer", "footer_services", "footer_corporate"]);
 
@@ -45,7 +46,7 @@ export async function saveNavMenuAction(raw: unknown) {
     return { error: "Menü kaydedilemedi. Sayfayı yenileyip tekrar deneyin." };
   }
   revalidatePath("/admin/gorunum/menu");
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
   return { success: true };
 }
 
@@ -71,7 +72,7 @@ export async function resetNavMenuAction(location: NavLocation) {
     return { error: "Varsayılan menü yüklenemedi." };
   }
   revalidatePath("/admin/gorunum/menu");
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
   return { success: true };
 }
 
@@ -95,7 +96,7 @@ export async function toggleCategoryInHeaderNavAction(categoryId: string) {
     const result = await toggleCategoryInHeaderNav(category);
     revalidatePath("/admin/kategoriler");
     revalidatePath("/admin/gorunum/menu");
-    revalidatePath("/", "layout");
+    revalidatePublicSite({ layout: true });
     return { success: true, inNav: result.inNav };
   } catch (err) {
     console.error("[toggleCategoryInHeaderNavAction]", err);
@@ -136,7 +137,7 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
     raw.parityDesign === "1" || raw.parityDesign === "3" ? raw.parityDesign : "2";
   values.imsakiyeDesign = raw.imsakiyeDesign === "1" ? "1" : "2";
   await setSettings(values);
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/admin/gorunum/ogeler");
   return { success: true };
 }
@@ -147,7 +148,7 @@ export async function saveCustomCodeAction(raw: Record<string, string>) {
     customHeadHtml: raw.customHeadHtml ?? "",
     customBodyEndHtml: raw.customBodyEndHtml ?? "",
   });
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
   revalidatePath("/admin/gorunum/ozel-kod");
   return { success: true };
 }
@@ -170,7 +171,7 @@ export async function saveGoogleSiteKitAction(raw: Record<string, string>) {
     googleTagManagerId: gtm,
     googleSiteVerification: verify,
   });
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
   revalidatePath("/admin/gorunum/google");
   return { success: true };
 }
@@ -191,7 +192,7 @@ export async function saveGoogleAdsAction(raw: Record<string, string>) {
     googleAdsenseClient: client,
     googleAdsenseAutoAds: autoAds,
   });
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
   revalidatePath("/ads.txt");
   revalidatePath("/admin/gorunum/google");
   return { success: true };
@@ -206,7 +207,7 @@ export async function saveTvGuideAction(raw: Record<string, string>) {
     tvChannelSlugs: raw.tvChannelSlugs ?? "",
     showBroadcast: raw.showBroadcast === "on" || raw.showBroadcast === "1" ? "1" : "0",
   });
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/yayin-akisi");
   revalidatePath("/admin/yayin-akisi");
   return { success: true };

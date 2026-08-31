@@ -9,7 +9,7 @@ import type { SubmissionStatus } from "@prisma/client";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site-url";
-import { sendPanelNotificationEmail } from "@/lib/notify-email";
+import { parseAttachmentUrls } from "@/lib/attachments";
 
 export async function submitTipAction(values: {
   message: string;
@@ -31,7 +31,7 @@ export async function submitTipAction(values: {
     data: {
       message: parsed.data.message.slice(0, 5000),
       contactInfo: parsed.data.contactInfo || null,
-      attachmentUrl: parsed.data.attachmentUrl || null,
+      attachmentUrl: parsed.data.attachmentUrl ?? null,
     },
   });
 
@@ -49,7 +49,7 @@ export async function submitTipAction(values: {
         value: parsed.data.contactInfo?.trim() || "Belirtilmedi",
       },
       ...(parsed.data.attachmentUrl
-        ? [{ label: "Ek dosya", value: parsed.data.attachmentUrl }]
+        ? [{ label: "Ek dosya", value: parseAttachmentUrls(parsed.data.attachmentUrl).join(", ") }]
         : []),
       {
         label: "Mesaj",

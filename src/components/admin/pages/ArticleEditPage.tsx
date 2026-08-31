@@ -1,16 +1,19 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-guard";
+import { canEditArticle } from "@/lib/article-access";
 import { getArticleForEdit } from "@/lib/articles";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ArticleForm } from "@/components/admin/ArticleForm";
 
 export async function ArticleEditPage({ id }: { id: string }) {
+  const session = await requireRole(["ADMIN", "EDITOR"]);
   const [article, categories] = await Promise.all([
     getArticleForEdit(id),
     prisma.category.findMany({ orderBy: { order: "asc" }, select: { id: true, name: true } }),
   ]);
 
-  if (!article) notFound();
+  if (!article || !canEditArticle(session, article)) notFound();
 
   return (
     <>

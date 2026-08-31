@@ -42,7 +42,7 @@ export async function submitNewsAction(values: {
     data: {
       title: parsed.data.title.slice(0, 300),
       content: sanitizeArticleHtml(parsed.data.content).slice(0, 50_000),
-      attachmentUrl: parsed.data.attachmentUrl || null,
+      attachmentUrl: parsed.data.attachmentUrl ?? null,
       submitterId: session?.user?.id,
       submitterName: session?.user?.name ?? (parsed.data.submitterName || null),
       submitterEmail: session?.user?.email ?? (parsed.data.submitterEmail || null),
@@ -66,7 +66,9 @@ export async function submitNewsAction(values: {
       { label: "Başlık", value: parsed.data.title.slice(0, 300) },
       { label: "Gönderen", value: submitterName },
       { label: "E-posta", value: submitterEmail },
-      ...(parsed.data.attachmentUrl ? [{ label: "Ek dosya", value: parsed.data.attachmentUrl }] : []),
+      ...(parsed.data.attachmentUrl
+        ? [{ label: "Ek dosya", value: parseAttachmentUrls(parsed.data.attachmentUrl).join(", ") }]
+        : []),
       {
         label: "İçerik",
         value: parsed.data.content.replace(/<[^>]+>/g, " ").slice(0, 2000),

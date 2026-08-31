@@ -20,6 +20,7 @@ import {
   Settings,
   Star,
   Tags,
+  UserRound,
   Users,
   Tv,
   Video,
@@ -30,6 +31,7 @@ import {
   ChartNoAxesCombined,
   type LucideIcon,
 } from "lucide-react";
+import { panelBrandLabel, panelPathForRole } from "@/lib/role";
 
 export type PanelNavLink = {
   href: string;
@@ -47,11 +49,33 @@ export type PanelNavGroup = {
 };
 
 export function getPanelHome(role: Role): PanelNavLink {
-  const base = role === "ADMIN" ? "/admin" : "/editor";
-  return { href: base, label: "Genel Bakış", Icon: LayoutDashboard, exact: true };
+  return { href: panelPathForRole(role), label: "Genel Bakış", Icon: LayoutDashboard, exact: true };
 }
 
 export function getPanelNav(role: Role): PanelNavGroup[] {
+  if (role === "USER") {
+    return [
+      {
+        id: "hesap",
+        label: "Hesabım",
+        items: [
+          { href: "/hesabim/profil", label: "Profil", Icon: UserRound },
+          { href: "/hesabim/haberlerim", label: "Haberlerim", Icon: Newspaper },
+          { href: "/hesabim/yorumlarim", label: "Yorumlarım", Icon: MessageSquare },
+        ],
+      },
+      {
+        id: "katki",
+        label: "Katkı",
+        items: [
+          { href: "/hesabim/haber-gonder", label: "Haber Gönder", Icon: Send },
+          { href: "/hesabim/ihbar", label: "İhbar Hattı", Icon: Megaphone },
+          { href: "/hesabim/bulten", label: "E-posta bülteni", Icon: Mail },
+        ],
+      },
+    ];
+  }
+
   const base = role === "ADMIN" ? "/admin" : "/editor";
 
   const groups: PanelNavGroup[] = [
@@ -64,7 +88,7 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
           ? [{ href: "/admin/haber-botu", label: "Haber Botu", Icon: Bot }]
           : []),
         { href: `${base}/arsiv`, label: "Arşiv", Icon: Archive },
-        { href: `${base}/manset`, label: "Ana Manşetler", Icon: Star },
+        ...(role === "ADMIN" ? [{ href: "/admin/manset", label: "Ana Manşetler", Icon: Star }] : []),
         { href: `${base}/son-dakika`, label: "Üst Manşetler", Icon: Zap },
         { href: `${base}/videolar`, label: "Videolar", Icon: Video },
       ],
@@ -144,7 +168,7 @@ export function isNavActive(pathname: string, href: string, home: string, exact 
  * "Haberler / Arşiv" biçiminde kırıntı göstermek için kullanılır.
  */
 export function getPanelBreadcrumb(pathname: string, role: Role) {
-  const home = role === "ADMIN" ? "/admin" : "/editor";
+  const home = panelPathForRole(role);
   const homeLink = getPanelHome(role);
 
   if (isNavActive(pathname, homeLink.href, home, true)) {
@@ -162,7 +186,7 @@ export function getPanelBreadcrumb(pathname: string, role: Role) {
   }
 
   return {
-    group: role === "ADMIN" ? "Yönetim" : "Editör",
+    group: panelBrandLabel(role),
     page: "Panel",
     Icon: LayoutDashboard,
   };

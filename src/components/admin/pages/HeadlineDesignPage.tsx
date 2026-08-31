@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getArticleForEdit } from "@/lib/articles";
+import { requireRole } from "@/lib/auth-guard";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HeadlineDesignForm } from "@/components/admin/HeadlineDesignForm";
 import type { HeadlineAlign } from "@/components/news/HeadlineFace";
@@ -11,6 +12,7 @@ export async function HeadlineDesignPage({
   id: string;
   cancelHref: string;
 }) {
+  await requireRole(["ADMIN"]);
   const article = await getArticleForEdit(id);
   if (!article) notFound();
 

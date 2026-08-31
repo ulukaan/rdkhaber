@@ -59,7 +59,8 @@ export function NewsletterUnsubscribeForm({ token }: { token?: string }) {
   return (
     <form onSubmit={confirmWithEmail} className="flex flex-col gap-4">
       <p className="text-sm leading-relaxed text-ink-soft">
-        Abonelikten çıkmak için bültene kayıtlı e-posta adresinizi girin.
+        Abonelikten çıkmak için bültene kayıtlı e-posta adresinizi girin. Onay bağlantısı
+        e-postanıza gönderilir.
       </p>
       <FieldGroup label="E-posta" htmlFor="unsubscribe-email">
         <Input

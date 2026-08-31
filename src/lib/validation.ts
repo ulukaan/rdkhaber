@@ -1,4 +1,25 @@
 import { z } from "zod";
+import { parseAttachmentUrls, serializeAttachmentUrls } from "@/lib/attachments";
+import { isSafeHttpUrl, isSafeMediaUrl } from "@/lib/safe-url";
+
+const safeAttachmentUrlSchema = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (!value?.trim()) return undefined;
+    const urls = parseAttachmentUrls(value);
+    return urls.length > 0 ? serializeAttachmentUrls(urls) ?? undefined : undefined;
+  });
+
+const optionalSafeMediaUrl = z
+  .string()
+  .optional()
+  .refine((value) => !value?.trim() || isSafeMediaUrl(value), "Geçersiz medya adresi");
+
+const optionalSafeHttpUrl = z
+  .string()
+  .optional()
+  .refine((value) => !value?.trim() || isSafeHttpUrl(value), "Geçerli http(s) bağlantısı girin");
 
 export const loginSchema = z.object({
   email: z.string().email("Geçerli bir e-posta girin"),
@@ -29,7 +50,7 @@ export const resetPasswordSchema = z
 export const tipSchema = z.object({
   message: z.string().min(10, "Lütfen en az 10 karakter yazın"),
   contactInfo: z.string().optional(),
-  attachmentUrl: z.string().optional(),
+  attachmentUrl: safeAttachmentUrlSchema,
 });
 
 export const contactSchema = z.object({
@@ -44,7 +65,7 @@ export const newsSubmissionSchema = z.object({
   content: z.string().min(20, "İçerik en az 20 karakter olmalı"),
   submitterName: z.string().optional(),
   submitterEmail: z.string().email("Geçerli bir e-posta girin").optional().or(z.literal("")),
-  attachmentUrl: z.string().optional(),
+  attachmentUrl: safeAttachmentUrlSchema,
 });
 
 export const categorySchema = z.object({
@@ -83,13 +104,13 @@ export const articleSchema = z.object({
   slug: z.string().min(3, "Slug gerekli"),
   summary: z.string().min(10, "Özet en az 10 karakter olmalı"),
   content: z.string().min(20, "İçerik en az 20 karakter olmalı"),
-  coverImageUrl: z.string().optional(),
-  videoUrl: z.string().optional(),
+  coverImageUrl: optionalSafeMediaUrl,
+  videoUrl: optionalSafeHttpUrl,
   videoEmbed: z.string().optional(),
   galleryImages: z
     .array(
       z.object({
-        url: z.string().min(1),
+        url: z.string().min(1).refine(isSafeMediaUrl, "Geçersiz galeri görseli"),
         caption: z.string().optional().default(""),
       }),
     )
@@ -102,16 +123,16 @@ export const articleSchema = z.object({
   isFeatured: z.coerce.boolean().default(false),
   inSpotlight: z.coerce.boolean().default(false),
   inFiveHeadline: z.coerce.boolean().default(false),
-  imageMainHeadline: z.string().optional(),
-  imageTopHeadline: z.string().optional(),
-  imageSpotlight: z.string().optional(),
-  imageFiveHeadline: z.string().optional(),
-  imageSocial: z.string().optional(),
-  imageStory: z.string().optional(),
+  imageMainHeadline: optionalSafeMediaUrl,
+  imageTopHeadline: optionalSafeMediaUrl,
+  imageSpotlight: optionalSafeMediaUrl,
+  imageFiveHeadline: optionalSafeMediaUrl,
+  imageSocial: optionalSafeMediaUrl,
+  imageStory: optionalSafeMediaUrl,
   reporterName: z.string().optional(),
   sourceName: z.string().optional(),
-  sourceUrl: z.string().optional(),
-  redirectUrl: z.string().optional(),
+  sourceUrl: optionalSafeHttpUrl,
+  redirectUrl: optionalSafeHttpUrl,
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   seoKeywords: z.string().optional(),
@@ -131,8 +152,22 @@ export const userSchema = z.object({
   active: z.coerce.boolean().default(true),
   slug: z.string().max(80).optional().or(z.literal("")),
   bio: z.string().max(2000).optional().or(z.literal("")),
-  avatarUrl: z.string().max(500).optional().or(z.literal("")),
+  avatarUrl: optionalSafeMediaUrl,
 });
+
+export const profileSchema = z
+  .object({
+    name: z.string().min(2, "Ad soyad gerekli"),
+    email: z.string().email("Geçerli bir e-posta girin"),
+    password: optionalPasswordSchema.optional(),
+    currentPassword: z.string().optional(),
+    bio: z.string().max(2000).optional().or(z.literal("")),
+    avatarUrl: optionalSafeMediaUrl,
+  })
+  .refine((value) => !value.password || Boolean(value.currentPassword?.trim()), {
+    message: "Şifre değiştirmek için mevcut şifrenizi girin",
+    path: ["currentPassword"],
+  });
 
 export const commentSchema = z.object({
   articleId: z.string().min(1),
@@ -176,7 +211,10 @@ export const adSchema = z.object({
   name: z.string().min(2, "Reklam adı gerekli"),
   position: z.enum(AD_SLOT_CODES),
   imageUrl: z.string().min(1, "Görsel gerekli"),
-  targetUrl: z.string().min(1, "Hedef bağlantı gerekli"),
+  targetUrl: z
+    .string()
+    .min(1, "Hedef bağlantı gerekli")
+    .refine(isSafeHttpUrl, "Yalnızca http veya https bağlantıları kullanılabilir"),
   active: z.coerce.boolean().default(true),
 });
 

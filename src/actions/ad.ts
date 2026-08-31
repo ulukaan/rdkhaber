@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { adSchema } from "@/lib/validation";
 import { requireRole } from "@/lib/auth-guard";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
 
 export async function createAdAction(raw: Record<string, unknown>) {
   await requireRole(["ADMIN"]);
@@ -17,7 +18,7 @@ export async function createAdAction(raw: Record<string, unknown>) {
     update: parsed.data,
   });
   revalidatePath("/admin/reklamlar");
-  revalidatePath("/");
+  revalidatePublicSite();
   return { success: true };
 }
 
@@ -29,7 +30,7 @@ export async function updateAdAction(id: string, raw: Record<string, unknown>) {
   }
   await prisma.adSlot.update({ where: { id }, data: parsed.data });
   revalidatePath("/admin/reklamlar");
-  revalidatePath("/");
+  revalidatePublicSite();
   return { success: true };
 }
 
@@ -37,7 +38,7 @@ export async function deleteAdAction(id: string) {
   await requireRole(["ADMIN"]);
   await prisma.adSlot.delete({ where: { id } });
   revalidatePath("/admin/reklamlar");
-  revalidatePath("/");
+  revalidatePublicSite();
 }
 
 export async function toggleAdActiveAction(id: string) {
@@ -46,6 +47,6 @@ export async function toggleAdActiveAction(id: string) {
   if (!ad) return { error: "Reklam bulunamadı" };
   await prisma.adSlot.update({ where: { id }, data: { active: !ad.active } });
   revalidatePath("/admin/reklamlar");
-  revalidatePath("/");
+  revalidatePublicSite();
   return { success: true };
 }

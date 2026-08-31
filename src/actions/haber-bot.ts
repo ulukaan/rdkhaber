@@ -7,12 +7,13 @@ import { haberBotSourceSchema, haberBotWordSchema } from "@/lib/validation";
 import { parseWordTemplate } from "@/lib/haber-bot/words";
 import { runAllHaberBotSources, runHaberBotSource } from "@/lib/haber-bot/import";
 import { normalizeSourceUrlSafe } from "@/lib/haber-bot/feed";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
 
 function refresh() {
   revalidatePath("/admin/haber-botu");
   revalidatePath("/admin/makaleler");
   revalidatePath("/editor/makaleler");
-  revalidatePath("/");
+  revalidatePublicSite();
 }
 
 export async function createHaberBotSourceAction(raw: Record<string, unknown>) {

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { settingsSchema } from "@/lib/validation";
 import { setSettings } from "@/lib/settings";
 import { requireRole } from "@/lib/auth-guard";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
 
 export async function updateSettingsAction(raw: Record<string, unknown>) {
   await requireRole(["ADMIN"]);
@@ -13,6 +14,7 @@ export async function updateSettingsAction(raw: Record<string, unknown>) {
   }
 
   await setSettings(parsed.data);
-  revalidatePath("/", "layout");
+  revalidatePublicSite({ layout: true });
+  revalidatePath("/admin/ayarlar");
   return { success: true };
 }

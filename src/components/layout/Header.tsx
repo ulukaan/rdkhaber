@@ -1,54 +1,33 @@
-import { prisma } from "@/lib/prisma";
+import { Suspense } from "react";
 import { getSettings } from "@/lib/settings";
 import { flattenNavLinks, getNavItems } from "@/lib/nav-menu";
-import { getPrayerTimes, getNextPrayerSlot } from "@/lib/prayer-times";
-import { getCityWeather } from "@/lib/weather";
-import { CITY_COOKIE, resolveCity } from "@/lib/cities";
-import { cookies } from "next/headers";
+import { getCategoriesForNav } from "@/lib/categories";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/layout/Logo";
-import { TopBar } from "@/components/layout/TopBar";
 import { CategoryNav } from "@/components/layout/CategoryNav";
-import { MobileMenu } from "@/components/layout/MobileMenu";
-import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
-import { mobileStripFromCategories } from "@/lib/mobile-category-strip";
+import { SiteMegaMenu } from "@/components/layout/SiteMegaMenu";
 import { BreakingTicker } from "@/components/layout/BreakingTicker";
 import { AccountMenu } from "@/components/layout/AccountMenu";
-import { SiteMegaMenu } from "@/components/layout/SiteMegaMenu";
 import { RatesBar } from "@/components/layout/RatesBar";
 import { HeaderShell } from "@/components/layout/HeaderShell";
-import { auth } from "@/auth";
-import { panelPathForRole } from "@/lib/role";
 import { TarifParkLink } from "@/components/layout/TarifParkLink";
+import { HeaderTopBarServer } from "@/components/layout/HeaderTopBarServer";
+import { MobileMenuWithSession } from "@/components/layout/MobileMenuWithSession";
+import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
+import { mobileStripFromCategories } from "@/lib/mobile-category-strip";
+
+function HeaderExtrasSkeleton() {
+  return <div className="h-9 animate-pulse bg-ink/5" aria-hidden />;
+}
 
 export async function Header() {
-  const cookieStore = await cookies();
-  const city = resolveCity(cookieStore.get(CITY_COOKIE)?.value);
-
-  const [categories, settings, session, headerNav, weather, prayers, serviceNav, corporateNav] =
-    await Promise.all([
-      prisma.category.findMany({
-        orderBy: { order: "asc" },
-        select: { name: true, slug: true },
-      }),
-      getSettings(),
-      auth(),
-      getNavItems("header"),
-      getCityWeather(city),
-      getPrayerTimes(city),
-      getNavItems("footer_services"),
-      getNavItems("footer_corporate"),
-    ]);
-
-  const nextPrayer = prayers ? getNextPrayerSlot(prayers) : null;
-
-  const account = session?.user
-    ? {
-        authenticated: true as const,
-        name: session.user.name?.split(" ")[0] ?? "Hesabım",
-        panelHref: panelPathForRole(session.user.role),
-      }
-    : { authenticated: false as const };
+  const [categories, settings, headerNav, serviceNav, corporateNav] = await Promise.all([
+    getCategoriesForNav(),
+    getSettings(),
+    getNavItems("header"),
+    getNavItems("footer_services"),
+    getNavItems("footer_corporate"),
+  ]);
 
   const socials = [
     { href: settings.facebookUrl, label: "Facebook" },
@@ -59,18 +38,14 @@ export async function Header() {
 
   const serviceLinks = flattenNavLinks(serviceNav);
   const corporateLinks = flattenNavLinks(corporateNav);
-
   const mobileStrip = mobileStripFromCategories(categories);
 
   return (
     <HeaderShell
       top={
-        <TopBar
-          whatsappNumber={settings.whatsappNumber}
-          citySlug={city.slug}
-          weather={weather}
-          nextPrayer={nextPrayer}
-        />
+        <Suspense fallback={<div className="h-9 bg-ink/5" aria-hidden />}>
+          <HeaderTopBarServer />
+        </Suspense>
       }
       main={
         <>
@@ -86,7 +61,9 @@ export async function Header() {
               </nav>
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
                 <div className="hidden md:block">
-                  <AccountMenu />
+                  <Suspense fallback={null}>
+                    <AccountMenu />
+                  </Suspense>
                 </div>
                 <SiteMegaMenu
                   categories={categories}
@@ -95,12 +72,13 @@ export async function Header() {
                   corporate={corporateLinks}
                   whatsappNumber={settings.whatsappNumber}
                 />
-                <MobileMenu
-                  categories={categories}
-                  whatsappNumber={settings.whatsappNumber}
-                  account={account}
-                  socials={socials}
-                />
+                <Suspense fallback={null}>
+                  <MobileMenuWithSession
+                    categories={categories}
+                    whatsappNumber={settings.whatsappNumber}
+                    socials={socials}
+                  />
+                </Suspense>
               </div>
             </Container>
           </div>
@@ -110,8 +88,16 @@ export async function Header() {
       extras={
         settings.showRates !== "0" || settings.showTicker !== "0" ? (
           <>
-            {settings.showRates !== "0" ? <RatesBar /> : null}
-            {settings.showTicker !== "0" ? <BreakingTicker /> : null}
+            {settings.showRates !== "0" ? (
+              <Suspense fallback={<HeaderExtrasSkeleton />}>
+                <RatesBar />
+              </Suspense>
+            ) : null}
+            {settings.showTicker !== "0" ? (
+              <Suspense fallback={<HeaderExtrasSkeleton />}>
+                <BreakingTicker />
+              </Suspense>
+            ) : null}
           </>
         ) : null
       }

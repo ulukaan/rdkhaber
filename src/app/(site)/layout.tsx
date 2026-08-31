@@ -8,6 +8,8 @@ import { StickyFooterAd } from "@/components/ads/StickyFooterAd";
 import { OpeningAd } from "@/components/ads/OpeningAd";
 import { getActiveAd } from "@/lib/ads";
 
+export const revalidate = 60;
+
 export default async function SiteLayout({
   children,
 }: {

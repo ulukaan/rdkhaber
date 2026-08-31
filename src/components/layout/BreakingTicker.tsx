@@ -1,24 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { getBreakingTickerItems } from "@/lib/articles";
 import { Container } from "@/components/ui/Container";
 import { BreakingTickerTrack } from "@/components/layout/BreakingTickerTrack";
 
 export async function BreakingTicker() {
-  let items = await prisma.article.findMany({
-    where: { status: "PUBLISHED", isBreaking: true },
-    orderBy: { publishedAt: "desc" },
-    take: 10,
-    select: { title: true, slug: true },
-  });
-
-  if (items.length === 0) {
-    items = await prisma.article.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-      take: 8,
-      select: { title: true, slug: true },
-    });
-  }
-
+  const items = await getBreakingTickerItems();
   if (items.length === 0) return null;
 
   return (

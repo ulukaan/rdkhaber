@@ -6,6 +6,7 @@ import { ExternalLink, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { getPanelHome, getPanelNav, isNavActive } from "@/lib/panel-nav";
+import { panelFooterLabel, panelPathForRole } from "@/lib/role";
 
 export function PanelSidebar({
   role,
@@ -23,7 +24,7 @@ export function PanelSidebar({
   className?: string;
 }) {
   const pathname = usePathname();
-  const home = role === "ADMIN" ? "/admin" : "/editor";
+  const home = panelPathForRole(role);
   const homeLink = getPanelHome(role);
   const groups = getPanelNav(role);
   const homeActive = isNavActive(pathname, homeLink.href, home, true);
@@ -122,7 +123,7 @@ export function PanelSidebar({
           Siteyi aç
         </Link>
         <p className="hidden px-2.5 py-1 text-[10px] font-medium tracking-wide text-panel-text/50 lg:block">
-          {role === "ADMIN" ? "Yönetim paneli" : "Editör paneli"}
+          {panelFooterLabel(role)}
         </p>
       </div>
     </aside>

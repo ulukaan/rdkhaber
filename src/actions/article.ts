@@ -8,13 +8,15 @@ import { articleSchema, headlineDesignSchema } from "@/lib/validation";
 import { categoryHref } from "@/lib/category-path";
 import { requireRole } from "@/lib/auth-guard";
 import { sanitizeArticleHtml } from "@/lib/article-html";
+import { revalidatePublicSite } from "@/lib/revalidate-site";
+import { getEditableArticle, canEditArticle } from "@/lib/article-access";
 
 async function revalidateArticlePaths(opts: {
   slug: string;
   categoryId?: string | null;
   previousCategoryId?: string | null;
 }) {
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath(`/haber/${opts.slug}`);
   revalidatePath("/admin/makaleler");
   revalidatePath("/editor/makaleler");
@@ -191,6 +193,9 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
 
   const current = await prisma.article.findUnique({ where: { id } });
   if (!current) return { error: "Haber bulunamadı." };
+  if (!(await getEditableArticle(session, id))) {
+    return { error: "Bu haberi düzenleme yetkiniz yok." };
+  }
 
   const publishedAt = parsePublishedAt(data.publishedAt, data.status, current.publishedAt);
 
@@ -218,7 +223,7 @@ export async function saveHeadlineDesignAction(
   id: string,
   raw: Record<string, unknown>,
 ) {
-  const session = await requireRole(["ADMIN", "EDITOR"]);
+  const session = await requireRole(["ADMIN"]);
   const parsed = headlineDesignSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Geçersiz form" };
@@ -237,24 +242,20 @@ export async function saveHeadlineDesignAction(
     },
   });
 
-  revalidatePath("/");
+  revalidatePublicSite();
   revalidatePath("/admin/manset");
   revalidatePath("/editor/manset");
   redirect(`${session.user.role === "ADMIN" ? "/admin" : "/editor"}/manset`);
 }
 
 export async function updateArticleCategoryAction(id: string, categoryId: string) {
-  await requireRole(["ADMIN", "EDITOR"]);
+  const session = await requireRole(["ADMIN", "EDITOR"]);
   if (!categoryId.trim()) return { error: "Kategori seçin." };
 
-  const [article, category] = await Promise.all([
-    prisma.article.findUnique({
-      where: { id },
-      select: { slug: true, categoryId: true },
-    }),
-    prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } }),
-  ]);
-  if (!article) return { error: "Haber bulunamadı." };
+  const article = await getEditableArticle(session, id);
+  if (!article) return { error: "Haber bulunamadı veya yetkiniz yok." };
+
+  const category = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
   if (!category) return { error: "Kategori bulunamadı." };
   if (article.categoryId === categoryId) return { success: true as const };
 
@@ -272,11 +273,8 @@ export async function updateArticleCategoryAction(id: string, categoryId: string
 }
 
 export async function deleteArticleAction(id: string) {
-  await requireRole(["ADMIN", "EDITOR"]);
-  const article = await prisma.article.findUnique({
-    where: { id },
-    select: { slug: true, categoryId: true },
-  });
+  const session = await requireRole(["ADMIN", "EDITOR"]);
+  const article = await getEditableArticle(session, id);
   if (!article) return;
   await prisma.article.delete({ where: { id } });
   await revalidateArticlePaths({
@@ -286,14 +284,17 @@ export async function deleteArticleAction(id: string) {
 }
 
 export async function refreshArticleCacheAction(slug: string) {
-  await requireRole(["ADMIN", "EDITOR"]);
-  const article = await prisma.article.findUnique({
+  const session = await requireRole(["ADMIN", "EDITOR"]);
+  const row = await prisma.article.findUnique({
     where: { slug },
-    select: { categoryId: true },
+    select: { id: true, authorId: true, categoryId: true },
   });
+  if (!row || !canEditArticle(session, row)) {
+    return { error: "Haber bulunamadı veya yetkiniz yok." };
+  }
   await revalidateArticlePaths({
     slug,
-    categoryId: article?.categoryId,
+    categoryId: row.categoryId,
   });
   return { success: true as const };
 }

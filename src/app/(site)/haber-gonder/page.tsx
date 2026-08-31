@@ -80,7 +80,7 @@ export default async function SubmitNewsPage() {
               </p>
             ) : (
               <Link
-                href="/hesabim"
+                href="/hesabim/haberlerim"
                 className="flex items-center gap-2 px-1 text-sm font-semibold text-ink-soft hover:text-brand"
               >
                 <Send className="h-4 w-4" aria-hidden />

@@ -1,5 +1,7 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { categoryHref, normalizeCategoryHref, resolveCategoryHref } from "@/lib/category-path";
 
 export type NavLocation = "header" | "footer" | "footer_services" | "footer_corporate";
@@ -65,20 +67,26 @@ function toTree(
   return build(null);
 }
 
-export const getNavItems = cache(async (location: NavLocation): Promise<NavLink[]> => {
-  try {
-    const rows = await prisma.navItem.findMany({
-      where: { location },
-      orderBy: { order: "asc" },
-    });
-    if (rows.length > 0) {
-      return toTree(rows, true);
-    }
-  } catch {
-    // Client henüz generate edilmediyse veya tablo yoksa varsayılan menü.
-  }
-  return getDefaultNav(location);
-});
+export const getNavItems = cache((location: NavLocation): Promise<NavLink[]> =>
+  unstable_cache(
+    async () => {
+      try {
+        const rows = await prisma.navItem.findMany({
+          where: { location },
+          orderBy: { order: "asc" },
+        });
+        if (rows.length > 0) {
+          return toTree(rows, true);
+        }
+      } catch {
+        // Client henüz generate edilmediyse veya tablo yoksa varsayılan menü.
+      }
+      return getDefaultNav(location);
+    },
+    ["nav-items", location],
+    { revalidate: 300, tags: [CACHE_TAGS.nav] },
+  )(),
+);
 
 export async function getNavItemsForEdit(location: NavLocation): Promise<NavEditItem[]> {
   try {

@@ -21,7 +21,7 @@ export default async function NewsletterSettingsPage() {
           newsletterSmtpHost: settings.newsletterSmtpHost,
           newsletterSmtpPort: settings.newsletterSmtpPort,
           newsletterSmtpUser: settings.newsletterSmtpUser,
-          newsletterSmtpPass: settings.newsletterSmtpPass,
+          hasSmtpPass: Boolean(settings.newsletterSmtpPass.trim()),
           newsletterSmtpSecure: settings.newsletterSmtpSecure,
         }}
       />

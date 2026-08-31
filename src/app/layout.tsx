@@ -17,8 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Hostinger build workers cannot rely on MySQL; render on request instead.
-export const dynamic = "force-dynamic";
+// Hostinger build workers cannot rely on MySQL; public pages use ISR + data cache.
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();

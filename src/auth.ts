@@ -7,7 +7,7 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const REVALIDATE_MS = 5 * 60_000;
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt", maxAge: 60 * 60 * 12 },
   pages: { signIn: "/giris" },
@@ -45,7 +45,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
@@ -55,12 +55,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return token;
       }
 
+      if (trigger === "update" && session?.user) {
+        if (typeof session.user.name === "string") token.name = session.user.name;
+        if (typeof session.user.email === "string") token.email = session.user.email;
+        if ("image" in session.user) token.picture = session.user.image;
+        token.checkedAt = 0;
+      }
+
       const id = token.id as string | undefined;
       const checkedAt = typeof token.checkedAt === "number" ? token.checkedAt : 0;
       if (id && Date.now() - checkedAt > REVALIDATE_MS) {
         const dbUser = await prisma.user.findUnique({
           where: { id },
-          select: { active: true, role: true },
+          select: { active: true, role: true, name: true, email: true, avatarUrl: true },
         });
         token.checkedAt = Date.now();
         if (!dbUser || !dbUser.active) {
@@ -69,6 +76,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return token;
         }
         token.role = dbUser.role;
+        token.name = dbUser.name;
+        token.email = dbUser.email;
+        token.picture = dbUser.avatarUrl;
         token.active = true;
         delete token.error;
       }
@@ -81,6 +91,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
+        if (typeof token.name === "string") session.user.name = token.name;
+        if (typeof token.email === "string") session.user.email = token.email;
+        if (typeof token.picture === "string" || token.picture === null) {
+          session.user.image = token.picture as string | null;
+        }
       }
       return session;
     },

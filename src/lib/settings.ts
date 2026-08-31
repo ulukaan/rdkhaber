@@ -1,6 +1,7 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { ensureLegalPages } from "@/lib/legal-pages";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 export const DEFAULT_SETTINGS = {
   siteName: "Düzce Radikal",
@@ -120,59 +121,27 @@ export function serializeCategoryBlocks(blocks: CategoryBlockConfig[]) {
   return blocks.map((b) => `${b.slug}:${b.layout}`).join(",");
 }
 
-const SITE_EMAIL = "info@duzceradikal.com";
-
-function isLegacySiteEmail(email: string) {
-  const trimmed = email.trim().toLowerCase();
-  if (!trimmed) return true;
-  return trimmed.endsWith("@rdhaber.com");
+function materializeSettings(map: Record<string, string>): Record<SettingKey, string> {
+  const settings = { ...DEFAULT_SETTINGS, ...map } as Record<SettingKey, string>;
+  settings.logoUrl = coerceBrandAsset(settings.logoUrl, DEFAULT_SETTINGS.logoUrl);
+  settings.faviconUrl = coerceBrandAsset(
+    settings.faviconUrl,
+    DEFAULT_SETTINGS.faviconUrl,
+  );
+  return settings;
 }
 
-export const getSettings = cache(async (): Promise<Record<SettingKey, string>> => {
-  const rows = await prisma.setting.findMany();
-  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-  const settings = { ...DEFAULT_SETTINGS, ...map } as Record<SettingKey, string>;
+const loadSettings = unstable_cache(
+  async () => {
+    const rows = await prisma.setting.findMany();
+    return materializeSettings(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+  },
+  ["site-settings"],
+  { revalidate: 120, tags: [CACHE_TAGS.settings] },
+);
 
-  try {
-    if (settings.siteName.trim() === "RD Haber") {
-      await setSetting("siteName", DEFAULT_SETTINGS.siteName);
-      settings.siteName = DEFAULT_SETTINGS.siteName;
-    }
-    if (!settings.footerAbout.trim()) {
-      await setSetting("footerAbout", DEFAULT_SETTINGS.footerAbout);
-      settings.footerAbout = DEFAULT_SETTINGS.footerAbout;
-    }
-    settings.logoUrl = coerceBrandAsset(settings.logoUrl, DEFAULT_SETTINGS.logoUrl);
-    settings.faviconUrl = coerceBrandAsset(
-      settings.faviconUrl,
-      DEFAULT_SETTINGS.faviconUrl,
-    );
-    if (
-      !settings.instagramUrl.trim() ||
-      /instagram\.com\/rdkhaber\/?$/i.test(settings.instagramUrl.trim())
-    ) {
-      await setSetting("instagramUrl", DEFAULT_SETTINGS.instagramUrl);
-      settings.instagramUrl = DEFAULT_SETTINGS.instagramUrl;
-    }
-    if (isLegacySiteEmail(settings.contactEmail)) {
-      await setSetting("contactEmail", SITE_EMAIL);
-      settings.contactEmail = SITE_EMAIL;
-    }
-    if (isLegacySiteEmail(settings.tipLineEmail)) {
-      await setSetting("tipLineEmail", SITE_EMAIL);
-      settings.tipLineEmail = SITE_EMAIL;
-    }
-    if (!settings.newsletterFromEmail.trim() || isLegacySiteEmail(settings.newsletterFromEmail)) {
-      await setSetting("newsletterFromEmail", SITE_EMAIL);
-      settings.newsletterFromEmail = SITE_EMAIL;
-    }
-    await ensureLegalPages(settings.siteName);
-  } catch {
-    // İlk kurulumda tablo yoksa sayfayı yine de aç.
-  }
-
-  return settings;
-});
+/** İstek başına tek okuma; istekler arası 120 sn önbellek. */
+export const getSettings = cache(loadSettings);
 
 export async function setSetting(key: SettingKey, value: string) {
   return prisma.setting.upsert({

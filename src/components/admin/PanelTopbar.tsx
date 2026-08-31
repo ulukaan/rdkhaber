@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight, ExternalLink, LogOut, Menu } from "lucide-react";
 import type { Role } from "@prisma/client";
 import type { Session } from "next-auth";
-import { roleLabel } from "@/lib/role";
+import { panelBrandLabel, panelPathForRole, roleLabel } from "@/lib/role";
 import { signOutAction } from "@/actions/auth";
 import { getPanelBreadcrumb } from "@/lib/panel-nav";
 import { PanelBrand } from "@/components/admin/PanelBrand";
@@ -25,7 +25,7 @@ export function PanelTopbar({
 }) {
   const pathname = usePathname();
   const crumb = getPanelBreadcrumb(pathname, role);
-  const home = role === "ADMIN" ? "/admin" : "/editor";
+  const home = panelPathForRole(role);
 
   return (
     <header
@@ -47,7 +47,7 @@ export function PanelTopbar({
             href={home}
             siteName={siteName}
             logoUrl={logoUrl}
-            roleLabel={role === "ADMIN" ? "Yönetim" : "Editör"}
+            roleLabel={panelBrandLabel(role)}
             compact
           />
 

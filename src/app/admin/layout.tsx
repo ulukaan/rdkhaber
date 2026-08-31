@@ -1,6 +1,8 @@
 import { requireRole } from "@/lib/auth-guard";
 import { PanelShell } from "@/components/admin/PanelShell";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: {

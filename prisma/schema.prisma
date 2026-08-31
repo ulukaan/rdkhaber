@@ -155,6 +155,8 @@ model Article {
   @@index([status, publishedAt])
   @@index([categoryId])
   @@index([isBreaking])
+  @@index([status, isFeatured, publishedAt])
+  @@index([status, viewCount])
   @@index([sourceUrl])
 }
 

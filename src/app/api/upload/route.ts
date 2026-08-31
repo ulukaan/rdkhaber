@@ -12,7 +12,13 @@ const MAX_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "EDITOR")) {
+  if (!session?.user) {
+    return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+  }
+
+  const isStaff = session.user.role === "ADMIN" || session.user.role === "EDITOR";
+  const isMember = session.user.role === "USER";
+  if (!isStaff && !isMember) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
@@ -22,9 +28,9 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`upload:admin:${session.user.id}:${ip}`, {
-    limit: 40,
-    windowMs: 60_000,
+  const limited = rateLimit(`upload:${session.user.role}:${session.user.id}:${ip}`, {
+    limit: isMember ? 12 : 40,
+    windowMs: isMember ? 60 * 60_000 : 60_000,
   });
   if (!limited.ok) {
     return NextResponse.json(
@@ -38,8 +44,11 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Dosya bulunamadı" }, { status: 400 });
   }
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Dosya çok büyük (max 5MB)" }, { status: 400 });
+  if (file.size > (isMember ? 2 * 1024 * 1024 : MAX_SIZE)) {
+    return NextResponse.json(
+      { error: isMember ? "Dosya çok büyük (max 2MB)" : "Dosya çok büyük (max 5MB)" },
+      { status: 400 },
+    );
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -52,22 +61,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  const uploadDir = path.join(
+    process.cwd(),
+    "public",
+    "uploads",
+    isMember ? "avatars" : "",
+  );
   await mkdir(uploadDir, { recursive: true });
 
   const filename = `${randomUUID()}.${ext}`;
   await writeFile(path.join(uploadDir, filename), buffer);
 
-  const url = `/uploads/${filename}`;
-  await prisma.media.create({
-    data: {
-      url,
-      filename: file.name.slice(0, 180),
-      mimeType: mime,
-      size: file.size,
-      uploadedById: session.user.id,
-    },
-  });
+  const url = isMember ? `/uploads/avatars/${filename}` : `/uploads/${filename}`;
+  if (isStaff) {
+    await prisma.media.create({
+      data: {
+        url,
+        filename: file.name.slice(0, 180),
+        mimeType: mime,
+        size: file.size,
+        uploadedById: session.user.id,
+      },
+    });
+  }
 
   return NextResponse.json({ url });
 }

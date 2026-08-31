@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 export const articleSummarySelect = {
   id: true,
@@ -256,3 +258,27 @@ export function getEditorArticles(take = 5) {
     select: articleSummarySelect,
   });
 }
+
+export const getBreakingTickerItems = unstable_cache(
+  async () => {
+    let items = await prisma.article.findMany({
+      where: { status: "PUBLISHED", isBreaking: true },
+      orderBy: { publishedAt: "desc" },
+      take: 10,
+      select: { title: true, slug: true },
+    });
+
+    if (items.length === 0) {
+      items = await prisma.article.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: { publishedAt: "desc" },
+        take: 8,
+        select: { title: true, slug: true },
+      });
+    }
+
+    return items;
+  },
+  ["breaking-ticker"],
+  { revalidate: 30, tags: [CACHE_TAGS.breaking] },
+);

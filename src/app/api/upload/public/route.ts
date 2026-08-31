@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`upload:public:${ip}`, { limit: 8, windowMs: 60 * 60_000 });
+  const limited = rateLimit(`upload:public:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return NextResponse.json(
       { error: `Yükleme limiti aşıldı. ${limited.retryAfterSec} sn sonra tekrar deneyin.` },

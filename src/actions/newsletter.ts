@@ -80,12 +80,52 @@ export async function unsubscribeNewsletterAction(token: string) {
   return { success: true as const };
 }
 
+export async function setMemberNewsletterAction(subscribe: boolean) {
+  const session = await requireRole(["USER"]);
+  const email = normalizeEmail(session.user.email ?? "");
+  if (!email) return { error: "Hesap e-postası bulunamadı." };
+
+  const existing = await prisma.newsletterSubscriber.findUnique({ where: { email } });
+  if (subscribe) {
+    if (existing) {
+      await prisma.newsletterSubscriber.update({
+        where: { id: existing.id },
+        data: {
+          status: "ACTIVE",
+          name: session.user.name || existing.name,
+          source: existing.source || "uye",
+        },
+      });
+    } else {
+      await prisma.newsletterSubscriber.create({
+        data: {
+          email,
+          name: session.user.name ?? null,
+          status: "ACTIVE",
+          source: "uye",
+          token: newToken(),
+        },
+      });
+    }
+  } else if (existing && existing.status === "ACTIVE") {
+    await prisma.newsletterSubscriber.update({
+      where: { id: existing.id },
+      data: { status: "UNSUBSCRIBED" },
+    });
+  }
+
+  refresh();
+  revalidatePath("/hesabim");
+  revalidatePath("/hesabim/bulten");
+  return { success: true as const };
+}
+
 export async function unsubscribeNewsletterByEmailAction(email: string) {
   const { headers } = await import("next/headers");
   const { clientIp, rateLimit } = await import("@/lib/rate-limit");
   const h = await headers();
   const limited = rateLimit(`newsletter-unsub:${clientIp(h)}`, {
-    limit: 10,
+    limit: 5,
     windowMs: 60 * 60_000,
   });
   if (!limited.ok) {
@@ -99,16 +139,25 @@ export async function unsubscribeNewsletterByEmailAction(email: string) {
 
   const row = await prisma.newsletterSubscriber.findUnique({ where: { email: normalized } });
   if (row && row.status === "ACTIVE") {
-    await prisma.newsletterSubscriber.update({
-      where: { id: row.id },
-      data: { status: "UNSUBSCRIBED" },
-    });
-    refresh();
+    const settings = await getSettings();
+    const siteUrl = getSiteUrl();
+    const confirmUrl = `${siteUrl}/bulten/cikis?token=${row.token}`;
+    try {
+      await sendMail({
+        to: normalized,
+        subject: `${settings.siteName} — Abonelik iptali onayı`,
+        html: `<p>Bülten aboneliğinizi iptal etmek için aşağıdaki bağlantıya tıklayın:</p><p><a href="${confirmUrl}">Abonelikten çık</a></p><p>Bu talebi siz yapmadıysanız bu e-postayı yok sayın.</p>`,
+        logSource: "newsletter",
+      });
+    } catch {
+      return { error: "Onay e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin." };
+    }
   }
 
   return {
     success: true as const,
-    message: "Talebiniz alındı. Bu adrese artık bülten gönderilmeyecek.",
+    message:
+      "Talebiniz alındı. Kayıtlı bir adres ise onay bağlantısı e-postanıza gönderildi.",
   };
 }
 

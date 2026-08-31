@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getCategoriesWithChildren } from "@/lib/categories";
 import {
   getFeaturedArticles,
   getLatestArticles,
@@ -39,6 +39,8 @@ import { categoryHref } from "@/lib/category-path";
 import { getLatestInstagramPost } from "@/lib/instagram";
 import { InstagramLatestCard } from "@/components/home/InstagramLatestCard";
 
+export const revalidate = 60;
+
 export default async function HomePage() {
   const settings = await getSettings();
 
@@ -74,10 +76,7 @@ export default async function HomePage() {
     getLatestArticles(24),
     settings.showMostRead !== "0" ? getMostReadArticles(6) : Promise.resolve([]),
     settings.showVideos !== "0" ? getVideoArticles(6) : Promise.resolve([]),
-    prisma.category.findMany({
-      orderBy: { order: "asc" },
-      include: { children: { select: { slug: true } } },
-    }),
+    getCategoriesWithChildren(),
     getArticlesByCategory("gundem", 5),
     settings.showInterviews !== "0"
       ? getArticlesByCategory("roportaj", 4)

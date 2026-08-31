@@ -1,6 +1,6 @@
 /**
- * Basit bellek içi rate limit (tek süreç). Prod’da birden fazla instance varsa
- * Redis vb. gerekir; yine de brute-force ve spam’i ciddi azaltır.
+ * Basit bellek içi rate limit (tek süreç). Prod'da birden fazla instance varsa
+ * Redis vb. gerekir; yine de brute-force ve spam'i ciddi azaltır.
  */
 type Bucket = { count: number; resetAt: number };
 
@@ -28,14 +28,40 @@ export function rateLimit(
   return { ok: true };
 }
 
+function isPrivateOrLocalIp(ip: string) {
+  const value = ip.trim().toLowerCase();
+  if (!value || value === "unknown") return true;
+  if (value === "::1" || value.startsWith("fe80:") || value.startsWith("fc") || value.startsWith("fd")) {
+    return true;
+  }
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(value)) {
+    const [a, b] = value.split(".").map(Number);
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+  }
+  return false;
+}
+
+/** Hostinger/nginx: önce x-real-ip; spoof edilebilir x-forwarded-for zincirinin sonundan seç. */
 export function clientIp(headers: Headers | { get(name: string): string | null }) {
+  const real = headers.get("x-real-ip")?.trim();
+  if (real && !isPrivateOrLocalIp(real)) return real.slice(0, 64);
+
   const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first.slice(0, 64);
+    const parts = forwarded
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    for (let i = parts.length - 1; i >= 0; i -= 1) {
+      const ip = parts[i];
+      if (ip && !isPrivateOrLocalIp(ip)) return ip.slice(0, 64);
+    }
   }
-  const real = headers.get("x-real-ip");
-  if (real) return real.trim().slice(0, 64);
+
   return "unknown";
 }
 

@@ -18,7 +18,7 @@ export function NewsletterSmtpForm({
     newsletterSmtpHost: string;
     newsletterSmtpPort: string;
     newsletterSmtpUser: string;
-    newsletterSmtpPass: string;
+    hasSmtpPass: boolean;
     newsletterSmtpSecure: string;
   };
 }) {
@@ -107,7 +107,7 @@ export function NewsletterSmtpForm({
               id="nl-pass"
               name="newsletterSmtpPass"
               type="password"
-              placeholder={defaults.newsletterSmtpPass ? "Kayıtlı şifreyi korumak için boş bırakın" : ""}
+              placeholder={defaults.hasSmtpPass ? "Kayıtlı şifreyi korumak için boş bırakın" : ""}
               autoComplete="new-password"
             />
             <FieldHint>Boş bırakırsanız mevcut şifre değişmez.</FieldHint>
