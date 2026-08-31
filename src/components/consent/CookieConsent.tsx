@@ -16,6 +16,7 @@ import {
   type ConsentState,
 } from "@/lib/cookie-consent";
 import { applyConsentMode } from "@/lib/consent-mode";
+import { cn } from "@/lib/utils";
 import { ConsentScripts } from "@/components/consent/ConsentScripts";
 
 type Props = {
