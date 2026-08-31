@@ -15,6 +15,7 @@ type TipValues = z.infer<typeof tipSchema>;
 
 export function TipForm() {
   const [done, setDone] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -37,6 +38,7 @@ export function TipForm() {
       setError(result.error);
       return;
     }
+    setEmailSent(Boolean(result?.emailSent));
     setDone(true);
     setAttachments([]);
     reset();
@@ -47,7 +49,14 @@ export function TipForm() {
       <div className="border border-border bg-surface p-6 text-center">
         <p className="text-lg font-extrabold text-ink">İhbarınız alındı</p>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          Teşekkür ederiz. Ekibimiz en kısa sürede değerlendirecek. Kimliğiniz gizli tutulur.
+          Teşekkür ederiz. Ekibimiz en kısa sürede değerlendirecek; uygun görülürse yayına alınacaktır.
+          Kimliğiniz gizli tutulur.
+          {emailSent ? (
+            <>
+              {" "}
+              Onay e-postası adresinize gönderildi.
+            </>
+          ) : null}
         </p>
         <button
           type="button"
@@ -80,7 +89,7 @@ export function TipForm() {
       >
         <Input
           id="contactInfo"
-          placeholder="Telefon veya e-posta — paylaşmak zorunda değilsiniz"
+          placeholder="E-posta veya telefon — e-posta yazarsanız onay mesajı alırsınız"
           {...register("contactInfo")}
         />
       </FieldGroup>

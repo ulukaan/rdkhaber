@@ -9,8 +9,9 @@ import type { SubmissionStatus } from "@prisma/client";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site-url";
-import { sendPanelNotificationEmail } from "@/lib/notify-email";
+import { sendPanelNotificationEmail, sendSubmitterConfirmationEmail } from "@/lib/notify-email";
 import { parseAttachmentUrls, serializeAttachmentUrls } from "@/lib/attachments";
+import { extractEmail } from "@/lib/extract-email";
 
 export async function submitTipAction(values: {
   message: string;
@@ -61,7 +62,18 @@ export async function submitTipAction(values: {
     panelHref: `${siteUrl}/admin/ihbarlar`,
   });
 
-  return { success: true };
+  const recipientEmail = extractEmail(parsed.data.contactInfo);
+  let emailSent = false;
+  if (recipientEmail) {
+    await sendSubmitterConfirmationEmail({
+      to: recipientEmail,
+      kind: "tip",
+      siteUrl,
+    });
+    emailSent = true;
+  }
+
+  return { success: true as const, emailSent };
 }
 
 export async function submitContactAction(values: {

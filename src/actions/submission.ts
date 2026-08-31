@@ -17,7 +17,8 @@ import {
 } from "@/lib/attachments";
 import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site-url";
-import { sendPanelNotificationEmail } from "@/lib/notify-email";
+import { sendPanelNotificationEmail, sendSubmitterConfirmationEmail } from "@/lib/notify-email";
+import { isValidEmail } from "@/lib/extract-email";
 
 export async function submitNewsAction(values: {
   title: string;
@@ -79,7 +80,20 @@ export async function submitNewsAction(values: {
     panelHref: `${siteUrl}/admin/haber-basvurulari`,
   });
 
-  return { success: true };
+  const recipientEmail = session?.user?.email ?? parsed.data.submitterEmail?.trim();
+  let emailSent = false;
+  if (isValidEmail(recipientEmail)) {
+    await sendSubmitterConfirmationEmail({
+      to: recipientEmail,
+      kind: "news",
+      recipientName: session?.user?.name ?? parsed.data.submitterName?.trim(),
+      referenceTitle: parsed.data.title,
+      siteUrl,
+    });
+    emailSent = true;
+  }
+
+  return { success: true as const, emailSent };
 }
 
 export async function rejectSubmissionAction(id: string) {
