@@ -58,7 +58,7 @@ function underThousand(n: number) {
   return parts.join(" ");
 }
 
-export function cardinal(n: number) {
+export function cardinal(n: number): string {
   if (!Number.isFinite(n)) return String(n);
   n = Math.trunc(n);
   if (n === 0) return "sıfır";
