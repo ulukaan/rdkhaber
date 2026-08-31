@@ -15,6 +15,7 @@ type SubmissionValues = z.infer<typeof newsSubmissionSchema>;
 
 export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
   const [done, setDone] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -37,6 +38,7 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
       setError(result.error);
       return;
     }
+    setEmailSent(Boolean(result?.emailSent));
     setDone(true);
     setAttachments([]);
     reset();
@@ -47,7 +49,13 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
       <div className="border border-border bg-surface p-6 text-center">
         <p className="text-lg font-extrabold text-ink">Haberiniz bize ulaştı</p>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          Editörlerimiz inceledikten sonra uygun görülürse yayınlanacak. Katkınız için teşekkürler.
+          Editörlerimiz inceledikten sonra uygun görülürse yayınlanacaktır. Katkınız için teşekkürler.
+          {emailSent ? (
+            <>
+              {" "}
+              Onay e-postası adresinize gönderildi.
+            </>
+          ) : null}
         </p>
         <button
           type="button"
@@ -90,11 +98,17 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
             <Input id="submitterName" {...register("submitterName")} />
           </FieldGroup>
           <FieldGroup
-            label="E-posta (isteğe bağlı)"
+            label="E-posta"
             htmlFor="submitterEmail"
             error={errors.submitterEmail?.message}
           >
-            <Input id="submitterEmail" type="email" {...register("submitterEmail")} />
+            <Input
+              id="submitterEmail"
+              type="email"
+              autoComplete="email"
+              placeholder="Onay mesajı bu adrese gönderilir"
+              {...register("submitterEmail", { required: "Onay e-postası için geçerli bir adres girin" })}
+            />
           </FieldGroup>
         </div>
       ) : null}
