@@ -1,8 +1,11 @@
 "use server";
 
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth-guard";
+import { buildAdsTxtContent } from "@/lib/ads-txt";
 import {
   replaceNavItems,
   getDefaultNav,
@@ -198,6 +201,12 @@ export async function saveGoogleAdsAction(raw: Record<string, string>) {
     googleAdsenseClient: client,
     googleAdsenseAutoAds: autoAds,
   });
+
+  const adsTxt = buildAdsTxtContent(client);
+  if (adsTxt) {
+    writeFileSync(resolve(process.cwd(), "public/ads.txt"), adsTxt, "utf8");
+  }
+
   revalidatePublicSite({ layout: true });
   revalidatePath("/ads.txt");
   revalidatePath("/admin/gorunum/google");
