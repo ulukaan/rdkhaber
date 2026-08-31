@@ -32,9 +32,9 @@ export function ArticleCategoryChrome({
   const [active, setActive] = useState<CategoryActiveDetail>({ name, slug, color });
   const bg = active.color || "var(--brand)";
 
-  useEffect(() => {
+  if (active.name !== name || active.slug !== slug || active.color !== color) {
     setActive({ name, slug, color });
-  }, [name, slug, color]);
+  }
 
   useEffect(() => {
     let frame = 0;

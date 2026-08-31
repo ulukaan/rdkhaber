@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function AdModal({
   imageUrl,
@@ -11,14 +11,13 @@ export function AdModal({
   targetUrl: string;
   name: string;
 }) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
     const key = "rd-ad-modal-077";
-    if (sessionStorage.getItem(key)) return;
+    if (sessionStorage.getItem(key)) return false;
     sessionStorage.setItem(key, "1");
-    setOpen(true);
-  }, []);
+    return true;
+  });
 
   if (!open) return null;
 

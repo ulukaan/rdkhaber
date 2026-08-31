@@ -31,18 +31,24 @@ type Props = {
 export function CookieConsent(props: Props) {
   const pathname = usePathname();
   const panel = pathname.startsWith("/admin") || pathname.startsWith("/editor");
-  const [ready, setReady] = useState(false);
-  const [consent, setConsent] = useState<ConsentState | null>(null);
+  const [ready, setReady] = useState(() => typeof window !== "undefined");
+  const [consent, setConsent] = useState<ConsentState | null>(() =>
+    typeof window !== "undefined" ? readConsentCookie() : null,
+  );
   const [open, setOpen] = useState(false);
   const [details, setDetails] = useState(false);
-  const [draft, setDraft] = useState<ConsentState>(rejectOptionalConsent());
+  const [draft, setDraft] = useState<ConsentState>(() =>
+    typeof window !== "undefined" ? readConsentCookie() ?? rejectOptionalConsent() : rejectOptionalConsent(),
+  );
 
   useEffect(() => {
-    const current = readConsentCookie();
-    setConsent(current);
-    if (current) setDraft(current);
-    setReady(true);
-    setOpen(!current && !panel);
+    queueMicrotask(() => {
+      const current = readConsentCookie();
+      setConsent(current);
+      if (current) setDraft(current);
+      setReady(true);
+      setOpen(!current && !panel);
+    });
 
     const onChange = (event: Event) => {
       const next = (event as CustomEvent<ConsentState>).detail;

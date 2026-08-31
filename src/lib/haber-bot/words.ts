@@ -61,7 +61,7 @@ export function applyWordPairs(text: string, pairs: WordPair[]) {
     .filter((p) => p.find.trim())
     .sort((a, b) => b.find.length - a.find.length || a.find.localeCompare(b.find, "tr"));
   const placeholders: string[] = [];
-  let result = ordered.reduce(
+  const result = ordered.reduce(
     (acc, pair) => replacePlainOnce(acc, pair.find.trim(), pair.replace, placeholders),
     text,
   );

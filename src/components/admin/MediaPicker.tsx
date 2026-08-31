@@ -30,8 +30,8 @@ export function MediaPicker({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setLoading(true);
     const timer = window.setTimeout(async () => {
+      setLoading(true);
       try {
         const rows = await listMediaAction(query.trim() || undefined);
         if (!cancelled) setItems(rows);

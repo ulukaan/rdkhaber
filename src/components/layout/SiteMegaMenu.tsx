@@ -130,11 +130,11 @@ export function SiteMegaMenu({
 
   useEffect(() => {
     if (open) {
-      setMounted(true);
+      queueMicrotask(() => setMounted(true));
       const frame = requestAnimationFrame(() => setVisible(true));
       return () => cancelAnimationFrame(frame);
     }
-    setVisible(false);
+    queueMicrotask(() => setVisible(false));
     const timer = window.setTimeout(() => setMounted(false), 300);
     return () => window.clearTimeout(timer);
   }, [open]);

@@ -1,16 +1,14 @@
 import { Eye, MessageSquare, Newspaper, Send, Users } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatCard } from "@/components/admin/StatCard";
 import { Table, Th, Td } from "@/components/admin/Table";
+import { loadStatsPageData } from "@/lib/stats-page-data";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "İstatistikler" };
 
 export default async function StatsPage() {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60_000);
-
-  const [
+  const {
     totalViews,
     publishedCount,
     commentCount,
@@ -19,23 +17,7 @@ export default async function StatsPage() {
     topArticles,
     submissions30,
     tips30,
-  ] = await Promise.all([
-    prisma.article.aggregate({ _sum: { viewCount: true } }),
-    prisma.article.count({ where: { status: "PUBLISHED" } }),
-    prisma.comment.count({ where: { approved: true } }),
-    prisma.user.count({ where: { active: true } }),
-    prisma.article.count({
-      where: { status: "PUBLISHED", publishedAt: { gte: thirtyDaysAgo } },
-    }),
-    prisma.article.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { viewCount: "desc" },
-      take: 10,
-      select: { title: true, slug: true, viewCount: true, publishedAt: true },
-    }),
-    prisma.newsSubmission.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-    prisma.tip.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
-  ]);
+  } = await loadStatsPageData();
 
   return (
     <>
@@ -45,11 +27,7 @@ export default async function StatsPage() {
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        <StatCard
-          label="Toplam görüntülenme"
-          value={totalViews._sum.viewCount ?? 0}
-          Icon={Eye}
-        />
+        <StatCard label="Toplam görüntülenme" value={totalViews} Icon={Eye} />
         <StatCard label="Yayında haber" value={publishedCount} Icon={Newspaper} />
         <StatCard label="Onaylı yorum" value={commentCount} Icon={MessageSquare} />
         <StatCard label="Aktif üye" value={activeUsers} Icon={Users} />

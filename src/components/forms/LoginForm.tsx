@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
@@ -16,6 +17,7 @@ import type { z } from "zod";
 type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
@@ -65,7 +67,8 @@ export function LoginForm() {
       return;
     }
 
-    window.location.href = "/post-giris";
+    router.push("/post-giris");
+    router.refresh();
   };
 
   const onVerify2fa = async () => {
@@ -81,7 +84,8 @@ export function LoginForm() {
       setServerError(result.error);
       return;
     }
-    window.location.href = "/post-giris";
+    router.push("/post-giris");
+    router.refresh();
   };
 
   if (step2) {

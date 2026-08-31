@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { FacebookIcon, WhatsAppIcon, XIcon } from "@/components/icons/SocialIcons";
+import { resolveShareUrl } from "@/lib/share-url";
 
 export function ShareButtons({
   url,
@@ -12,15 +13,7 @@ export function ShareButtons({
   title: string;
   size?: "sm" | "md";
 }) {
-  const [shareUrl, setShareUrl] = useState(url);
-
-  useEffect(() => {
-    if (url.startsWith("http")) {
-      setShareUrl(url);
-      return;
-    }
-    setShareUrl(`${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`);
-  }, [url]);
+  const shareUrl = useMemo(() => resolveShareUrl(url), [url]);
 
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);

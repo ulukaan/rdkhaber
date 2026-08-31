@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Link2 } from "lucide-react";
 import {
   FacebookIcon,
@@ -9,18 +9,11 @@ import {
   XIcon,
 } from "@/components/icons/SocialIcons";
 import { BookmarkButton } from "@/components/account/BookmarkButton";
+import { resolveShareUrl } from "@/lib/share-url";
 
 export function ShareBar({ url, title, articleId }: { url: string; title: string; articleId?: string }) {
   const [copied, setCopied] = useState(false);
-  const [shareUrl, setShareUrl] = useState(url);
-
-  useEffect(() => {
-    if (url.startsWith("http")) {
-      setShareUrl(url);
-      return;
-    }
-    setShareUrl(`${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`);
-  }, [url]);
+  const shareUrl = useMemo(() => resolveShareUrl(url), [url]);
 
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);

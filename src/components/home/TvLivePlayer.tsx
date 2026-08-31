@@ -16,7 +16,6 @@ function HlsPlayer({ url, title }: { url: string; title: string }) {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    setError(false);
 
     let hls: Hls | null = null;
 
@@ -37,7 +36,7 @@ function HlsPlayer({ url, title }: { url: string; title: string }) {
         if (data.fatal) setError(true);
       });
     } else {
-      setError(true);
+      queueMicrotask(() => setError(true));
     }
 
     return () => {

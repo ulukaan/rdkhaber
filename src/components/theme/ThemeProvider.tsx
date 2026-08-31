@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useLayoutEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
@@ -9,16 +9,19 @@ const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
   toggle: () => {},
 });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+function readTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  const stored = localStorage.getItem("rdk_theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return stored === "dark" || stored === "light" ? stored : prefersDark ? "dark" : "light";
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem("rdk_theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = stored === "dark" || stored === "light" ? stored : prefersDark ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-  }, []);
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(readTheme);
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   const toggle = () => {
     setTheme((current) => {
