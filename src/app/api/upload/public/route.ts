@@ -12,6 +12,7 @@ import {
   isVideoMime,
 } from "@/lib/upload-safe";
 import { verifyPublicUploadToken } from "@/lib/upload-token";
+import { optimizeImageBuffer } from "@/lib/image-optimize";
 
 const IMAGE_MAX_ANON = 2 * 1024 * 1024;
 const IMAGE_MAX_AUTH = 5 * 1024 * 1024;
@@ -51,8 +52,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Dosya bulunamadı" }, { status: 400 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const mime = detectUploadMime(buffer);
+  let buffer = Buffer.from(await file.arrayBuffer());
+  let mime = detectUploadMime(buffer);
   if (!mime) {
     return NextResponse.json(
       { error: "Yalnızca fotoğraf (JPG, PNG, WEBP, GIF) veya video (MP4, WEBM) yükleyebilirsiniz" },
@@ -64,6 +65,14 @@ export async function POST(req: Request) {
   const isVideo = isVideoMime(mime);
   if (!isImage && !isVideo) {
     return NextResponse.json({ error: "Desteklenmeyen dosya türü" }, { status: 400 });
+  }
+
+  let ext = extensionForMime(mime);
+  if (isImage && ext) {
+    const optimized = await optimizeImageBuffer(buffer);
+    buffer = Buffer.from(optimized.buffer);
+    mime = optimized.mime;
+    ext = optimized.ext;
   }
 
   if (isVideo && !session?.user) {
@@ -87,7 +96,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const ext = extensionForMime(mime);
   if (!ext) {
     return NextResponse.json({ error: "Desteklenmeyen dosya türü" }, { status: 400 });
   }

@@ -10,11 +10,15 @@ export async function ArticleListPage({
   filter,
   title = "Haberler",
   description = "Tüm haberleri yönetin.",
+  bulkEnabled = false,
+  canDelete = false,
 }: {
   basePath: string;
   filter?: "archived" | "featured" | "breaking" | "video";
   title?: string;
   description?: string;
+  bulkEnabled?: boolean;
+  canDelete?: boolean;
 }) {
   const [articles, categoryRows] = await Promise.all([
     getAllArticlesForPanel(filter),
@@ -44,6 +48,8 @@ export async function ArticleListPage({
         categories={categories}
         basePath={basePath}
         designBasePath={filter === "featured" ? basePath.replace("/makaleler", "/manset") : undefined}
+        bulkEnabled={bulkEnabled}
+        canDelete={canDelete}
       />
     </>
   );

@@ -7,6 +7,8 @@ import { newsSubmissionSchema } from "@/lib/validation";
 import { submitNewsAction } from "@/actions/submission";
 import { serializeAttachmentUrls } from "@/lib/attachments";
 import { AttachmentUploadField } from "@/components/forms/AttachmentUploadField";
+import { TurnstileWidget } from "@/components/captcha/TurnstileWidget";
+import { captchaConfigured } from "@/lib/captcha-client";
 import { FieldGroup, Input, Textarea } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import type { z } from "zod";
@@ -19,6 +21,7 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [captchaToken, setCaptchaToken] = useState("");
   const {
     register,
     handleSubmit,
@@ -27,11 +30,17 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
   } = useForm<SubmissionValues>({ resolver: zodResolver(newsSubmissionSchema) });
 
   const onSubmit = async (values: SubmissionValues) => {
+    if (captchaConfigured() && !captchaToken) {
+      setError("Güvenlik doğrulamasını tamamlayın.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     const result = await submitNewsAction({
       ...values,
       attachmentUrl: serializeAttachmentUrls(attachments) ?? undefined,
+      captchaToken,
     });
     setLoading(false);
     if (result?.error) {
@@ -41,6 +50,7 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
     setEmailSent(Boolean(result?.emailSent));
     setDone(true);
     setAttachments([]);
+    setCaptchaToken("");
     reset();
   };
 
@@ -112,6 +122,8 @@ export function NewsSubmissionForm({ loggedIn }: { loggedIn: boolean }) {
           </FieldGroup>
         </div>
       ) : null}
+
+      <TurnstileWidget onToken={setCaptchaToken} />
 
       {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
 

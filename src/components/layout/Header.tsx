@@ -14,6 +14,7 @@ import { TarifParkLink } from "@/components/layout/TarifParkLink";
 import { HeaderTopBarServer } from "@/components/layout/HeaderTopBarServer";
 import { MobileMenuWithSession } from "@/components/layout/MobileMenuWithSession";
 import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { mobileStripFromCategories } from "@/lib/mobile-category-strip";
 
 function HeaderExtrasSkeleton() {
@@ -60,6 +61,7 @@ export async function Header() {
                 <TarifParkLink />
               </nav>
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+                <ThemeToggle className="hidden sm:inline-flex" />
                 <div className="hidden md:block">
                   <Suspense fallback={null}>
                     <AccountMenu />

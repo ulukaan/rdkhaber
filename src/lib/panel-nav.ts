@@ -29,6 +29,8 @@ import {
   Mail,
   Inbox,
   ChartNoAxesCombined,
+  Shield,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 import { panelBrandLabel, panelPathForRole } from "@/lib/role";
@@ -147,6 +149,9 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
         label: "Sistem",
         adminOnly: true,
         items: [
+          { href: "/admin/istatistikler", label: "İstatistikler", Icon: ChartNoAxesCombined },
+          { href: "/admin/audit-log", label: "Denetim kaydı", Icon: ScrollText },
+          { href: "/admin/guvenlik", label: "Güvenlik (2FA)", Icon: Shield },
           { href: "/admin/kullanicilar", label: "Kullanıcılar", Icon: Users },
           { href: "/admin/ayarlar", label: "Ayarlar", Icon: Settings },
           { href: "/admin/kunye", label: "Künye", Icon: BookUser },

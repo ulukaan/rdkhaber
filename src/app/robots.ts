@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/editor/", "/api/", "/hesabim"],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    sitemap: [`${base}/sitemap.xml`, `${base}/news-sitemap.xml`],
     host: base,
   };
 }

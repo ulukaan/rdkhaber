@@ -30,6 +30,7 @@ import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { AuthorByline } from "@/components/news/AuthorByline";
 import { sanitizeArticleHtml } from "@/lib/article-html";
 import { authorHref } from "@/lib/authors";
+import { buildNewsArticleJsonLd } from "@/lib/json-ld";
 import { RecordArticleRead } from "@/components/account/RecordArticleRead";
 
 export async function generateMetadata({
@@ -44,11 +45,17 @@ export async function generateMetadata({
     title: article.seoTitle?.trim() || article.title,
     description: article.seoDescription?.trim() || article.summary,
     keywords: article.seoKeywords?.trim() || undefined,
+    alternates: {
+      canonical: `/haber/${article.slug}`,
+    },
     openGraph: {
       type: "article",
       title: article.seoTitle?.trim() || article.title,
       description: article.seoDescription?.trim() || article.summary,
       images: article.coverImageUrl ? [article.coverImageUrl] : undefined,
+      publishedTime: article.publishedAt?.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
+      authors: [article.author.name],
     },
   };
 }
@@ -108,8 +115,23 @@ export default async function ArticlePage({
   const relatedForSidebar = related.filter((a) => a.id !== article.id);
   const mostReadForSidebar = mostRead.filter((a) => a.id !== article.id);
 
+  const jsonLd = buildNewsArticleJsonLd({
+    title: article.title,
+    summary: article.summary,
+    slug: article.slug,
+    coverImageUrl: article.coverImageUrl,
+    publishedAt: article.publishedAt,
+    updatedAt: article.updatedAt,
+    authorName: byline || article.author.name,
+    siteName: settings.siteName,
+  });
+
   return (
     <article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header
         id="article-main"
         data-url={articleUrl}

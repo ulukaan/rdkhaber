@@ -176,18 +176,39 @@ export function incrementViewCount(id: string) {
   });
 }
 
-export function searchArticles(query: string, take = 20) {
+export function searchArticles(query: string, take = 20, skip = 0) {
+  const q = query.trim();
+  if (!q) return Promise.resolve([]);
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
       OR: [
-        { title: { contains: query } },
-        { summary: { contains: query } },
+        { title: { contains: q } },
+        { summary: { contains: q } },
+        { content: { contains: q } },
+        { tags: { some: { name: { contains: q } } } },
       ],
     },
     orderBy: { publishedAt: "desc" },
+    skip,
     take,
     select: articleSummarySelect,
+  });
+}
+
+export function countSearchArticles(query: string) {
+  const q = query.trim();
+  if (!q) return Promise.resolve(0);
+  return prisma.article.count({
+    where: {
+      status: "PUBLISHED",
+      OR: [
+        { title: { contains: q } },
+        { summary: { contains: q } },
+        { content: { contains: q } },
+        { tags: { some: { name: { contains: q } } } },
+      ],
+    },
   });
 }
 

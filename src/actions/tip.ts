@@ -12,17 +12,23 @@ import { getSiteUrl } from "@/lib/site-url";
 import { sendPanelNotificationEmail, sendSubmitterConfirmationEmail } from "@/lib/notify-email";
 import { parseAttachmentUrls, serializeAttachmentUrls } from "@/lib/attachments";
 import { extractEmail } from "@/lib/extract-email";
+import { verifyTurnstileToken } from "@/lib/captcha";
+import { notifyAdmins } from "@/lib/notifications";
 
 export async function submitTipAction(values: {
   message: string;
   contactInfo?: string;
   attachmentUrl?: string;
+  captchaToken?: string;
 }) {
   const h = await headers();
   const limited = rateLimit(`tip:${clientIp(h)}`, { limit: 8, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla ihbar. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
+
+  const captchaOk = await verifyTurnstileToken(values.captchaToken ?? "", clientIp(h));
+  if (!captchaOk) return { error: "Güvenlik doğrulaması başarısız." };
 
   const parsed = tipSchema.safeParse(values);
   if (!parsed.success) {
@@ -60,6 +66,12 @@ export async function submitTipAction(values: {
       },
     ],
     panelHref: `${siteUrl}/admin/ihbarlar`,
+  });
+
+  await notifyAdmins({
+    title: "Yeni ihbar",
+    body: parsed.data.message.slice(0, 180),
+    href: "/admin/ihbarlar",
   });
 
   const recipientEmail = extractEmail(parsed.data.contactInfo);

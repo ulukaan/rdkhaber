@@ -5,6 +5,8 @@ import { getSettings } from "@/lib/settings";
 import { darkenColor } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/site-url";
 import { CookieConsent } from "@/components/consent/CookieConsent";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import {
   parseCustomLinkTags,
   parseCustomMetaTags,
@@ -106,18 +108,22 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             type={link.type}
           />
         ))}
+        <link rel="alternate" type="application/rss+xml" title={`${settings.siteName} RSS`} href="/feed.xml" />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
-        <CookieConsent
-          analyticsConfigured={Boolean(gaId || gtmId || customBodyEndHtml)}
-          adsConfigured={Boolean(adsenseClient && adsenseAuto)}
-          gaId={gaId}
-          gtmId={gtmId}
-          adsenseClient={adsenseClient}
-          adsenseAuto={adsenseAuto}
-          customBodyEndHtml={customBodyEndHtml}
-        />
+        <ThemeProvider>
+          {children}
+          <ServiceWorkerRegister />
+          <CookieConsent
+            analyticsConfigured={Boolean(gaId || gtmId || customBodyEndHtml)}
+            adsConfigured={Boolean(adsenseClient && adsenseAuto)}
+            gaId={gaId}
+            gtmId={gtmId}
+            adsenseClient={adsenseClient}
+            adsenseAuto={adsenseAuto}
+            customBodyEndHtml={customBodyEndHtml}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );

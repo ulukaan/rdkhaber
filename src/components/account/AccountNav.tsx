@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@prisma/client";
 import {
+  Bell,
+  Shield,
   Bookmark,
   BookOpen,
   LayoutDashboard,
@@ -33,6 +35,8 @@ const LINKS: AccountLink[] = [
   { href: "/hesabim/haberlerim", label: "Haberlerim", Icon: Newspaper },
   { href: "/hesabim/yorumlarim", label: "Yorumlarım", Icon: MessageSquare },
   { href: "/hesabim/profil", label: "Profil", Icon: UserRound },
+  { href: "/hesabim/bildirimler", label: "Bildirimler", Icon: Bell },
+  { href: "/hesabim/verilerim", label: "Verilerim (KVKK)", Icon: Shield },
   { href: "/hesabim/haber-gonder", label: "Haber gönder", Icon: Send },
   { href: "/hesabim/ihbar", label: "İhbar hattı", Icon: Megaphone },
   { href: "/hesabim/bulten", label: "Bülten", Icon: Mail },

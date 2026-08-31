@@ -40,6 +40,8 @@ model User {
   avatarUrl      String?
   bio            String?  @db.Text
   active         Boolean  @default(true)
+  totpSecret     String?
+  totpEnabled    Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -52,6 +54,9 @@ model User {
   reads          ArticleRead[]
   following      AuthorFollow[] @relation("UserFollows")
   followers      AuthorFollow[] @relation("UserFollowers")
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+  articleRevisions ArticleRevision[]
 
   @@index([role])
 }
@@ -157,6 +162,7 @@ model Article {
   images        ArticleImage[]
   bookmarks     ArticleBookmark[]
   reads         ArticleRead[]
+  revisions     ArticleRevision[]
 
   @@index([status, publishedAt])
   @@index([categoryId])
@@ -434,4 +440,46 @@ model MailboxMessage {
 
   @@unique([direction, externalId])
   @@index([direction, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String?
+  entityId  String?
+  meta      String?  @db.Text
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([action])
+}
+
+model ArticleRevision {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshot  String   @db.LongText
+  createdAt DateTime @default(now())
+
+  @@index([articleId, createdAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String    @db.Text
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }

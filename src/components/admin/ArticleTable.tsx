@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Pencil, Eye, LayoutTemplate } from "lucide-react";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
 import { Badge } from "@/components/ui/Badge";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { ArticleCategorySelect } from "@/components/admin/ArticleCategorySelect";
+import { ArticleBulkToolbar } from "@/components/admin/ArticleBulkToolbar";
 import { deleteArticleAction } from "@/actions/article";
 import { formatDate } from "@/lib/utils";
 import { CoverImage } from "@/components/news/CoverImage";
@@ -38,14 +42,27 @@ export function ArticleTable({
   categories,
   basePath,
   designBasePath,
+  bulkEnabled = false,
+  canDelete = false,
 }: {
   articles: ArticleRow[];
   categories: CategoryOption[];
   basePath: string;
   designBasePath?: string;
+  bulkEnabled?: boolean;
+  canDelete?: boolean;
 }) {
   const siteUrl = getSiteUrl().replace(/\/$/, "");
-  const colSpan = designBasePath ? 8 : 7;
+  const colSpan = (designBasePath ? 8 : 7) + (bulkEnabled ? 1 : 0);
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggle = (id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleAll = () => {
+    setSelected((prev) => (prev.length === articles.length ? [] : articles.map((a) => a.id)));
+  };
 
   if (articles.length === 0) {
     return (
@@ -78,17 +95,37 @@ export function ArticleTable({
 
   return (
     <>
+      {bulkEnabled ? (
+        <ArticleBulkToolbar
+          selectedIds={selected}
+          onClear={() => setSelected([])}
+          canDelete={canDelete}
+        />
+      ) : null}
       <ArticleMobileList
         articles={articles}
         basePath={basePath}
         designBasePath={designBasePath}
         siteUrl={siteUrl}
         categories={categories}
+        bulkEnabled={bulkEnabled}
+        selected={selected}
+        onToggle={toggle}
       />
       <div className="hidden md:block">
         <Table>
           <thead>
             <tr>
+              {bulkEnabled ? (
+                <Th>
+                  <input
+                    type="checkbox"
+                    aria-label="Tümünü seç"
+                    checked={selected.length === articles.length && articles.length > 0}
+                    onChange={toggleAll}
+                  />
+                </Th>
+              ) : null}
               {designBasePath && <Th>Görsel</Th>}
               <Th>Başlık</Th>
               <Th>Kategori</Th>
@@ -108,6 +145,9 @@ export function ArticleTable({
                 designBasePath={designBasePath}
                 siteUrl={siteUrl}
                 categories={categories}
+                bulkEnabled={bulkEnabled}
+                selected={selected.includes(a.id)}
+                onToggle={() => toggle(a.id)}
               />
             ))}
           </tbody>
@@ -123,15 +163,26 @@ function ArticleTableRow({
   designBasePath,
   siteUrl,
   categories,
+  bulkEnabled,
+  selected,
+  onToggle,
 }: {
   article: ArticleRow;
   basePath: string;
   designBasePath?: string;
   siteUrl: string;
   categories: CategoryOption[];
+  bulkEnabled?: boolean;
+  selected?: boolean;
+  onToggle?: () => void;
 }) {
   return (
     <tr>
+      {bulkEnabled ? (
+        <Td>
+          <input type="checkbox" aria-label={`${a.title} seç`} checked={selected} onChange={onToggle} />
+        </Td>
+      ) : null}
       {designBasePath && (
         <Td>
           <CoverImage src={a.coverImageUrl} alt={a.title} className="h-12 w-16" sizes="64px" />
@@ -173,12 +224,18 @@ function ArticleMobileList({
   designBasePath,
   siteUrl,
   categories,
+  bulkEnabled,
+  selected,
+  onToggle,
 }: {
   articles: ArticleRow[];
   basePath: string;
   designBasePath?: string;
   siteUrl: string;
   categories: CategoryOption[];
+  bulkEnabled?: boolean;
+  selected?: string[];
+  onToggle?: (id: string) => void;
 }) {
   if (articles.length === 0) {
     return (
@@ -196,6 +253,15 @@ function ArticleMobileList({
           className="overflow-hidden rounded-xl border border-border bg-white shadow-sm"
         >
           <div className="flex gap-3 p-3">
+            {bulkEnabled && onToggle ? (
+              <input
+                type="checkbox"
+                className="mt-1 shrink-0"
+                aria-label={`${a.title} seç`}
+                checked={selected?.includes(a.id)}
+                onChange={() => onToggle(a.id)}
+              />
+            ) : null}
             {a.coverImageUrl ? (
               <CoverImage
                 src={a.coverImageUrl}

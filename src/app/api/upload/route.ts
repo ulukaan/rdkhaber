@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
 import { detectUploadMime, extensionForMime, isImageMime } from "@/lib/upload-safe";
+import { optimizeImageBuffer } from "@/lib/image-optimize";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -51,13 +52,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const mime = detectUploadMime(buffer);
-  if (!mime || !isImageMime(mime)) {
-    return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
+  let buffer = Buffer.from(await file.arrayBuffer());
+  let mime = detectUploadMime(buffer);
+  let ext = mime ? extensionForMime(mime) : null;
+  if (mime && isImageMime(mime)) {
+    const optimized = await optimizeImageBuffer(buffer);
+    buffer = Buffer.from(optimized.buffer);
+    mime = optimized.mime;
+    ext = optimized.ext;
   }
-  const ext = extensionForMime(mime);
-  if (!ext) {
+  if (!mime || !isImageMime(mime) || !ext) {
     return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
   }
 

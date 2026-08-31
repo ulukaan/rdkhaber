@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { randomBytes } from "node:crypto";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword } from "@/lib/password";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import { rateLimit } from "@/lib/rate-limit";
 
 const REVALIDATE_MS = 5 * 60_000;
@@ -12,14 +14,24 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   session: { strategy: "jwt", maxAge: 60 * 60 * 12 },
   pages: { signIn: "/giris" },
   providers: [
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     Credentials({
       credentials: {
         email: { label: "E-posta", type: "email" },
         password: { label: "Şifre", type: "password" },
+        totpVerified: { label: "2FA", type: "text" },
       },
       authorize: async (credentials) => {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
+        const totpVerified = credentials?.totpVerified === "1";
         if (!email || !password) return null;
 
         const limited = rateLimit(`login:${email.toLowerCase()}`, {
@@ -34,6 +46,8 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
 
+        if (user.totpEnabled && !totpVerified) return null;
+
         return {
           id: user.id,
           name: user.name,
@@ -45,7 +59,41 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google" || !user.email) return true;
+
+      const email = user.email.toLowerCase();
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (!existing) {
+        await prisma.user.create({
+          data: {
+            name: user.name?.trim() || email,
+            email,
+            passwordHash: await hashPassword(randomBytes(32).toString("hex")),
+            role: "USER",
+            avatarUrl: user.image ?? null,
+          },
+        });
+      }
+      return true;
+    },
+    async jwt({ token, user, account, trigger, session }) {
+      if (account?.provider === "google" && user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email.toLowerCase() },
+          select: { id: true, role: true, active: true, name: true, email: true, avatarUrl: true },
+        });
+        if (!dbUser?.active) return token;
+        token.id = dbUser.id;
+        token.role = dbUser.role;
+        token.name = dbUser.name;
+        token.email = dbUser.email;
+        token.picture = dbUser.avatarUrl;
+        token.active = true;
+        token.checkedAt = Date.now();
+        return token;
+      }
+
       if (user) {
         token.id = user.id as string;
         token.role = user.role;

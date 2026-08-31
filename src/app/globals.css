@@ -3,7 +3,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-
   --brand: #d0021b;
   --brand-dark: #a3010f;
   --ink: #14181f;
@@ -17,6 +16,16 @@
   --panel-line: #223049;
   --panel-text: #93a3bd;
   --panel-bg: #f1f3f7;
+}
+
+html[data-theme="dark"] {
+  --background: #0b0f17;
+  --foreground: #eef1f6;
+  --ink: #eef1f6;
+  --ink-soft: #b6beca;
+  --surface: #141b28;
+  --border: #243044;
+  --panel-bg: #101722;
 }
 
 @theme inline {

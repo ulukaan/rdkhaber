@@ -7,6 +7,8 @@ import { tipSchema } from "@/lib/validation";
 import { submitTipAction } from "@/actions/tip";
 import { serializeAttachmentUrls } from "@/lib/attachments";
 import { AttachmentUploadField } from "@/components/forms/AttachmentUploadField";
+import { TurnstileWidget } from "@/components/captcha/TurnstileWidget";
+import { captchaConfigured } from "@/lib/captcha-client";
 import { FieldGroup, Input, Textarea } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import type { z } from "zod";
@@ -19,6 +21,7 @@ export function TipForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [captchaToken, setCaptchaToken] = useState("");
   const {
     register,
     handleSubmit,
@@ -27,11 +30,17 @@ export function TipForm() {
   } = useForm<TipValues>({ resolver: zodResolver(tipSchema) });
 
   const onSubmit = async (values: TipValues) => {
+    if (captchaConfigured() && !captchaToken) {
+      setError("Güvenlik doğrulamasını tamamlayın.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     const result = await submitTipAction({
       ...values,
       attachmentUrl: serializeAttachmentUrls(attachments) ?? undefined,
+      captchaToken,
     });
     setLoading(false);
     if (result?.error) {
@@ -41,6 +50,7 @@ export function TipForm() {
     setEmailSent(Boolean(result?.emailSent));
     setDone(true);
     setAttachments([]);
+    setCaptchaToken("");
     reset();
   };
 
@@ -93,6 +103,8 @@ export function TipForm() {
           {...register("contactInfo")}
         />
       </FieldGroup>
+
+      <TurnstileWidget onToken={setCaptchaToken} />
 
       {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
 

@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/auth-guard";
 import { sanitizeArticleHtml } from "@/lib/article-html";
 import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { getEditableArticle, canEditArticle } from "@/lib/article-access";
+import { writeAuditLog } from "@/lib/audit-log";
 
 async function revalidateArticlePaths(opts: {
   slug: string;
@@ -199,6 +200,20 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
 
   const publishedAt = parsePublishedAt(data.publishedAt, data.status, current.publishedAt);
 
+  await prisma.articleRevision.create({
+    data: {
+      articleId: id,
+      userId: session.user.id,
+      snapshot: JSON.stringify({
+        title: current.title,
+        slug: current.slug,
+        status: current.status,
+        summary: current.summary.slice(0, 500),
+        updatedAt: current.updatedAt.toISOString(),
+      }).slice(0, 50_000),
+    },
+  });
+
   await prisma.article.update({
     where: { id },
     data: {
@@ -209,6 +224,14 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
   });
 
   await syncGalleryImages(id, data.galleryImages);
+
+  await writeAuditLog({
+    userId: session.user.id,
+    action: "article.update",
+    entity: "Article",
+    entityId: id,
+    meta: { slug, status: data.status },
+  });
 
   const base = session.user.role === "ADMIN" ? "/admin" : "/editor";
   await revalidateArticlePaths({

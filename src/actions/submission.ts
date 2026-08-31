@@ -19,6 +19,8 @@ import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site-url";
 import { sendPanelNotificationEmail, sendSubmitterConfirmationEmail } from "@/lib/notify-email";
 import { isValidEmail } from "@/lib/extract-email";
+import { verifyTurnstileToken } from "@/lib/captcha";
+import { notifyAdmins } from "@/lib/notifications";
 
 export async function submitNewsAction(values: {
   title: string;
@@ -26,12 +28,16 @@ export async function submitNewsAction(values: {
   submitterName?: string;
   submitterEmail?: string;
   attachmentUrl?: string;
+  captchaToken?: string;
 }) {
   const h = await headers();
   const limited = rateLimit(`news-submit:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla istek. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
+
+  const captchaOk = await verifyTurnstileToken(values.captchaToken ?? "", clientIp(h));
+  if (!captchaOk) return { error: "Güvenlik doğrulaması başarısız." };
 
   const parsed = newsSubmissionSchema.safeParse(values);
   if (!parsed.success) {
@@ -78,6 +84,12 @@ export async function submitNewsAction(values: {
       },
     ],
     panelHref: `${siteUrl}/admin/haber-basvurulari`,
+  });
+
+  await notifyAdmins({
+    title: "Yeni haber başvurusu",
+    body: parsed.data.title.slice(0, 180),
+    href: "/admin/haber-basvurulari",
   });
 
   const recipientEmail = session?.user?.email ?? parsed.data.submitterEmail?.trim();
