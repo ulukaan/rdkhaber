@@ -4,7 +4,9 @@ import Link from "next/link";
 import {
   getArticleBySlug,
   getRelatedArticles,
+  getMostCommentedArticles,
   getMostReadArticles,
+  getTrendingArticles,
   getLatestArticles,
   getBreakingArticles,
   getRandomSpotlightArticles,
@@ -74,9 +76,12 @@ export default async function ArticlePage({
 
   incrementViewCount(article.id).catch(() => {});
 
-  const [related, mostRead, settings, latest, breaking, rates, prayers] = await Promise.all([
+  const [related, mostRead, trending, mostCommented, settings, latest, breaking, rates, prayers] =
+    await Promise.all([
     getRelatedArticles(article.category.slug, article.id, 6),
     getMostReadArticles(8),
+    getTrendingArticles(8),
+    getMostCommentedArticles(8),
     getSettings(),
     getLatestArticles(8),
     getBreakingArticles(5),
@@ -117,6 +122,8 @@ export default async function ArticlePage({
 
   const relatedForSidebar = related.filter((a) => a.id !== article.id);
   const mostReadForSidebar = mostRead.filter((a) => a.id !== article.id);
+  const trendingForSidebar = trending.filter((a) => a.id !== article.id);
+  const mostCommentedForSidebar = mostCommented.filter((a) => a.id !== article.id);
 
   const jsonLd = buildNewsArticleJsonLd({
     title: article.title,
@@ -247,6 +254,8 @@ export default async function ArticlePage({
           <ArticleSidebar
             related={relatedForSidebar}
             mostRead={mostReadForSidebar}
+            trending={trendingForSidebar}
+            mostCommented={mostCommentedForSidebar}
             latest={latestForSidebar}
             categoryName={article.category.name}
             categorySlug={article.category.slug}
@@ -262,6 +271,8 @@ export default async function ArticlePage({
         whatsappNumber={settings.whatsappNumber}
         sidebar={{
           mostRead: mostReadForSidebar,
+          trending: trendingForSidebar,
+          mostCommented: mostCommentedForSidebar,
           latest: latestForSidebar,
           parityItems: settings.showParity !== "0" ? parityItems : [],
           prayers: settings.showImsakiye !== "0" ? prayers : null,

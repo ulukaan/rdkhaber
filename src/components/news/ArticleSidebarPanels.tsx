@@ -14,6 +14,8 @@ import { categoryHref } from "@/lib/category-path";
 export type SidebarPanelsData = {
   related: ArticleSummary[];
   mostRead: ArticleSummary[];
+  trending?: ArticleSummary[];
+  mostCommented?: ArticleSummary[];
   latest: ArticleSummary[];
   categoryName: string;
   categorySlug: string;
@@ -24,6 +26,8 @@ export type SidebarPanelsData = {
 export function ArticleSidebarPanels({
   related,
   mostRead,
+  trending = [],
+  mostCommented = [],
   latest,
   categoryName,
   categorySlug,
@@ -42,8 +46,20 @@ export function ArticleSidebarPanels({
       ) : null}
 
       {mostRead.length > 0 ? (
-        <SidebarWidget title="Çok Okunanlar" href="/">
+        <SidebarWidget title="Çok Okunanlar" href="/enler#cok-okunanlar">
           <SidebarNewsList articles={mostRead.slice(0, 6)} ranked />
+        </SidebarWidget>
+      ) : null}
+
+      {trending.length > 0 ? (
+        <SidebarWidget title="Haftanın Trendi" href="/enler#haftanin-trendi">
+          <SidebarNewsList articles={trending.slice(0, 5)} ranked />
+        </SidebarWidget>
+      ) : null}
+
+      {mostCommented.length > 0 ? (
+        <SidebarWidget title="En Çok Yorumlanan" href="/enler#en-cok-yorumlanan">
+          <SidebarNewsList articles={mostCommented.slice(0, 5)} ranked />
         </SidebarWidget>
       ) : null}
 

@@ -130,8 +130,9 @@ export async function getDefaultNav(location: NavLocation): Promise<NavLink[]> {
       { label: "TarifPark", href: "https://tarifpark.com/", visible: true, order: 2 },
       { label: "Video Haberler", href: "/video-haberler", visible: true, order: 3 },
       { label: "Foto Galeri", href: "/foto-galeri", visible: true, order: 4 },
-      { label: "Haber Gönder", href: "/haber-gonder", visible: true, order: 5 },
-      { label: "İhbar Hattı", href: "/ihbar-hatti", visible: true, order: 6 },
+      { label: "Enler", href: "/enler", visible: true, order: 5 },
+      { label: "Haber Gönder", href: "/haber-gonder", visible: true, order: 6 },
+      { label: "İhbar Hattı", href: "/ihbar-hatti", visible: true, order: 7 },
     ];
   }
 
