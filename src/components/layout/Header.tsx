@@ -79,6 +79,8 @@ export async function Header() {
                     categories={categories}
                     whatsappNumber={settings.whatsappNumber}
                     socials={socials}
+                    services={serviceLinks}
+                    corporate={corporateLinks}
                   />
                 </Suspense>
               </div>

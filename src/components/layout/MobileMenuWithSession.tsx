@@ -8,9 +8,17 @@ type Props = {
   categories: Array<{ name: string; slug: string }>;
   whatsappNumber: string;
   socials: Social[];
+  services?: Array<{ label: string; href: string }>;
+  corporate?: Array<{ label: string; href: string }>;
 };
 
-export async function MobileMenuWithSession({ categories, whatsappNumber, socials }: Props) {
+export async function MobileMenuWithSession({
+  categories,
+  whatsappNumber,
+  socials,
+  services,
+  corporate,
+}: Props) {
   const session = await auth();
 
   const account = session?.user
@@ -31,6 +39,8 @@ export async function MobileMenuWithSession({ categories, whatsappNumber, social
       whatsappNumber={whatsappNumber}
       account={account}
       socials={socials}
+      services={services}
+      corporate={corporate}
     />
   );
 }
