@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { hasDatabaseUrl, skipMessage } from "./ensure-db-utils.mjs";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,11 @@ async function columnExists(table, column) {
 }
 
 async function main() {
+  if (!hasDatabaseUrl()) {
+    skipMessage("ensure-platform-tables");
+    return;
+  }
+
   if (!(await columnExists("User", "totpSecret"))) {
     await prisma.$executeRawUnsafe(
       "ALTER TABLE `User` ADD COLUMN `totpSecret` VARCHAR(191) NULL",

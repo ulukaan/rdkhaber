@@ -1,8 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { hasDatabaseUrl, skipMessage } from "./ensure-db-utils.mjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  if (!hasDatabaseUrl()) {
+    skipMessage("ensure-mailbox-table");
+    return;
+  }
+
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS \`MailboxMessage\` (
       \`id\` VARCHAR(191) NOT NULL,
@@ -26,7 +32,6 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error(err);
-    process.exit(1);
+    console.error("ensure-mailbox-table skipped:", err?.message ?? err);
   })
   .finally(() => prisma.$disconnect());

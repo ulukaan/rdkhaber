@@ -1,8 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { hasDatabaseUrl, skipMessage } from "./ensure-db-utils.mjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  if (!hasDatabaseUrl()) {
+    skipMessage("ensure-profile-tables");
+    return;
+  }
+
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS \`ArticleBookmark\` (
       \`id\` VARCHAR(191) NOT NULL,
