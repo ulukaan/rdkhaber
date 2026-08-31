@@ -69,7 +69,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSettings();
   const gaId = settings.googleAnalyticsId.trim();
   const gtmId = settings.googleTagManagerId.trim();

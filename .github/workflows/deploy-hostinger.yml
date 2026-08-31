@@ -12,10 +12,25 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && secrets.HOSTINGER_SSH_HOST != ''
+    if: github.ref == 'refs/heads/main'
     environment: production
     steps:
+      - name: Deploy ön kontrol
+        id: gate
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+        run: |
+          if [ -z "$HOSTINGER_SSH_HOST" ]; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deploy atlandı — GitHub Secrets tanımlı değil."
+            echo "Settings → Secrets → Actions: HOSTINGER_SSH_HOST, HOSTINGER_SSH_USER, HOSTINGER_SSH_KEY, HOSTINGER_DEPLOY_PATH"
+            echo "Ayrıca: DATABASE_URL_BUILD, AUTH_SECRET, NEXT_PUBLIC_SITE_URL, AUTH_URL, NEXTAUTH_URL"
+            exit 0
+          fi
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
       - name: Deploy over SSH
+        if: steps.gate.outputs.deploy == 'true'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
@@ -35,13 +50,3 @@ jobs:
             export HOSTINGER_RESTART_CMD="${{ secrets.HOSTINGER_RESTART_CMD }}"
             cd "$DEPLOY_PATH"
             bash scripts/deploy-hostinger-remote.sh
-
-  deploy-skipped:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && secrets.HOSTINGER_SSH_HOST == ''
-    steps:
-      - name: Hostinger secrets missing
-        run: |
-          echo "::warning::Deploy atlandı — GitHub Secrets tanımlı değil."
-          echo "Settings → Secrets → Actions: HOSTINGER_SSH_HOST, HOSTINGER_SSH_USER, HOSTINGER_SSH_KEY, HOSTINGER_DEPLOY_PATH"
-          echo "Ayrıca: DATABASE_URL_BUILD, AUTH_SECRET, NEXT_PUBLIC_SITE_URL, AUTH_URL, NEXTAUTH_URL"
