@@ -136,8 +136,12 @@ function materializeSettings(map: Record<string, string>): Record<SettingKey, st
 
 const loadSettings = unstable_cache(
   async () => {
-    const rows = await prisma.setting.findMany();
-    return materializeSettings(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+    try {
+      const rows = await prisma.setting.findMany();
+      return materializeSettings(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+    } catch {
+      return materializeSettings({});
+    }
   },
   ["site-settings"],
   { revalidate: 120, tags: [CACHE_TAGS.settings] },
