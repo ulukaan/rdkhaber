@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
 import { auth } from "@/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -13,6 +11,7 @@ import {
 } from "@/lib/upload-safe";
 import { verifyPublicUploadToken } from "@/lib/upload-token";
 import { optimizeImageBuffer } from "@/lib/image-optimize";
+import { writeUploadedFile } from "@/lib/upload-path";
 
 const IMAGE_MAX_ANON = 2 * 1024 * 1024;
 const IMAGE_MAX_AUTH = 5 * 1024 * 1024;
@@ -69,10 +68,14 @@ export async function POST(req: Request) {
 
   let ext = extensionForMime(mime);
   if (isImage && ext) {
-    const optimized = await optimizeImageBuffer(buffer);
-    buffer = Buffer.from(optimized.buffer);
-    mime = optimized.mime;
-    ext = optimized.ext;
+    try {
+      const optimized = await optimizeImageBuffer(buffer);
+      buffer = Buffer.from(optimized.buffer);
+      mime = optimized.mime;
+      ext = optimized.ext;
+    } catch {
+      // sharp yoksa orijinal dosyayı kaydet
+    }
   }
 
   if (isVideo && !session?.user) {
@@ -100,21 +103,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Desteklenmeyen dosya türü" }, { status: 400 });
   }
 
-  const uploadDir = path.join(
-    process.cwd(),
-    "public",
-    "uploads",
-    "reader",
-    session?.user ? session.user.id : "anon",
-  );
-  await mkdir(uploadDir, { recursive: true });
-
   const filename = `${randomUUID()}.${ext}`;
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const prefix = session?.user ? `/uploads/reader/${session.user.id}` : "/uploads/reader/anon";
+  const relative = session?.user ? `reader/${session.user.id}/${filename}` : `reader/anon/${filename}`;
+  const url = await writeUploadedFile(relative, buffer);
   return NextResponse.json({
-    url: `${prefix}/${filename}`,
+    url,
     mimeType: mime,
     kind: isVideo ? "video" : "image",
   });

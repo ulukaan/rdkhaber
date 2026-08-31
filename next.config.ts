@@ -72,6 +72,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/uploads/:path*",
+          destination: "/api/uploads/:path*",
+        },
+      ],
+    };
+  },
   async headers() {
     const longCache = [
       { key: "Cache-Control", value: "public, max-age=31536000, immutable" },

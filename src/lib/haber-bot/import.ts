@@ -1,5 +1,3 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
 import { ArticleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -45,11 +43,9 @@ async function saveCover(url: string | null, uploadedById: string): Promise<stri
     const ext = extensionForMime(mime);
     if (!ext) return null;
 
-    const dir = path.join(process.cwd(), "public", "uploads", "bot");
-    await mkdir(dir, { recursive: true });
+    const { writeUploadedFile } = await import("@/lib/upload-path");
     const filename = `${randomUUID()}.${ext}`;
-    await writeFile(path.join(dir, filename), buffer);
-    const localUrl = `/uploads/bot/${filename}`;
+    const localUrl = await writeUploadedFile(`bot/${filename}`, buffer);
 
     await prisma.media.create({
       data: {

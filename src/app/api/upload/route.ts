@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +6,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
 import { detectUploadMime, extensionForMime, isImageMime } from "@/lib/upload-safe";
 import { optimizeImageBuffer } from "@/lib/image-optimize";
+import { writeUploadedFile } from "@/lib/upload-path";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -56,27 +55,22 @@ export async function POST(req: Request) {
   let mime = detectUploadMime(buffer);
   let ext = mime ? extensionForMime(mime) : null;
   if (mime && isImageMime(mime)) {
-    const optimized = await optimizeImageBuffer(buffer);
-    buffer = Buffer.from(optimized.buffer);
-    mime = optimized.mime;
-    ext = optimized.ext;
+    try {
+      const optimized = await optimizeImageBuffer(buffer);
+      buffer = Buffer.from(optimized.buffer);
+      mime = optimized.mime;
+      ext = optimized.ext;
+    } catch {
+      // sharp yoksa orijinal dosyayı kaydet
+    }
   }
   if (!mime || !isImageMime(mime) || !ext) {
     return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
   }
 
-  const uploadDir = path.join(
-    process.cwd(),
-    "public",
-    "uploads",
-    isMember ? "avatars" : "",
-  );
-  await mkdir(uploadDir, { recursive: true });
-
   const filename = `${randomUUID()}.${ext}`;
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const url = isMember ? `/uploads/avatars/${filename}` : `/uploads/${filename}`;
+  const relative = isMember ? `avatars/${filename}` : filename;
+  const url = await writeUploadedFile(relative, buffer);
   if (isStaff) {
     await prisma.media.create({
       data: {

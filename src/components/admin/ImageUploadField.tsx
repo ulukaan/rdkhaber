@@ -17,6 +17,7 @@ export function ImageUploadField({
   const [url, setUrl] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -28,6 +29,7 @@ export function ImageUploadField({
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Yükleme başarısız");
+      setPreviewFailed(false);
       setUrl(json.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yükleme başarısız");
@@ -53,11 +55,14 @@ export function ImageUploadField({
             fill
             className={variant === "avatar" ? "object-cover" : "object-contain bg-surface"}
             unoptimized
-            onError={() => setUrl("")}
+            onError={() => setPreviewFailed(true)}
           />
           <button
             type="button"
-            onClick={() => setUrl("")}
+            onClick={() => {
+              setPreviewFailed(false);
+              setUrl("");
+            }}
             className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
           >
             <X className="h-4 w-4" />
@@ -89,8 +94,14 @@ export function ImageUploadField({
       <Input
         placeholder="veya görsel URL'i yapıştırın"
         value={url}
-        onChange={(e) => setUrl(e.target.value)}
+        onChange={(e) => {
+          setPreviewFailed(false);
+          setUrl(e.target.value);
+        }}
       />
+      {previewFailed && url ? (
+        <p className="mt-1 text-xs text-ink-soft">Önizleme yüklenemedi; adres kayıtlı duruyor.</p>
+      ) : null}
       {error && <p className="mt-1 text-xs font-medium text-brand">{error}</p>}
     </div>
   );
