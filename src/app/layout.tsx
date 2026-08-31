@@ -5,6 +5,10 @@ import { getSettings } from "@/lib/settings";
 import { darkenColor } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/site-url";
 import { CookieConsent } from "@/components/consent/CookieConsent";
+import { ConsentModeDefaultScript } from "@/components/consent/ConsentModeDefaultScript";
+import { ConsentModeSync } from "@/components/consent/ConsentModeSync";
+import { GoogleAdSense } from "@/components/ads/GoogleAdSense";
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import {
@@ -77,6 +81,7 @@ export default async function RootLayout({
   const gtmId = settings.googleTagManagerId.trim();
   const adsenseClient = settings.googleAdsenseClient.trim();
   const adsenseAuto = settings.googleAdsenseAutoAds === "1";
+  const googleTagsEnabled = Boolean(gtmId || gaId || (adsenseClient && adsenseAuto));
   const customMeta = parseCustomMetaTags(settings.customHeadHtml);
   const customLinks = parseCustomLinkTags(settings.customHeadHtml);
   const customBodyEndHtml = sanitizeCustomBodyEndHtml(settings.customBodyEndHtml);
@@ -111,11 +116,18 @@ export default async function RootLayout({
           />
         ))}
         <link rel="alternate" type="application/rss+xml" title={`${settings.siteName} RSS`} href="/feed.xml" />
+        {googleTagsEnabled ? <ConsentModeDefaultScript /> : null}
+        {adsenseClient && adsenseAuto ? (
+          <GoogleAdSense client={adsenseClient} autoAds={adsenseAuto} />
+        ) : null}
       </head>
       <body className="min-h-full flex flex-col">
+        {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
+        {!gtmId && gaId ? <GoogleAnalytics gaId={gaId} /> : null}
         <ThemeProvider>
           {children}
           <ServiceWorkerRegister />
+          <ConsentModeSync />
           <CookieConsent
             analyticsConfigured={Boolean(gaId || gtmId || customBodyEndHtml)}
             adsConfigured={Boolean(adsenseClient && adsenseAuto)}

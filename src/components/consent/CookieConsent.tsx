@@ -15,7 +15,7 @@ import {
   CONSENT_OPEN_EVENT,
   type ConsentState,
 } from "@/lib/cookie-consent";
-import { cn } from "@/lib/utils";
+import { applyConsentMode } from "@/lib/consent-mode";
 import { ConsentScripts } from "@/components/consent/ConsentScripts";
 
 type Props = {
@@ -71,6 +71,7 @@ export function CookieConsent(props: Props) {
 
   const save = (state: ConsentState) => {
     writeConsentCookie(state);
+    applyConsentMode(state);
     if (!state.preferences) {
       document.cookie = `${CITY_COOKIE}=;path=/;max-age=0;samesite=lax`;
     }
@@ -80,14 +81,7 @@ export function CookieConsent(props: Props) {
 
   return (
     <>
-      <ConsentScripts
-        consent={consent}
-        gaId={props.gaId}
-        gtmId={props.gtmId}
-        adsenseClient={props.adsenseClient}
-        adsenseAuto={props.adsenseAuto}
-        customBodyEndHtml={props.customBodyEndHtml}
-      />
+      <ConsentScripts consent={consent} customBodyEndHtml={props.customBodyEndHtml} />
 
       {ready && open && !panel ? (
         <div

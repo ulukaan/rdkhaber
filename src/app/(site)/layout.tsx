@@ -16,7 +16,9 @@ export default async function SiteLayout({
   children: React.ReactNode;
 }) {
   const settings = await getSettings();
-  const stickyAd = await getActiveAd("153");
+  /** AdSense onay sürecinde popup/sticky ev reklamları Auto Ads ile çakışmasın. */
+  const suppressHouseAds = settings.googleAdsenseAutoAds === "1";
+  const stickyAd = suppressHouseAds ? null : await getActiveAd("153");
 
   return (
     <div className={stickyAd ? "site-sticky-ad flex min-h-svh flex-col" : "flex min-h-svh flex-col"}>
@@ -25,8 +27,8 @@ export default async function SiteLayout({
       <AdTowers />
       <main className="flex-1">{children}</main>
       <Footer />
-      <StickyFooterAd />
-      <OpeningAd />
+      {!suppressHouseAds ? <StickyFooterAd /> : null}
+      {!suppressHouseAds ? <OpeningAd /> : null}
       <WhatsAppFloatButton whatsappNumber={settings.whatsappNumber} />
     </div>
   );
