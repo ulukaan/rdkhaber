@@ -41,6 +41,7 @@ export const SERVICE_LINKS: SiteMenuLink[] = [
 export const CORPORATE_LINKS: SiteMenuLink[] = [
   { label: "İletişim", href: "/iletisim" },
   { label: "Künye", href: "/sayfa/kunye" },
+  { label: "İçerik şikayeti", href: "/sikayet" },
   { label: "Gizlilik", href: "/sayfa/gizlilik" },
   { label: "KVKK", href: "/sayfa/kvkk" },
   { label: "Çerezler", href: "/cerezler" },

@@ -31,6 +31,8 @@ import {
   ChartNoAxesCombined,
   Shield,
   ScrollText,
+  ClipboardCheck,
+  Scale,
   type LucideIcon,
 } from "lucide-react";
 import { panelBrandLabel, panelPathForRole } from "@/lib/role";
@@ -149,7 +151,10 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
         label: "Sistem",
         adminOnly: true,
         items: [
+          { href: `${base}/onay-kuyrugu`, label: "Onay kuyruğu", Icon: ClipboardCheck },
           { href: "/admin/istatistikler", label: "İstatistikler", Icon: ChartNoAxesCombined },
+          { href: "/admin/sikayetlar", label: "İçerik şikayetleri", Icon: Scale },
+          { href: "/admin/bik", label: "BİK / Resmî ilan", Icon: FileText },
           { href: "/admin/audit-log", label: "Denetim kaydı", Icon: ScrollText },
           { href: "/admin/guvenlik", label: "Güvenlik (2FA)", Icon: Shield },
           { href: "/admin/kullanicilar", label: "Kullanıcılar", Icon: Users },

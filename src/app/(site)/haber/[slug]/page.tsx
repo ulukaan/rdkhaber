@@ -32,6 +32,9 @@ import { sanitizeArticleHtml } from "@/lib/article-html";
 import { authorHref } from "@/lib/authors";
 import { buildNewsArticleJsonLd } from "@/lib/json-ld";
 import { RecordArticleRead } from "@/components/account/RecordArticleRead";
+import { CorrectionBanner } from "@/components/news/CorrectionBanner";
+import { LiveBlogTimeline } from "@/components/news/LiveBlogTimeline";
+import { PushSubscribeButton } from "@/components/pwa/PushSubscribeButton";
 
 export async function generateMetadata({
   params,
@@ -124,6 +127,10 @@ export default async function ArticlePage({
     updatedAt: article.updatedAt,
     authorName: byline || article.author.name,
     siteName: settings.siteName,
+    keywords: [
+      ...article.tags.map((t) => t.name),
+      ...(article.seoKeywords?.split(",").map((k) => k.trim()).filter(Boolean) ?? []),
+    ],
   });
 
   return (
@@ -177,6 +184,11 @@ export default async function ArticlePage({
       </header>
 
       <Container className="py-7">
+        <CorrectionBanner corrections={article.corrections} />
+        {article.isLiveBlog ? <LiveBlogTimeline updates={article.liveUpdates} /> : null}
+        <div className="mb-4">
+          <PushSubscribeButton />
+        </div>
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-10">
           <div className="min-w-0">
             <div className="overflow-hidden border border-border bg-white">

@@ -57,6 +57,9 @@ model User {
   auditLogs      AuditLog[]
   notifications  Notification[]
   articleRevisions ArticleRevision[]
+  liveBlogUpdates  LiveBlogUpdate[]
+  articleCorrections ArticleCorrection[]
+  pushSubscriptions PushSubscription[]
 
   @@index([role])
 }
@@ -148,6 +151,10 @@ model Article {
   headlineImageAlign String   @default("center")
   viewCount     Int           @default(0)
   publishedAt   DateTime?
+  scheduledAt   DateTime?
+  isLiveBlog    Boolean       @default(false)
+  approvedById  String?
+  approvedAt    DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -163,8 +170,11 @@ model Article {
   bookmarks     ArticleBookmark[]
   reads         ArticleRead[]
   revisions     ArticleRevision[]
+  liveUpdates   LiveBlogUpdate[]
+  corrections   ArticleCorrection[]
 
   @@index([status, publishedAt])
+  @@index([scheduledAt])
   @@index([categoryId])
   @@index([isBreaking])
   @@index([status, isFeatured, publishedAt])
@@ -468,6 +478,58 @@ model ArticleRevision {
   createdAt DateTime @default(now())
 
   @@index([articleId, createdAt])
+}
+
+model LiveBlogUpdate {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  body      String   @db.Text
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([articleId, createdAt])
+}
+
+model ArticleCorrection {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  note      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([articleId, createdAt])
+}
+
+model ContentComplaint {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  articleUrl String?
+  message   String   @db.Text
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique @db.VarChar(500)
+  p256dh    String
+  auth      String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Notification {

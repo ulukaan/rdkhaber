@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { requireRole } from "@/lib/auth-guard";
 import { commentSchema } from "@/lib/validation";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { filterCommentContent } from "@/lib/comment-filter";
 
 export async function submitCommentAction(values: {
   articleId: string;
@@ -24,6 +25,9 @@ export async function submitCommentAction(values: {
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Geçersiz form" };
   }
+
+  const filtered = filterCommentContent(parsed.data.content);
+  if (!filtered.ok) return { error: filtered.reason };
 
   const session = await auth();
   const article = await prisma.article.findUnique({ where: { id: parsed.data.articleId } });

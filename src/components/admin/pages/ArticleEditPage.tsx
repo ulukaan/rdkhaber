@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
@@ -5,6 +6,9 @@ import { canEditArticle } from "@/lib/article-access";
 import { getArticleForEdit } from "@/lib/articles";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ArticleForm } from "@/components/admin/ArticleForm";
+import { LiveBlogEditor } from "@/components/admin/LiveBlogEditor";
+import { CorrectionPanel } from "@/components/admin/CorrectionPanel";
+import { Button } from "@/components/ui/Button";
 
 export async function ArticleEditPage({ id }: { id: string }) {
   const session = await requireRole(["ADMIN", "EDITOR"]);
@@ -15,9 +19,19 @@ export async function ArticleEditPage({ id }: { id: string }) {
 
   if (!article || !canEditArticle(session, article)) notFound();
 
+  const base = session.user.role === "ADMIN" ? "/admin" : "/editor";
+
   return (
     <>
-      <PageHeader title="Haberi düzenle" description={article.title} />
+      <PageHeader
+        title="Haberi düzenle"
+        description={article.title}
+        action={
+          <Button href={`${base}/makaleler/${id}/revizyonlar`} size="sm" variant="outline">
+            Revizyon geçmişi
+          </Button>
+        }
+      />
       <ArticleForm
         categories={categories}
         defaults={{
@@ -54,9 +68,15 @@ export async function ArticleEditPage({ id }: { id: string }) {
           seoDescription: article.seoDescription,
           seoKeywords: article.seoKeywords,
           publishedAt: article.publishedAt,
+          scheduledAt: article.scheduledAt,
+          isLiveBlog: article.isLiveBlog,
           viewCount: article.viewCount,
         }}
       />
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <LiveBlogEditor articleId={article.id} />
+        <CorrectionPanel articleId={article.id} />
+      </div>
     </>
   );
 }

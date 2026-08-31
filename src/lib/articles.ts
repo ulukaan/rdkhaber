@@ -163,6 +163,15 @@ export async function getArticleBySlug(slug: string) {
         orderBy: { order: "asc" },
         select: { id: true, imageUrl: true, caption: true },
       },
+      corrections: {
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        include: { user: { select: { name: true } } },
+      },
+      liveUpdates: {
+        orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+        include: { user: { select: { name: true } } },
+      },
     },
   });
   if (!article || article.status !== "PUBLISHED") return null;

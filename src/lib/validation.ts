@@ -136,6 +136,8 @@ export const articleSchema = z.object({
   seoDescription: z.string().optional(),
   seoKeywords: z.string().optional(),
   publishedAt: z.string().optional(),
+  scheduledAt: z.string().optional(),
+  isLiveBlog: z.coerce.boolean().default(false),
 });
 
 const optionalPasswordSchema = z
@@ -195,6 +197,9 @@ export const settingsSchema = z.object({
   twitterUrl: z.string().optional(),
   instagramUrl: z.string().optional(),
   youtubeUrl: z.string().optional(),
+  editorRequiresApproval: z.enum(["0", "1"]).optional(),
+  socialAutoShare: z.enum(["0", "1"]).optional(),
+  bikPublisherCode: z.string().optional(),
 });
 
 export const pageSchema = z.object({

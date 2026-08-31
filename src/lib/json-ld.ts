@@ -9,6 +9,7 @@ type ArticleJsonLdInput = {
   updatedAt: Date;
   authorName: string;
   siteName: string;
+  keywords?: string[];
 };
 
 export function buildNewsArticleJsonLd(input: ArticleJsonLdInput) {
@@ -27,6 +28,8 @@ export function buildNewsArticleJsonLd(input: ArticleJsonLdInput) {
     description: input.summary,
     url,
     mainEntityOfPage: url,
+    isAccessibleForFree: true,
+    inLanguage: "tr-TR",
     datePublished: input.publishedAt?.toISOString(),
     dateModified: input.updatedAt.toISOString(),
     author: { "@type": "Person", name: input.authorName },
@@ -35,6 +38,7 @@ export function buildNewsArticleJsonLd(input: ArticleJsonLdInput) {
       name: input.siteName,
       url: siteUrl,
     },
+    ...(input.keywords?.length ? { keywords: input.keywords.join(", ") } : {}),
     ...(image ? { image: [image] } : {}),
   };
 }

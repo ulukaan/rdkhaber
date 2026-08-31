@@ -11,6 +11,9 @@ import { sanitizeArticleHtml } from "@/lib/article-html";
 import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { getEditableArticle, canEditArticle } from "@/lib/article-access";
 import { writeAuditLog } from "@/lib/audit-log";
+import { getSettings } from "@/lib/settings";
+import { resolveArticlePublishState, parseScheduledAt } from "@/lib/article-workflow";
+import { onArticlePublished } from "@/lib/article-publish-hooks";
 
 async function revalidateArticlePaths(opts: {
   slug: string;
@@ -76,6 +79,31 @@ function parsePublishedAt(raw: string | undefined, status: string, fallback: Dat
   return fallback;
 }
 
+async function resolvePublishFields(
+  data: ReturnType<typeof articleSchema.parse>,
+  session: { user: { id: string; role: import("@prisma/client").Role } },
+  current: { publishedAt: Date | null; status: string } | null,
+) {
+  const settings = await getSettings();
+  const scheduledAt = parseScheduledAt(data.scheduledAt);
+  const manualPublishedAt = parsePublishedAt(data.publishedAt, data.status, current?.publishedAt ?? null);
+  const resolution = resolveArticlePublishState({
+    requestedStatus: data.status,
+    scheduledAt,
+    publishedAt: manualPublishedAt,
+    role: session.user.role,
+    editorRequiresApproval: settings.editorRequiresApproval === "1",
+  });
+
+  return {
+    status: resolution.status,
+    publishedAt: resolution.publishedAt,
+    scheduledAt: resolution.scheduledAt,
+    isLiveBlog: data.isLiveBlog,
+    pendingApproval: resolution.pendingApproval,
+  };
+}
+
 async function resolveTags(names: string[]) {
   const tags = await Promise.all(
     names.map((name) =>
@@ -107,7 +135,10 @@ async function syncGalleryImages(
   });
 }
 
-function articleFields(data: ReturnType<typeof articleSchema.parse>, publishedAt: Date | null) {
+function articleFields(
+  data: ReturnType<typeof articleSchema.parse>,
+  publish: { status: string; publishedAt: Date | null; scheduledAt: Date | null; isLiveBlog: boolean },
+) {
   return {
     title: data.title,
     summary: data.summary,
@@ -116,11 +147,12 @@ function articleFields(data: ReturnType<typeof articleSchema.parse>, publishedAt
     videoUrl: emptyToNull(data.videoUrl),
     videoEmbed: emptyToNull(data.videoEmbed),
     categoryId: data.categoryId,
-    status: data.status,
+    status: publish.status as import("@prisma/client").ArticleStatus,
     isBreaking: data.isBreaking,
     isFeatured: data.isFeatured,
     inSpotlight: data.inSpotlight,
     inFiveHeadline: data.inFiveHeadline,
+    isLiveBlog: publish.isLiveBlog,
     imageMainHeadline: emptyToNull(data.imageMainHeadline),
     imageTopHeadline: emptyToNull(data.imageTopHeadline),
     imageSpotlight: emptyToNull(data.imageSpotlight),
@@ -134,7 +166,8 @@ function articleFields(data: ReturnType<typeof articleSchema.parse>, publishedAt
     seoTitle: emptyToNull(data.seoTitle),
     seoDescription: emptyToNull(data.seoDescription),
     seoKeywords: emptyToNull(data.seoKeywords),
-    publishedAt,
+    publishedAt: publish.publishedAt,
+    scheduledAt: publish.scheduledAt,
   };
 }
 
@@ -156,11 +189,11 @@ export async function createArticleAction(raw: Record<string, unknown>) {
     return { error: "Bu slug zaten kullanılıyor." };
   }
 
-  const publishedAt = parsePublishedAt(data.publishedAt, data.status, null);
+  const publish = await resolvePublishFields(data, session, null);
 
   const article = await prisma.article.create({
     data: {
-      ...articleFields(data, publishedAt),
+      ...articleFields(data, publish),
       slug,
       authorId: session.user.id,
       tags: { connect: await resolveTags(parseTagNames(data.tagNames)) },
@@ -168,6 +201,21 @@ export async function createArticleAction(raw: Record<string, unknown>) {
   });
 
   await syncGalleryImages(article.id, data.galleryImages);
+
+  if (publish.status === "PUBLISHED") {
+    await onArticlePublished(
+      {
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        summary: article.summary,
+        content: article.content,
+        isBreaking: article.isBreaking,
+        publishedAt: article.publishedAt,
+      },
+      { wasPublished: false },
+    );
+  }
 
   const base = session.user.role === "ADMIN" ? "/admin" : "/editor";
   await revalidateArticlePaths({ slug, categoryId: data.categoryId });
@@ -198,7 +246,8 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
     return { error: "Bu haberi düzenleme yetkiniz yok." };
   }
 
-  const publishedAt = parsePublishedAt(data.publishedAt, data.status, current.publishedAt);
+  const publish = await resolvePublishFields(data, session, current);
+  const wasPublished = current.status === "PUBLISHED";
 
   await prisma.articleRevision.create({
     data: {
@@ -214,10 +263,10 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
     },
   });
 
-  await prisma.article.update({
+  const updated = await prisma.article.update({
     where: { id },
     data: {
-      ...articleFields(data, publishedAt),
+      ...articleFields(data, publish),
       slug,
       tags: { set: [], connect: await resolveTags(parseTagNames(data.tagNames)) },
     },
@@ -225,12 +274,27 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
 
   await syncGalleryImages(id, data.galleryImages);
 
+  if (publish.status === "PUBLISHED" && !wasPublished) {
+    await onArticlePublished(
+      {
+        id: updated.id,
+        title: updated.title,
+        slug: updated.slug,
+        summary: updated.summary,
+        content: updated.content,
+        isBreaking: updated.isBreaking,
+        publishedAt: updated.publishedAt,
+      },
+      { wasPublished },
+    );
+  }
+
   await writeAuditLog({
     userId: session.user.id,
     action: "article.update",
     entity: "Article",
     entityId: id,
-    meta: { slug, status: data.status },
+    meta: { slug, status: publish.status, pendingApproval: publish.pendingApproval },
   });
 
   const base = session.user.role === "ADMIN" ? "/admin" : "/editor";

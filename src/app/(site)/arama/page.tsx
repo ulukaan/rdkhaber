@@ -1,4 +1,4 @@
-import { searchArticles, countSearchArticles } from "@/lib/articles";
+import { searchArticlesAdvanced } from "@/lib/search-index";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { NewsCard } from "@/components/news/NewsCard";
@@ -17,18 +17,18 @@ export default async function SearchPage({
   const take = 20;
   const skip = (page - 1) * take;
 
-  const [results, total] = query
-    ? await Promise.all([searchArticles(query, take, skip), countSearchArticles(query)])
-    : [[], 0];
+  const { items: results, total: totalCount } = query
+    ? await searchArticlesAdvanced({ query, page, pageSize: take })
+    : { items: [], total: 0 };
 
-  const totalPages = Math.max(1, Math.ceil(total / take));
+  const totalPages = Math.max(1, Math.ceil(totalCount / take));
 
   return (
     <Container className="py-6">
       <SectionHeading title={query ? `"${query}" için sonuçlar` : "Arama"} />
       {query ? (
         <p className="mb-4 text-sm text-ink-soft">
-          {total} sonuç bulundu · sayfa {page}/{totalPages}
+          {totalCount} sonuç bulundu · sayfa {page}/{totalPages}
         </p>
       ) : null}
 

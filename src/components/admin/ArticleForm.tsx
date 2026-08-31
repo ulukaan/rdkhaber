@@ -58,6 +58,8 @@ export type ArticleDefaults = {
   seoDescription?: string | null;
   seoKeywords?: string | null;
   publishedAt?: string | Date | null;
+  scheduledAt?: string | Date | null;
+  isLiveBlog?: boolean;
   viewCount?: number;
 };
 
@@ -129,6 +131,8 @@ export function ArticleForm({
       seoDescription: String(formData.get("seoDescription") ?? ""),
       seoKeywords: String(formData.get("seoKeywords") ?? ""),
       publishedAt: String(formData.get("publishedAt") ?? ""),
+      scheduledAt: String(formData.get("scheduledAt") ?? ""),
+      isLiveBlog: formData.get("isLiveBlog") === "on",
     };
 
     const result = isEdit
@@ -329,6 +333,26 @@ export function ArticleForm({
                 />
                 <FieldHint>Boşsa yayına alınca şu anki saat yazılır.</FieldHint>
               </FieldGroup>
+
+              <FieldGroup label="Zamanlanmış yayın" htmlFor="scheduledAt">
+                <Input
+                  id="scheduledAt"
+                  name="scheduledAt"
+                  type="datetime-local"
+                  defaultValue={toDatetimeLocal(defaults?.scheduledAt)}
+                />
+                <FieldHint>Gelecek tarih seçilirse haber o saatte otomatik yayınlanır.</FieldHint>
+              </FieldGroup>
+
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-semibold text-ink">
+                <input
+                  type="checkbox"
+                  name="isLiveBlog"
+                  defaultChecked={defaults?.isLiveBlog}
+                  className="h-4 w-4 accent-brand"
+                />
+                Canlı anlatım modu
+              </label>
 
               <FieldGroup label="Etiketler" htmlFor="tagNames">
                 <Input

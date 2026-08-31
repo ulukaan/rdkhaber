@@ -31,7 +31,12 @@ export function SettingsForm({ settings }: { settings: Record<SettingKey, string
     setSaved(false);
     // Formda olmayan ayarların (ör. görünüm anahtarları) sıfırlanmaması için
     // mevcut değerlerin üzerine yazılır.
-    const raw = { ...settings, ...Object.fromEntries(formData.entries()) };
+    const raw = {
+      ...settings,
+      ...Object.fromEntries(formData.entries()),
+      editorRequiresApproval: formData.get("editorRequiresApproval") === "1" ? "1" : "0",
+      socialAutoShare: formData.get("socialAutoShare") === "1" ? "1" : "0",
+    };
     const result = await updateSettingsAction(raw);
     setLoading(false);
     if (result?.error) {
@@ -200,6 +205,45 @@ export function SettingsForm({ settings }: { settings: Record<SettingKey, string
               placeholder="© 2026 Site Adı. Tüm hakları saklıdır."
             />
             <FieldHint>Boş bırakılırsa yıl ve site adı ile otomatik oluşturulur.</FieldHint>
+          </FieldGroup>
+        </div>
+      </FormCard>
+
+      <FormCard
+        title="Editöryal & dağıtım"
+        description="Onay akışı, otomatik sosyal paylaşım ve BİK bilgisi."
+        Icon={Megaphone}
+      >
+        <FieldGrid>
+          <label className="flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink">
+            <input
+              type="checkbox"
+              name="editorRequiresApproval"
+              value="1"
+              defaultChecked={settings.editorRequiresApproval === "1"}
+              className="h-4 w-4 accent-brand"
+            />
+            Editör yayını admin onayı gerektirsin
+          </label>
+          <label className="flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink">
+            <input
+              type="checkbox"
+              name="socialAutoShare"
+              value="1"
+              defaultChecked={settings.socialAutoShare === "1"}
+              className="h-4 w-4 accent-brand"
+            />
+            Yayında otomatik sosyal paylaşım (Telegram/X webhook)
+          </label>
+        </FieldGrid>
+        <div className="mt-4">
+          <FieldGroup label="BİK yayıncı kodu (opsiyonel)" htmlFor="bikPublisherCode">
+            <Input
+              id="bikPublisherCode"
+              name="bikPublisherCode"
+              defaultValue={settings.bikPublisherCode}
+              placeholder="Resmî ilan alıyorsanız"
+            />
           </FieldGroup>
         </div>
       </FormCard>

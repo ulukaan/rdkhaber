@@ -117,6 +117,25 @@ export async function runHaberBotSource(sourceId: string, authorId: string): Pro
         const summary = applyWordPairs(post.summary, words).trim();
         const content = replaceInHtml(post.content, words).trim();
 
+        const duplicateTitle = await prisma.article.findFirst({
+          where: { title },
+          select: { id: true },
+        });
+        if (duplicateTitle) {
+          skipped += 1;
+          await prisma.haberBotLog.create({
+            data: {
+              sourceId: source.id,
+              sourceUrl: post.url,
+              title,
+              status: "skipped",
+              message: "Aynı başlıkta haber zaten var",
+              articleId: duplicateTitle.id,
+            },
+          });
+          continue;
+        }
+
         if (title.length < 5 || content.length < 20) {
           failed += 1;
           await prisma.haberBotLog.create({

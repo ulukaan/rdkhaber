@@ -65,6 +65,9 @@ export const DEFAULT_SETTINGS = {
   newsletterSmtpUser: "",
   newsletterSmtpPass: "",
   newsletterSmtpSecure: "0",
+  editorRequiresApproval: "1",
+  socialAutoShare: "0",
+  bikPublisherCode: "",
 } as const;
 
 export type SettingKey = keyof typeof DEFAULT_SETTINGS;
