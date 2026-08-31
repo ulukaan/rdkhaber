@@ -1,10 +1,11 @@
-/** Cloudflare Turnstile doğrulaması — secret yoksa geliştirmede atlanır. */
+/** Cloudflare Turnstile doğrulaması — anahtarlar tanımlı değilse atlanır. */
 export async function verifyTurnstileToken(token: string, remoteIp?: string) {
-  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
-  if (!secret) {
-    return process.env.NODE_ENV !== "production";
+  if (!captchaConfigured()) {
+    return true;
   }
-  if (!token?.trim()) return false;
+
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
+  if (!secret || !token?.trim()) return false;
 
   const body = new URLSearchParams({
     secret,

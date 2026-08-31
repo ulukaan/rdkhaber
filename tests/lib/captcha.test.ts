@@ -1,5 +1,5 @@
 import { describe, expect, it, afterEach } from "vitest";
-import { captchaConfigured, turnstileSiteKey } from "@/lib/captcha";
+import { captchaConfigured, turnstileSiteKey, verifyTurnstileToken } from "@/lib/captcha";
 
 describe("captcha helpers", () => {
   const prevSite = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -21,5 +21,11 @@ describe("captcha helpers", () => {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = "site-key";
     process.env.TURNSTILE_SECRET_KEY = "secret-key";
     expect(captchaConfigured()).toBe(true);
+  });
+
+  it("anahtar yokken doğrulama atlanır", async () => {
+    delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    delete process.env.TURNSTILE_SECRET_KEY;
+    await expect(verifyTurnstileToken("")).resolves.toBe(true);
   });
 });
