@@ -134,6 +134,26 @@ Workflow sunucuda `git pull → npm ci → npm run build → tablo ensure` çal�
 
 **CI notu:** `npm ci` / postinstall, `DATABASE_URL` yoksa tablo script'lerini atlar; GitHub CI ve Hostinger build worker uyumludur.
 
+### Cron uç noktaları (CRON_SECRET ile)
+
+| Uç nokta | Açıklama |
+|----------|----------|
+| `/api/cron/publish-scheduled` | Zamanlanmış haberleri yayınlar |
+| `/api/cron/backup-db` | MySQL yedeği (`BACKUP_DIR`) |
+| `/api/cron/haber-bot` | Haber botu çekimi |
+| `/api/cron/cleanup-uploads` | Eski upload temizliği |
+
+Örnek: `curl -H "Authorization: Bearer $CRON_SECRET" https://site.com/api/cron/publish-scheduled`
+
+### Haber sitesi olmazsa olmaz modülleri
+
+- Zamanlanmış yayın + editör onay kuyruğu
+- Canlı anlatım + düzeltme notu
+- Web push (son dakika), sosyal otomatik paylaşım
+- İçerik şikayeti formu (`/sikayet`)
+- Yorum spam filtresi, Meilisearch/Redis (opsiyonel env)
+- Revizyon geçmişi, BİK bilgi sayfası
+
 ## Marka varlıkları
 
 - Logo: `public/brand/logo.png`
