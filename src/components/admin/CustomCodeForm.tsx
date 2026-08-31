@@ -59,7 +59,10 @@ export function CustomCodeForm({
             className="font-mono text-xs"
           />
         </FieldGroup>
-        <FieldHint>Bu alanlar ham HTML basar. Yalnızca güvendiğiniz kodları ekleyin.</FieldHint>
+        <FieldHint>
+          Yalnızca meta ve link etiketleri kaydedilir; script ve iframe otomatik silinir. Reklam/analytics script’leri
+          için Google Site Kit kullanın.
+        </FieldHint>
         {saved ? <p className="text-sm font-medium text-emerald-700">Kaydedildi.</p> : null}
         <FormActions>
           <Button type="submit" disabled={loading}>

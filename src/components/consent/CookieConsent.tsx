@@ -25,6 +25,7 @@ type Props = {
   gtmId: string;
   adsenseClient: string;
   adsenseAuto: boolean;
+  customBodyEndHtml: string;
 };
 
 export function CookieConsent(props: Props) {
@@ -79,6 +80,7 @@ export function CookieConsent(props: Props) {
         gtmId={props.gtmId}
         adsenseClient={props.adsenseClient}
         adsenseAuto={props.adsenseAuto}
+        customBodyEndHtml={props.customBodyEndHtml}
       />
 
       {ready && open && !panel ? (

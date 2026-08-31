@@ -74,27 +74,17 @@ function isFeedUrl(url: string) {
 }
 
 async function fetchText(url: string) {
-  const { assertSafePublicUrl } = await import("@/lib/ssrf");
-  const safe = await assertSafePublicUrl(url);
-  const res = await fetch(safe.toString(), {
-    headers: FETCH_HEADERS,
-    redirect: "manual",
+  const { safeFetch } = await import("@/lib/safe-fetch");
+  const res = await safeFetch(url, {
+    followRedirects: true,
+    maxRedirects: 1,
+    headers: {
+      Accept: "text/html,application/xhtml+xml,application/rss+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
+    },
     cache: "no-store",
     signal: AbortSignal.timeout(20000),
   });
-  if (res.status >= 300 && res.status < 400) {
-    const loc = res.headers.get("location");
-    if (!loc) throw new Error(`${url} → yönlendirme hedefi yok`);
-    const next = await assertSafePublicUrl(new URL(loc, safe).toString());
-    const again = await fetch(next.toString(), {
-      headers: FETCH_HEADERS,
-      redirect: "manual",
-      cache: "no-store",
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!again.ok) throw new Error(`${next} → ${again.status}`);
-    return again.text();
-  }
   if (!res.ok) throw new Error(`${url} → ${res.status}`);
   return res.text();
 }
@@ -180,9 +170,9 @@ async function tryFeed(url: string, origin: string): Promise<NormalizedPost[]> {
 
 async function fetchWpRest(origin: string, maxItems: number): Promise<NormalizedPost[]> {
   const endpoint = `${origin}/wp-json/wp/v2/posts?per_page=${Math.min(maxItems, 30)}&_embed=1&status=publish`;
-  const res = await fetch(endpoint, {
+  const { safeFetch } = await import("@/lib/safe-fetch");
+  const res = await safeFetch(endpoint, {
     headers: { ...FETCH_HEADERS, Accept: "application/json" },
-    redirect: "follow",
     cache: "no-store",
     signal: AbortSignal.timeout(20000),
   });

@@ -23,7 +23,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         if (!email || !password) return null;
 
         const limited = rateLimit(`login:${email.toLowerCase()}`, {
-          limit: 8,
+          limit: 5,
           windowMs: 15 * 60_000,
         });
         if (!limited.ok) return null;

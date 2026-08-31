@@ -10,12 +10,14 @@ export function ConsentScripts({
   gtmId,
   adsenseClient,
   adsenseAuto,
+  customBodyEndHtml,
 }: {
   consent: ConsentState | null;
   gaId: string;
   gtmId: string;
   adsenseClient: string;
   adsenseAuto: boolean;
+  customBodyEndHtml: string;
 }) {
   if (!consent) return null;
 
@@ -24,6 +26,9 @@ export function ConsentScripts({
       {consent.analytics && gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
       {consent.analytics && !gtmId && gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       {consent.ads ? <GoogleAdSense client={adsenseClient} autoAds={adsenseAuto} /> : null}
+      {consent.analytics && customBodyEndHtml ? (
+        <div dangerouslySetInnerHTML={{ __html: customBodyEndHtml }} />
+      ) : null}
     </>
   );
 }

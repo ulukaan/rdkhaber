@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { getSettings } from "@/lib/settings";
 import { logOutboundMail } from "@/lib/mailbox-log";
+import { decryptSecret } from "@/lib/secret-crypto";
 
 export type MailMessage = {
   to: string;
@@ -15,7 +16,9 @@ export async function getMailConfig() {
   const settings = await getSettings();
   const host = process.env.SMTP_HOST || settings.newsletterSmtpHost;
   const user = process.env.SMTP_USER || settings.newsletterSmtpUser;
-  const pass = process.env.SMTP_PASS || settings.newsletterSmtpPass;
+  const pass =
+    process.env.SMTP_PASS ||
+    (settings.newsletterSmtpPass ? decryptSecret(settings.newsletterSmtpPass) : "");
   const port = Number(process.env.SMTP_PORT || settings.newsletterSmtpPort || 587);
   const secure =
     process.env.SMTP_SECURE === "1" ||

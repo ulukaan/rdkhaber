@@ -13,6 +13,7 @@ type RegisterValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverInfo, setServerInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const {
     register,
@@ -22,10 +23,17 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterValues) => {
     setServerError(null);
+    setServerInfo(null);
     setLoading(true);
     const result = await registerAction(values);
     setLoading(false);
-    if (result?.error) setServerError(result.error);
+    if (result?.error) {
+      setServerError(result.error);
+      return;
+    }
+    if (result?.message) {
+      setServerInfo(result.message);
+    }
   };
 
   return (
@@ -45,7 +53,8 @@ export function RegisterForm() {
         />
       </FieldGroup>
 
-      {serverError && <p className="text-sm font-medium text-brand">{serverError}</p>}
+      {serverError ? <p className="text-sm font-medium text-brand">{serverError}</p> : null}
+      {serverInfo ? <p className="text-sm font-medium text-ink-soft">{serverInfo}</p> : null}
 
       <Button type="submit" disabled={loading} className="mt-2 w-full">
         {loading ? "Kayıt olunuyor..." : "Kayıt Ol"}

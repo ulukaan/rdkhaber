@@ -5,6 +5,11 @@ import { getSettings } from "@/lib/settings";
 import { darkenColor } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/site-url";
 import { CookieConsent } from "@/components/consent/CookieConsent";
+import {
+  parseCustomLinkTags,
+  parseCustomMetaTags,
+  sanitizeCustomBodyEndHtml,
+} from "@/lib/custom-code";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,6 +73,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const gtmId = settings.googleTagManagerId.trim();
   const adsenseClient = settings.googleAdsenseClient.trim();
   const adsenseAuto = settings.googleAdsenseAutoAds === "1";
+  const customMeta = parseCustomMetaTags(settings.customHeadHtml);
+  const customLinks = parseCustomLinkTags(settings.customHeadHtml);
+  const customBodyEndHtml = sanitizeCustomBodyEndHtml(settings.customBodyEndHtml);
 
   return (
     <html
@@ -80,21 +88,35 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         } as React.CSSProperties
       }
     >
+      <head>
+        {customMeta.map((tag, index) => {
+          const props: Record<string, string> = {};
+          if (tag.name) props.name = tag.name;
+          if (tag.property) props.property = tag.property;
+          if (tag.content) props.content = tag.content;
+          if (tag.httpEquiv) props.httpEquiv = tag.httpEquiv;
+          if (tag.charSet) props.charSet = tag.charSet;
+          return <meta key={`custom-meta-${index}`} {...props} />;
+        })}
+        {customLinks.map((link, index) => (
+          <link
+            key={`custom-link-${index}`}
+            rel={link.rel}
+            href={link.href}
+            type={link.type}
+          />
+        ))}
+      </head>
       <body className="min-h-full flex flex-col">
-        {settings.customHeadHtml ? (
-          <div hidden dangerouslySetInnerHTML={{ __html: settings.customHeadHtml }} />
-        ) : null}
         {children}
-        {settings.customBodyEndHtml ? (
-          <div dangerouslySetInnerHTML={{ __html: settings.customBodyEndHtml }} />
-        ) : null}
         <CookieConsent
-          analyticsConfigured={Boolean(gaId || gtmId)}
+          analyticsConfigured={Boolean(gaId || gtmId || customBodyEndHtml)}
           adsConfigured={Boolean(adsenseClient && adsenseAuto)}
           gaId={gaId}
           gtmId={gtmId}
           adsenseClient={adsenseClient}
           adsenseAuto={adsenseAuto}
+          customBodyEndHtml={customBodyEndHtml}
         />
       </body>
     </html>

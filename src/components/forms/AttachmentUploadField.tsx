@@ -4,13 +4,14 @@ import { useRef, useState } from "react";
 import { FileImage, Film, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isImageAttachment, isVideoAttachment } from "@/lib/attachments";
+import { issuePublicUploadTokenAction } from "@/actions/upload-token";
 
 export function AttachmentUploadField({
   value,
   onChange,
   maxFiles = 5,
   label = "Fotoğraf veya video ekle",
-  hint = "JPG, PNG, WEBP, GIF (max 8 MB) · MP4, WEBM, MOV (max 40 MB) · en fazla 5 dosya",
+  hint = "JPG, PNG, WEBP, GIF (max 2 MB anonim / 5 MB üye) · Video yalnızca giriş yapmış üyeler · en fazla 5 dosya",
 }: {
   value: string[];
   onChange: (urls: string[]) => void;
@@ -37,9 +38,15 @@ export function AttachmentUploadField({
     const next = [...value];
 
     try {
+      const tokenResult = await issuePublicUploadTokenAction();
+      if (!tokenResult.token) {
+        throw new Error(tokenResult.error ?? "Yükleme oturumu başlatılamadı");
+      }
+
       for (const file of list) {
         const fd = new FormData();
         fd.append("file", file);
+        fd.append("uploadToken", tokenResult.token);
         const res = await fetch("/api/upload/public", { method: "POST", body: fd });
         const json = (await res.json()) as { url?: string; error?: string };
         if (!res.ok || !json.url) throw new Error(json.error ?? "Yükleme başarısız");

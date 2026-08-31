@@ -27,7 +27,11 @@ export async function registerAction(values: {
     where: { email: parsed.data.email },
   });
   if (existing) {
-    return { error: "Bu e-posta adresi zaten kayıtlı." };
+    return {
+      ok: true as const,
+      message:
+        "Kayıt isteği alındı. E-posta adresinizle giriş yapmayı deneyin; hesabınız yoksa yöneticiyle iletişime geçin.",
+    };
   }
 
   const passwordHash = await hashPassword(parsed.data.password);

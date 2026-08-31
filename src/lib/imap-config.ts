@@ -1,10 +1,14 @@
 import { getSettings } from "@/lib/settings";
+import { decryptSecret } from "@/lib/secret-crypto";
 
 export async function getImapConfig() {
   const settings = await getSettings();
   const host = process.env.IMAP_HOST || "imap.hostinger.com";
   const user = process.env.IMAP_USER || process.env.SMTP_USER || settings.newsletterSmtpUser;
-  const pass = process.env.IMAP_PASS || process.env.SMTP_PASS || settings.newsletterSmtpPass;
+  const pass =
+    process.env.IMAP_PASS ||
+    process.env.SMTP_PASS ||
+    (settings.newsletterSmtpPass ? decryptSecret(settings.newsletterSmtpPass) : "");
   const port = Number(process.env.IMAP_PORT || 993);
   const secure = process.env.IMAP_SECURE !== "0";
 

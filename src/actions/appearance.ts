@@ -12,6 +12,10 @@ import {
 import { setSettings } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
 import { revalidatePublicSite } from "@/lib/revalidate-site";
+import {
+  sanitizeCustomBodyEndHtml,
+  sanitizeCustomHeadHtml,
+} from "@/lib/custom-code";
 
 const navLocationSchema = z.enum(["header", "footer", "footer_services", "footer_corporate"]);
 
@@ -144,9 +148,11 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
 
 export async function saveCustomCodeAction(raw: Record<string, string>) {
   await requireRole(["ADMIN"]);
+  const head = sanitizeCustomHeadHtml(raw.customHeadHtml ?? "");
+  const body = sanitizeCustomBodyEndHtml(raw.customBodyEndHtml ?? "");
   await setSettings({
-    customHeadHtml: raw.customHeadHtml ?? "",
-    customBodyEndHtml: raw.customBodyEndHtml ?? "",
+    customHeadHtml: head,
+    customBodyEndHtml: body,
   });
   revalidatePublicSite({ layout: true });
   revalidatePath("/admin/gorunum/ozel-kod");

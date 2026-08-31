@@ -31,12 +31,10 @@ async function uniqueSlug(base: string) {
 async function saveCover(url: string | null, uploadedById: string): Promise<string | null> {
   if (!url) return null;
   try {
-    const { assertSafePublicUrl } = await import("@/lib/ssrf");
+    const { safeFetch } = await import("@/lib/safe-fetch");
     const { detectUploadMime, extensionForMime, isImageMime } = await import("@/lib/upload-safe");
-    const safe = await assertSafePublicUrl(url);
-    const res = await fetch(safe.toString(), {
-      headers: { "User-Agent": UA, Accept: "image/*,*/*" },
-      redirect: "manual",
+    const res = await safeFetch(url, {
+      headers: { Accept: "image/*,*/*" },
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;

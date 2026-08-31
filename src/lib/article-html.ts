@@ -13,6 +13,11 @@ export function sanitizeArticleHtml(content: string) {
       a: ["href", "target", "rel"],
       img: ["src", "alt", "width", "height"],
     },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: {
+      a: ["http", "https", "mailto"],
+      img: ["http", "https"],
+    },
     transformTags: {
       a: sanitizeHtml.simpleTransform("a", {
         rel: "noopener noreferrer",

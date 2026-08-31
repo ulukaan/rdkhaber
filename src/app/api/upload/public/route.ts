@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { auth } from "@/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
 import {
@@ -10,9 +11,11 @@ import {
   isImageMime,
   isVideoMime,
 } from "@/lib/upload-safe";
+import { verifyPublicUploadToken } from "@/lib/upload-token";
 
-const IMAGE_MAX = 8 * 1024 * 1024;
-const VIDEO_MAX = 40 * 1024 * 1024;
+const IMAGE_MAX_ANON = 2 * 1024 * 1024;
+const IMAGE_MAX_AUTH = 5 * 1024 * 1024;
+const VIDEO_MAX_AUTH = 20 * 1024 * 1024;
 
 export async function POST(req: Request) {
   const origin = await assertSameOriginRequest();
@@ -20,8 +23,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: origin.error }, { status: 403 });
   }
 
+  const session = await auth();
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`upload:public:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
+  const formData = await req.formData();
+  const token = String(formData.get("uploadToken") ?? "");
+
+  if (!verifyPublicUploadToken(token, ip)) {
+    return NextResponse.json({ error: "Yükleme oturumu geçersiz veya süresi doldu." }, { status: 403 });
+  }
+
+  const limited = rateLimit(
+    session?.user ? `upload:public:user:${session.user.id}` : `upload:public:ip:${ip}`,
+    {
+      limit: session?.user ? 12 : 3,
+      windowMs: 60 * 60_000,
+    },
+  );
   if (!limited.ok) {
     return NextResponse.json(
       { error: `Yükleme limiti aşıldı. ${limited.retryAfterSec} sn sonra tekrar deneyin.` },
@@ -29,14 +46,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const formData = await req.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Dosya bulunamadı" }, { status: 400 });
-  }
-
-  if (file.size > VIDEO_MAX) {
-    return NextResponse.json({ error: "Dosya çok büyük" }, { status: 400 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -54,10 +66,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Desteklenmeyen dosya türü" }, { status: 400 });
   }
 
-  const max = isVideo ? VIDEO_MAX : IMAGE_MAX;
+  if (isVideo && !session?.user) {
+    return NextResponse.json(
+      { error: "Video yüklemek için giriş yapmanız gerekir." },
+      { status: 403 },
+    );
+  }
+
+  const max = isVideo ? VIDEO_MAX_AUTH : session?.user ? IMAGE_MAX_AUTH : IMAGE_MAX_ANON;
   if (file.size > max) {
     return NextResponse.json(
-      { error: isVideo ? "Video çok büyük (en fazla 40 MB)" : "Görsel çok büyük (en fazla 8 MB)" },
+      {
+        error: isVideo
+          ? "Video çok büyük (en fazla 20 MB)"
+          : session?.user
+            ? "Görsel çok büyük (en fazla 5 MB)"
+            : "Görsel çok büyük (en fazla 2 MB)",
+      },
       { status: 400 },
     );
   }
@@ -67,14 +92,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Desteklenmeyen dosya türü" }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "reader");
+  const uploadDir = path.join(
+    process.cwd(),
+    "public",
+    "uploads",
+    "reader",
+    session?.user ? session.user.id : "anon",
+  );
   await mkdir(uploadDir, { recursive: true });
 
   const filename = `${randomUUID()}.${ext}`;
   await writeFile(path.join(uploadDir, filename), buffer);
 
+  const prefix = session?.user ? `/uploads/reader/${session.user.id}` : "/uploads/reader/anon";
   return NextResponse.json({
-    url: `/uploads/reader/${filename}`,
+    url: `${prefix}/${filename}`,
     mimeType: mime,
     kind: isVideo ? "video" : "image",
   });

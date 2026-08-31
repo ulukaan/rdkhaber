@@ -11,6 +11,7 @@ import {
 } from "@/lib/validation";
 import { getMailConfig, sendMail } from "@/lib/mail";
 import { setSettings, getSettings } from "@/lib/settings";
+import { encryptSecret } from "@/lib/secret-crypto";
 import {
   buildNewsDigestHtml,
   parseSubscriberImport,
@@ -361,8 +362,17 @@ export async function saveNewsletterSmtpAction(raw: Record<string, unknown>) {
   }
   const current = await getSettings();
   const pass = parsed.data.newsletterSmtpPass?.trim()
-    ? parsed.data.newsletterSmtpPass
+    ? (() => {
+        try {
+          return encryptSecret(parsed.data.newsletterSmtpPass);
+        } catch {
+          return null;
+        }
+      })()
     : current.newsletterSmtpPass;
+  if (parsed.data.newsletterSmtpPass?.trim() && !pass) {
+    return { error: "SMTP şifresi kaydedilemedi. AUTH_SECRET (min. 32 karakter) tanımlı olmalı." };
+  }
   await setSettings({
     newsletterFromName: parsed.data.newsletterFromName ?? "",
     newsletterFromEmail: parsed.data.newsletterFromEmail ?? "",
