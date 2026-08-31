@@ -6,11 +6,16 @@ import { CACHE_TAGS } from "@/lib/cache-tags";
 
 export const getActiveAd = cache((code: string) =>
   unstable_cache(
-    async () =>
-      prisma.adSlot.findFirst({
-        where: { active: true, position: { in: lookupCodes(code) } },
-        orderBy: { createdAt: "desc" },
-      }),
+    async () => {
+      try {
+        return await prisma.adSlot.findFirst({
+          where: { active: true, position: { in: lookupCodes(code) } },
+          orderBy: { createdAt: "desc" },
+        });
+      } catch {
+        return null;
+      }
+    },
     ["active-ad", code],
     { revalidate: 120, tags: [CACHE_TAGS.ads] },
   )(),
