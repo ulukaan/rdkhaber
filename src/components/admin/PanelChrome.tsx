@@ -24,15 +24,14 @@ export function PanelChrome({
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
     try {
-      setCollapsed(localStorage.getItem(SIDEBAR_STORAGE_KEY) === "collapsed");
+      return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "collapsed";
     } catch {
-      // localStorage yoksa varsayılan geniş
+      return false;
     }
-  }, []);
+  });
 
   useEffect(() => {
     document.documentElement.style.setProperty(

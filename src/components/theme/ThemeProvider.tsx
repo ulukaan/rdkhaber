@@ -25,17 +25,15 @@ function readStoredTheme(): Theme {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const staff = isStaffPath(pathname);
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(() => readStoredTheme());
 
   useLayoutEffect(() => {
     if (staff) {
       document.documentElement.removeAttribute("data-theme");
       return;
     }
-    const next = readStoredTheme();
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-  }, [staff]);
+    document.documentElement.dataset.theme = theme;
+  }, [staff, theme]);
 
   const toggle = () => {
     if (staff) return;
