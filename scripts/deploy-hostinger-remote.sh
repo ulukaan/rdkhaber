@@ -39,6 +39,9 @@ npm run build
 echo "==> Tablo ensure"
 node scripts/ensure-all-tables.mjs
 
+echo "==> Demo seçim (yoksa)"
+node scripts/seed-demo-election.mjs
+
 echo "==> ads.txt sync"
 node scripts/sync-ads-txt.mjs
 
