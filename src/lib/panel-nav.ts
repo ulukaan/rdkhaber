@@ -25,6 +25,7 @@ import {
   Users,
   Tv,
   Video,
+  Vote,
   Zap,
   Bot,
   Mail,
@@ -145,6 +146,7 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
         adminOnly: true,
         items: [
           { href: "/admin/yayin-akisi", label: "Yayın Akışı", Icon: Tv },
+          { href: "/admin/secim", label: "Seçim Merkezi", Icon: Vote },
           { href: "/admin/bulten", label: "Bülten", Icon: Mail },
           { href: "/admin/eposta", label: "E-posta", Icon: Inbox },
           { href: "/admin/reklamlar", label: "Reklam Grupları", Icon: BadgeDollarSign },

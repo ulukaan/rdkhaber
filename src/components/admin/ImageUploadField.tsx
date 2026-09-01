@@ -9,10 +9,12 @@ export function ImageUploadField({
   name,
   defaultValue,
   variant = "cover",
+  onValueChange,
 }: {
   name: string;
   defaultValue?: string | null;
   variant?: "cover" | "avatar";
+  onValueChange?: (url: string) => void;
 }) {
   const [url, setUrl] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
@@ -31,6 +33,7 @@ export function ImageUploadField({
       if (!res.ok) throw new Error(json.error ?? "Yükleme başarısız");
       setPreviewFailed(false);
       setUrl(json.url);
+      onValueChange?.(json.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yükleme başarısız");
     } finally {
@@ -62,6 +65,7 @@ export function ImageUploadField({
             onClick={() => {
               setPreviewFailed(false);
               setUrl("");
+              onValueChange?.("");
             }}
             className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
           >
@@ -97,6 +101,7 @@ export function ImageUploadField({
         onChange={(e) => {
           setPreviewFailed(false);
           setUrl(e.target.value);
+          onValueChange?.(e.target.value);
         }}
       />
       {previewFailed && url ? (

@@ -36,8 +36,10 @@ import { ParityStrip } from "@/components/home/ParityStrip";
 import { ImsakiyeBar } from "@/components/home/ImsakiyeBar";
 import { HoroscopeStrip } from "@/components/home/HoroscopeStrip";
 import { BroadcastStrip } from "@/components/home/BroadcastStrip";
+import { ElectionStrip } from "@/components/home/ElectionStrip";
 import { LiveScoreStrip } from "@/components/home/LiveScoreStrip";
 import { getLiveScores } from "@/lib/livescore";
+import { getElectionStripData } from "@/lib/election";
 import { categoryHref } from "@/lib/category-path";
 import { getLatestInstagramPost } from "@/lib/instagram";
 import { InstagramLatestCard } from "@/components/home/InstagramLatestCard";
@@ -57,6 +59,7 @@ export default async function HomePage() {
   const needPrayer = settings.showImsakiye !== "0";
   const needHoroscope = settings.showHoroscope !== "0";
   const needBroadcast = settings.showBroadcast !== "0";
+  const needElection = settings.showElection !== "0";
   const needLiveScore = settings.showLiveScore !== "0";
   const needCards = settings.showCategoryCards !== "0";
   const needSpotlight = settings.showCategorySpotlight !== "0";
@@ -82,6 +85,7 @@ export default async function HomePage() {
     prayers,
     horoscopes,
     broadcastItems,
+    electionStrip,
     liveScores,
     featuredRailAd,
     instagramPost,
@@ -109,6 +113,7 @@ export default async function HomePage() {
     needPrayer ? getPrayerTimes() : Promise.resolve(null),
     needHoroscope ? getDailyHoroscopes() : Promise.resolve([]),
     needBroadcast ? getBroadcastItems({ limit: 6 }) : Promise.resolve([]),
+    needElection ? getElectionStripData() : Promise.resolve(null),
     needLiveScore ? getLiveScores() : Promise.resolve(null),
     getActiveAd("069"),
     instagramProfile
@@ -318,6 +323,16 @@ export default async function HomePage() {
       ) : null}
       {settings.showBroadcast !== "0" && broadcastItems.length > 0 ? (
         <BroadcastStrip items={broadcastItems} />
+      ) : null}
+      {settings.showElection !== "0" && electionStrip ? (
+        <ElectionStrip
+          title={electionStrip.title}
+          subtitle={electionStrip.subtitle}
+          boxPct={electionStrip.boxPct}
+          leadingName={electionStrip.leadingName}
+          leadingPct={electionStrip.leadingPct}
+          href="/secim"
+        />
       ) : null}
 
       {/* 7) Akış + yan sütun */}

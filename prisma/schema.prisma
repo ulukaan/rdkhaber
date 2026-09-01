@@ -612,6 +612,97 @@ model PollOption {
   @@index([pollId, order])
 }
 
+enum ElectionStatus {
+  DRAFT
+  UPCOMING
+  LIVE
+  FINISHED
+}
+
+enum ElectionRaceType {
+  MAYOR
+  COUNCIL
+}
+
+/** Yerel/genel seçim merkezi — anketten bağımsız resmî sonuç vitrini. */
+model Election {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+  title           String
+  subtitle        String?
+  electionDate    DateTime?
+  status          ElectionStatus   @default(DRAFT)
+  showOnHome      Boolean          @default(false)
+  isPrimary       Boolean          @default(false)
+  liveRefreshSec  Int              @default(60)
+  totalBoxes      Int              @default(0)
+  openBoxes       Int              @default(0)
+  totalVoters     Int              @default(0)
+  usedVotes       Int              @default(0)
+  validVotes      Int              @default(0)
+  categorySlug    String?
+  lastResultsAt   DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  candidates ElectionCandidate[]
+  districts  ElectionDistrict[]
+
+  @@index([status, isPrimary])
+}
+
+model ElectionCandidate {
+  id          String           @id @default(cuid())
+  electionId  String
+  election    Election         @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  raceType    ElectionRaceType @default(MAYOR)
+  name        String
+  partyName   String
+  partyColor  String           @default("#d0021b")
+  photoUrl    String?
+  slogan      String?
+  bio         String?          @db.Text
+  votes       Int              @default(0)
+  votePct     Float            @default(0)
+  prevVotes   Int?
+  prevVotePct Float?
+  order       Int              @default(0)
+
+  districtResults ElectionDistrictResult[]
+
+  @@index([electionId, raceType, order])
+}
+
+model ElectionDistrict {
+  id          String   @id @default(cuid())
+  electionId  String
+  election    Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  order       Int      @default(0)
+  totalBoxes  Int      @default(0)
+  openBoxes   Int      @default(0)
+  turnoutPct  Float    @default(0)
+
+  results ElectionDistrictResult[]
+
+  @@unique([electionId, slug])
+  @@index([electionId, order])
+}
+
+model ElectionDistrictResult {
+  id          String             @id @default(cuid())
+  districtId  String
+  district    ElectionDistrict   @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   ElectionCandidate  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  votes       Int                @default(0)
+  votePct     Float              @default(0)
+
+  @@unique([districtId, candidateId])
+  @@index([districtId])
+}
+
 /** Anonim ziyaretçi oyu — çerez ile tekil. */
 model PollVote {
   id        String   @id @default(cuid())

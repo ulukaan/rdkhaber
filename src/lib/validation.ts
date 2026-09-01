@@ -287,3 +287,57 @@ export const pollSchema = z.object({
     .min(2, "En az 2 seçenek gerekli")
     .max(8, "En fazla 8 seçenek"),
 });
+
+const electionCandidateSchema = z.object({
+  id: z.string().optional(),
+  raceType: z.enum(["MAYOR", "COUNCIL"]),
+  name: z.string().min(2, "Aday adı gerekli").max(120),
+  partyName: z.string().min(1, "Parti adı gerekli").max(80),
+  partyColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Geçerli HEX renk girin"),
+  photoUrl: optionalSafeMediaUrl,
+  slogan: z.string().max(160).optional().or(z.literal("")),
+  bio: z.string().max(2000).optional().or(z.literal("")),
+  votes: z.coerce.number().int().min(0).default(0),
+  votePct: z.coerce.number().min(0).max(100).default(0),
+  prevVotes: z.coerce.number().int().min(0).optional().nullable(),
+  prevVotePct: z.coerce.number().min(0).max(100).optional().nullable(),
+});
+
+const electionDistrictSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1).max(80),
+  slug: z.string().min(1).max(80),
+  order: z.coerce.number().int().min(0).default(0),
+  totalBoxes: z.coerce.number().int().min(0).default(0),
+  openBoxes: z.coerce.number().int().min(0).default(0),
+  turnoutPct: z.coerce.number().min(0).max(100).default(0),
+  results: z
+    .array(
+      z.object({
+        candidateKey: z.string().min(1),
+        votes: z.coerce.number().int().min(0).default(0),
+        votePct: z.coerce.number().min(0).max(100).default(0),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+export const electionSchema = z.object({
+  title: z.string().min(3, "Başlık en az 3 karakter").max(160),
+  slug: z.string().min(2).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug küçük harf ve tire olmalı"),
+  subtitle: z.string().max(200).optional().or(z.literal("")),
+  electionDate: z.string().optional().or(z.literal("")),
+  status: z.enum(["DRAFT", "UPCOMING", "LIVE", "FINISHED"]),
+  showOnHome: z.boolean().default(false),
+  isPrimary: z.boolean().default(false),
+  liveRefreshSec: z.coerce.number().int().min(15).max(300).default(60),
+  totalBoxes: z.coerce.number().int().min(0).default(0),
+  openBoxes: z.coerce.number().int().min(0).default(0),
+  totalVoters: z.coerce.number().int().min(0).default(0),
+  usedVotes: z.coerce.number().int().min(0).default(0),
+  validVotes: z.coerce.number().int().min(0).default(0),
+  categorySlug: z.string().max(120).optional().or(z.literal("")),
+  candidates: z.array(electionCandidateSchema).min(1, "En az bir aday gerekli"),
+  districts: z.array(electionDistrictSchema).optional().default([]),
+});
