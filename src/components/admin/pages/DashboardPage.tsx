@@ -219,7 +219,7 @@ export async function DashboardPage({ role }: { role: Role }) {
         </PanelCard>
 
         <PanelCard padding={false}>
-          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+          <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3.5">
             <SectionHeader title="Son eklenen haberler" className="mb-0" />
             <Link
               href={`${basePath}/makaleler`}
@@ -230,19 +230,19 @@ export async function DashboardPage({ role }: { role: Role }) {
           </div>
           <div className="flex flex-col divide-y divide-border">
             {data.recent.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-ink-soft">Henüz haber yok.</p>
+              <p className="px-4 py-10 text-center text-sm text-ink-soft sm:px-5">Henüz haber yok.</p>
             ) : (
               data.recent.map((a) => (
                 <Link
                   key={a.id}
                   href={`${basePath}/makaleler/${a.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-3 text-sm transition-colors hover:bg-surface/60"
+                  className="flex flex-col gap-1 px-4 py-3 text-sm transition-colors hover:bg-surface/60 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5"
                 >
                   <span className="flex min-w-0 items-center gap-2.5">
                     <StatusDot status={a.status as ArticleStatus} />
-                    <span className="truncate font-semibold text-ink">{a.title}</span>
+                    <span className="line-clamp-2 font-semibold text-ink sm:truncate">{a.title}</span>
                   </span>
-                  <span className="shrink-0 text-xs text-ink-soft">
+                  <span className="shrink-0 pl-5 text-xs text-ink-soft sm:pl-0">
                     {a.author.name} · {formatRelativeTime(a.createdAt)}
                   </span>
                 </Link>

@@ -48,36 +48,36 @@ export function HeadlineDesignForm({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 shadow-sm">
-        <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-white px-4 py-3 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
+        <label className="flex w-full items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-wide sm:w-auto sm:justify-start">
           Yazı yönü
           <select
             value={align}
             onChange={(e) => setAlign(e.target.value as HeadlineAlign)}
-            className="rounded border border-border bg-white px-2 py-1 text-xs font-semibold text-ink"
+            className="min-h-[44px] rounded border border-border bg-white px-2 py-1 text-xs font-semibold text-ink"
           >
             <option value="left">Sol</option>
             <option value="center">Orta</option>
             <option value="right">Sağ</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide">
+        <label className="flex w-full items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-wide sm:w-auto sm:justify-start">
           Resim yönü
           <select
             value={imageAlign}
             onChange={(e) => setImageAlign(e.target.value as HeadlineAlign)}
-            className="rounded border border-border bg-white px-2 py-1 text-xs font-semibold text-ink"
+            className="min-h-[44px] rounded border border-border bg-white px-2 py-1 text-xs font-semibold text-ink"
           >
             <option value="left">Sol</option>
             <option value="center">Orta</option>
             <option value="right">Sağ</option>
           </select>
         </label>
-        <div className="ml-auto flex gap-2">
-          <Button type="button" size="sm" onClick={save} disabled={pending}>
+        <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row">
+          <Button type="button" size="sm" onClick={save} disabled={pending} className="w-full sm:w-auto">
             {pending ? "Kaydediliyor…" : "Kaydet"}
           </Button>
-          <Button href={cancelHref} size="sm" variant="outline">
+          <Button href={cancelHref} size="sm" variant="outline" className="w-full sm:w-auto">
             İptal
           </Button>
         </div>

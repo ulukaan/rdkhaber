@@ -36,8 +36,8 @@ export default async function StatsPage() {
         <StatCard label="30 gün ihbar" value={tips30} Icon={Send} />
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-        <div className="border-b border-border px-5 py-3.5">
+      <div className="mt-8 rounded-xl border border-border bg-white shadow-sm">
+        <div className="border-b border-border px-4 py-3.5 sm:px-5">
           <h3 className="text-sm font-bold text-ink">En çok okunan haberler</h3>
         </div>
         <Table>

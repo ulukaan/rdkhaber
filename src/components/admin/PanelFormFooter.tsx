@@ -11,7 +11,7 @@ export function PanelFormFooter({
   return (
     <div
       className={cn(
-        "panel-form-footer fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-3 py-3 backdrop-blur sm:px-4 lg:left-[252px]",
+        "panel-form-footer fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-3 py-3 backdrop-blur sm:px-4 lg:left-[var(--panel-sidebar-w,260px)]",
         className,
       )}
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
