@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
-import { headlineFromArticle } from "@/components/news/HeadlineFace";
+import { HEADLINE_OVERLAY, HEADLINE_TITLE_SHADOW, headlineFromArticle } from "@/components/news/HeadlineFace";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
 
@@ -39,15 +39,15 @@ export function HeadlineSlider({
           className="absolute inset-0 h-full w-full"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
-        <span className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent" />
+        <span className={cn("absolute inset-0", HEADLINE_OVERLAY.bottomStrong)} />
         <span className="absolute inset-x-0 bottom-10 p-4 md:bottom-12 md:p-6">
           <span
-            className="mb-2 inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white"
+            className={cn("mb-2 inline-block px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white", HEADLINE_TITLE_SHADOW)}
             style={{ backgroundColor: accent || current.category.color || "var(--brand)" }}
           >
             {face.kicker}
           </span>
-          <h2 className="line-clamp-3 text-lg font-extrabold leading-snug text-white md:text-2xl lg:text-[1.65rem]">
+          <h2 className={cn("line-clamp-3 text-lg font-extrabold leading-snug text-white md:text-2xl lg:text-[1.65rem]", HEADLINE_TITLE_SHADOW)}>
             {face.title}
           </h2>
         </span>
@@ -73,7 +73,7 @@ export function HeadlineSlider({
                 onFocus={() => setIndex(i)}
                 className={cn(
                   "flex-1 py-1.5 text-center text-[11px] font-bold text-white transition-colors duration-200 md:py-2 md:text-xs",
-                  active ? "bg-ink/35" : "hover:bg-black/15",
+                  active ? "bg-black/35" : "hover:bg-black/15",
                 )}
               >
                 {i + 1}
