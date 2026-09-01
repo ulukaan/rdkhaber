@@ -1,4 +1,4 @@
-/** Cloudflare Turnstile doğrulaması — anahtarlar tanımlı değilse atlanır. */
+/** Cloudflare Turnstile doğrulaması — anahtarlar tanımlı değilse captcha atlanır. */
 export async function verifyTurnstileToken(token: string, remoteIp?: string) {
   if (!captchaConfigured()) {
     return true;
@@ -32,4 +32,9 @@ export function turnstileSiteKey() {
 
 export function captchaConfigured() {
   return Boolean(turnstileSiteKey() && process.env.TURNSTILE_SECRET_KEY?.trim());
+}
+
+/** Captcha zorunlu mu? (yalnızca anahtarlar tanımlıysa) */
+export function captchaRequired() {
+  return captchaConfigured();
 }
