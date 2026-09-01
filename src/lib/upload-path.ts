@@ -20,7 +20,9 @@ function candidateRoots() {
   const roots: string[] = [];
   if (fromEnv) roots.push(path.resolve(fromEnv));
   if (process.env.NODE_ENV === "production") {
+    roots.push(path.join(homedir(), "domains", "duzceradikal.com", "rdkhaber-uploads"));
     roots.push(path.join(homedir(), "rdkhaber-uploads"));
+    roots.push(path.join(process.cwd(), "..", "..", "..", "rdkhaber-uploads"));
     roots.push(path.join(process.cwd(), "..", "rdkhaber-uploads"));
   }
   roots.push(path.join(process.cwd(), "public", "uploads"));
@@ -42,6 +44,24 @@ export async function getUploadRoot() {
   await mkdir(fallback, { recursive: true });
   cachedRoot = fallback;
   return fallback;
+}
+
+/** Tüm olası yükleme köklerini döndürür (eski dağılmış dosyalar için). */
+export async function getAllUploadRoots() {
+  const roots: string[] = [];
+  const seen = new Set<string>();
+  for (const root of candidateRoots()) {
+    const abs = path.resolve(root);
+    if (seen.has(abs)) continue;
+    seen.add(abs);
+    try {
+      await mkdir(root, { recursive: true });
+      roots.push(abs);
+    } catch {
+      // yoksa atla
+    }
+  }
+  return roots;
 }
 
 /** `/uploads/foo/bar.jpg` → `foo/bar.jpg` */
@@ -71,7 +91,7 @@ export async function writeUploadedFile(relativePath: string, buffer: Buffer) {
 export async function readUploadedFile(urlPath: string) {
   const rel = relativeFromUploadUrl(urlPath);
   if (!rel) return null;
-  const roots = [await getUploadRoot(), path.join(process.cwd(), "public", "uploads")];
+  const roots = await getAllUploadRoots();
   const seen = new Set<string>();
   for (const root of roots) {
     const abs = path.resolve(/* turbopackIgnore: true */ root, rel);
@@ -92,7 +112,7 @@ export async function readUploadedFile(urlPath: string) {
 export async function deleteUploadedFile(urlPath: string) {
   const rel = relativeFromUploadUrl(urlPath);
   if (!rel) return false;
-  const roots = [await getUploadRoot(), path.join(process.cwd(), "public", "uploads")];
+  const roots = await getAllUploadRoots();
   const seen = new Set<string>();
   let deleted = false;
   for (const root of roots) {
