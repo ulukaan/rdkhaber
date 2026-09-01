@@ -48,6 +48,7 @@ export const DEFAULT_SETTINGS = {
   showParity: "1",
   showImsakiye: "1",
   showBroadcast: "1",
+  showElection: "0",
   showHoroscope: "1",
   showLiveScore: "1",
   parityDesign: "2",

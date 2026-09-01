@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Flame,
   Tv,
+  Vote,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { saveHomepageModulesAction } from "@/actions/appearance";
@@ -221,6 +222,12 @@ const GROUPS: Array<{
         label: "Yayın akışı",
         hint: "Ulusal kanalların anlık programı — 5 dk’da bir yenilenir",
         Icon: Tv,
+      },
+      {
+        key: "showElection",
+        label: "Seçim şeridi",
+        hint: "Birincil seçim ekranından özet — /secim sayfasına gider",
+        Icon: Vote,
       },
     ],
   },

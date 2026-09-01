@@ -136,6 +136,7 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
     "showParity",
     "showImsakiye",
     "showBroadcast",
+    "showElection",
     "showHoroscope",
     "showLiveScore",
   ] as const;
