@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
 import { detectUploadMime, extensionForMime, isImageMime } from "@/lib/upload-safe";
 import { optimizeImageBuffer } from "@/lib/image-optimize";
+import { saveStaffMedia } from "@/lib/media-upload";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -29,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`upload:${session.user.role}:${session.user.id}:${ip}`, {
+  const limited = await rateLimit(`upload:${session.user.role}:${session.user.id}:${ip}`, {
     limit: isMember ? 12 : 40,
     windowMs: isMember ? 60 * 60_000 : 60_000,
   });
@@ -52,42 +49,43 @@ export async function POST(req: Request) {
     );
   }
 
-  let buffer = Buffer.from(await file.arrayBuffer());
-  let mime = detectUploadMime(buffer);
-  let ext = mime ? extensionForMime(mime) : null;
-  if (mime && isImageMime(mime)) {
-    const optimized = await optimizeImageBuffer(buffer);
-    buffer = Buffer.from(optimized.buffer);
-    mime = optimized.mime;
-    ext = optimized.ext;
-  }
-  if (!mime || !isImageMime(mime) || !ext) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mime = detectUploadMime(buffer);
+  if (!mime || !isImageMime(mime)) {
     return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
   }
 
-  const uploadDir = path.join(
-    process.cwd(),
-    "public",
-    "uploads",
-    isMember ? "avatars" : "",
-  );
-  await mkdir(uploadDir, { recursive: true });
-
-  const filename = `${randomUUID()}.${ext}`;
-  await writeFile(path.join(uploadDir, filename), buffer);
-
-  const url = isMember ? `/uploads/avatars/${filename}` : `/uploads/${filename}`;
   if (isStaff) {
-    await prisma.media.create({
-      data: {
-        url,
-        filename: file.name.slice(0, 180),
-        mimeType: mime,
-        size: file.size,
+    try {
+      const saved = await saveStaffMedia({
+        buffer,
+        originalName: file.name,
         uploadedById: session.user.id,
-      },
-    });
+      });
+      return NextResponse.json({
+        url: saved.url,
+        duplicate: saved.duplicate,
+        size: saved.size,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Yükleme başarısız";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
+  let avatarBuffer = buffer;
+  let avatarExt = extensionForMime(mime);
+  try {
+    const optimized = await optimizeImageBuffer(buffer);
+    avatarBuffer = Buffer.from(optimized.buffer);
+    avatarExt = optimized.ext;
+  } catch {
+    // sharp yoksa orijinal
+  }
+
+  const { randomUUID } = await import("crypto");
+  const { writeUploadedFile } = await import("@/lib/upload-path");
+  const filename = `${randomUUID()}.${avatarExt}`;
+  const url = await writeUploadedFile(`avatars/${filename}`, avatarBuffer);
   return NextResponse.json({ url });
 }

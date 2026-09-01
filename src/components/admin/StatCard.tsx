@@ -8,6 +8,7 @@ export function StatCard({
   Icon,
   href,
   highlight = false,
+  subtext,
 }: {
   label: string;
   value: number | string;
@@ -15,6 +16,7 @@ export function StatCard({
   href?: string;
   /** Bekleyen iş varsa kartı marka rengiyle öne çıkarır. */
   highlight?: boolean;
+  subtext?: string;
 }) {
   const active = highlight && Number(value) > 0;
 
@@ -35,8 +37,11 @@ export function StatCard({
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0">
-        <p className="text-2xl font-extrabold leading-none text-ink">{value}</p>
+        <p className="text-2xl font-extrabold leading-none text-ink">
+          {typeof value === "number" ? value.toLocaleString("tr-TR") : value}
+        </p>
         <p className="mt-1.5 truncate text-xs font-semibold text-ink-soft">{label}</p>
+        {subtext ? <p className="mt-0.5 truncate text-[10px] font-medium text-ink-soft/80">{subtext}</p> : null}
       </div>
     </div>
   );

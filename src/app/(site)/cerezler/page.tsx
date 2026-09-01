@@ -73,8 +73,9 @@ export default async function CookiePolicyPage() {
           <section>
             <h2 className="text-lg font-extrabold text-ink">Analiz ve reklam (üçüncü taraf)</h2>
             <p className="mt-2">
-              Yalnızca yönetim panelinde kimlik girilmişse ve siz onaylarsanız Google script’leri yüklenir.
-              Onay yoksa bu script’ler hiç eklenmez.
+              Google etiketleri (Analytics, Tag Manager, AdSense) Consent Mode v2 ile yüklenir; kişiselleştirilmiş
+              reklam ve analiz çerezleri varsayılan olarak kapalıdır. Reklam veya analiz onayı verdiğinizde ilgili
+              depolama türleri Google’a “granted” olarak bildirilir.
             </p>
           </section>
 

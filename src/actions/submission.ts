@@ -31,7 +31,7 @@ export async function submitNewsAction(values: {
   captchaToken?: string;
 }) {
   const h = await headers();
-  const limited = rateLimit(`news-submit:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(`news-submit:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla istek. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
@@ -164,6 +164,7 @@ export async function approveSubmissionAction(id: string) {
         videoUrl,
         status: "DRAFT",
         categoryId: defaultCategory.id,
+        extraCategories: { create: { categoryId: defaultCategory.id } },
         authorId: session.user.id,
       },
     }),

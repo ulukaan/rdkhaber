@@ -3,6 +3,7 @@ import { readdir, stat, unlink } from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { verifyCronSecret } from "@/lib/security-tokens";
+import { getUploadRoot } from "@/lib/upload-path";
 
 const MAX_AGE_MS = 7 * 24 * 60 * 60_000;
 
@@ -34,15 +35,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
-  const readerDir = path.join(process.cwd(), "public", "uploads", "reader");
-  const files = await collectFiles(readerDir);
+  const root = await getUploadRoot();
+  const readerDirs = [
+    path.join(root, "reader"),
+    path.join(process.cwd(), "public", "uploads", "reader"),
+  ];
+  const files = [
+    ...new Set(
+      (await Promise.all(readerDirs.map((dir) => collectFiles(dir)))).flat(),
+    ),
+  ];
   const now = Date.now();
   let deleted = 0;
 
   for (const file of files) {
     const info = await stat(file);
     if (now - info.mtimeMs < MAX_AGE_MS) continue;
-    const rel = file.replace(path.join(process.cwd(), "public"), "").replace(/\\/g, "/");
+    const fromPersistent = path.relative(root, file).replace(/\\/g, "/");
+    const fromPublic = path
+      .relative(path.join(process.cwd(), "public"), file)
+      .replace(/\\/g, "/");
+    const rel = fromPersistent.startsWith("..")
+      ? `/${fromPublic}`
+      : `/uploads/${fromPersistent}`;
     const usedInTips = await prisma.tip.count({
       where: { attachmentUrl: { contains: rel } },
     });

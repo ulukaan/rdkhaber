@@ -10,7 +10,11 @@ export const metadata: Metadata = { title: "Kategoriler" };
 export default async function CategoriesIndexPage() {
   const categories = await prisma.category.findMany({
     orderBy: { order: "asc" },
-    include: { _count: { select: { articles: true } } },
+    include: {
+      _count: {
+        select: { articleLinks: { where: { article: { status: "PUBLISHED" } } } },
+      },
+    },
   });
 
   return (
@@ -35,7 +39,7 @@ export default async function CategoriesIndexPage() {
               <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{c.description}</p>
             ) : null}
             <p className="mt-3 text-xs font-semibold text-ink-soft">
-              {c._count.articles} haber
+              {c._count.articleLinks} haber
             </p>
           </Link>
         ))}

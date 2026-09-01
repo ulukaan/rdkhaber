@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   disableTotpAction,
   enableTotpAction,
@@ -11,7 +12,14 @@ import { FieldGroup, Input } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
-export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
+export function TwoFactorForm({
+  initialEnabled,
+  redirectAfterEnable,
+}: {
+  initialEnabled: boolean;
+  redirectAfterEnable?: string;
+}) {
+  const router = useRouter();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [setup, setSetup] = useState<{ secret: string; uri: string } | null>(null);
   const [code, setCode] = useState("");
@@ -42,6 +50,10 @@ export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
       setEnabled(true);
       setSetup(null);
       setCode("");
+      if (redirectAfterEnable) {
+        router.push(redirectAfterEnable);
+        router.refresh();
+      }
     });
   };
 
@@ -61,19 +73,21 @@ export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
   };
 
   return (
-    <div className="max-w-lg space-y-5 rounded-xl border border-border bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+    <div className="max-w-lg space-y-5 rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h2 className="text-sm font-bold text-ink">İki adımlı doğrulama (TOTP)</h2>
           <p className="mt-1 text-xs text-ink-soft">
-            Google Authenticator veya benzeri uygulama ile yönetici girişini koruyun.
+            Google Authenticator veya benzeri uygulama ile personel girişini koruyun.
           </p>
         </div>
-        <Badge variant={enabled ? "brand" : "outline"}>{enabled ? "Aktif" : "Kapalı"}</Badge>
+        <Badge variant={enabled ? "brand" : "outline"} className="self-start">
+          {enabled ? "Aktif" : "Kapalı"}
+        </Badge>
       </div>
 
       {!enabled && !setup ? (
-        <Button type="button" onClick={onStart} disabled={pending}>
+        <Button type="button" onClick={onStart} disabled={pending} className="w-full sm:w-auto">
           {pending ? "Hazırlanıyor..." : "2FA kurulumunu başlat"}
         </Button>
       ) : null}
@@ -103,7 +117,7 @@ export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
         </div>
       ) : null}
 
-      {enabled ? (
+      {enabled && process.env.NODE_ENV !== "production" ? (
         <div className="space-y-3 border-t border-border pt-4">
           <p className="text-xs text-ink-soft">Devre dışı bırakmak için mevcut kodu girin.</p>
           <FieldGroup label="Doğrulama kodu" htmlFor="disable-code">

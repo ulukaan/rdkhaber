@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { CoverImage } from "@/components/news/CoverImage";
-import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export type ArticleGalleryImage = {
@@ -32,16 +31,9 @@ export function ArticleImageGallery({
           Galeri · {images.length} görsel
         </p>
       </div>
-      <ul
-        className={cn(
-          "grid gap-px bg-border",
-          images.length === 1 && "grid-cols-1",
-          images.length === 2 && "grid-cols-2",
-          images.length >= 3 && "grid-cols-2 sm:grid-cols-3",
-        )}
-      >
+      <ul className="flex flex-wrap gap-2 p-3">
         {images.map((img, i) => (
-          <li key={img.id} className="bg-white">
+          <li key={img.id} className="w-[4.75rem] sm:w-[5.5rem]">
             <button
               type="button"
               onClick={() => setActive(i)}
@@ -51,12 +43,12 @@ export function ArticleImageGallery({
                 src={img.imageUrl}
                 alt={img.caption || `${title} — görsel ${i + 1}`}
                 color={color}
-                className="aspect-[16/10] w-full"
-                sizes="(max-width: 640px) 50vw, 280px"
+                className="aspect-square w-full"
+                sizes="88px"
                 fallback="wash"
               />
               {img.caption ? (
-                <p className="line-clamp-2 px-2.5 py-2 text-xs text-ink-soft group-hover:text-ink">
+                <p className="mt-1 line-clamp-2 text-[10px] leading-tight text-ink-soft group-hover:text-ink">
                   {img.caption}
                 </p>
               ) : null}

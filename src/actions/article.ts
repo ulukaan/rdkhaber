@@ -15,23 +15,35 @@ import { getSettings } from "@/lib/settings";
 import { resolveArticlePublishState, parseScheduledAt } from "@/lib/article-workflow";
 import { onArticlePublished } from "@/lib/article-publish-hooks";
 
+function uniqueCategoryIds(data: { categoryId?: string; categoryIds?: string[] }) {
+  const fromList = (data.categoryIds ?? []).map((id) => id.trim()).filter(Boolean);
+  const fromSingle = data.categoryId?.trim();
+  const ids = fromList.length > 0 ? fromList : fromSingle ? [fromSingle] : [];
+  return [...new Set(ids)];
+}
+
+async function syncArticleCategories(articleId: string, categoryIds: string[]) {
+  await prisma.articleCategory.deleteMany({ where: { articleId } });
+  if (categoryIds.length === 0) return;
+  await prisma.articleCategory.createMany({
+    data: categoryIds.map((categoryId) => ({ articleId, categoryId })),
+  });
+}
+
 async function revalidateArticlePaths(opts: {
   slug: string;
-  categoryId?: string | null;
-  previousCategoryId?: string | null;
+  categoryIds?: string[];
 }) {
   revalidatePublicSite();
   revalidatePath(`/haber/${opts.slug}`);
   revalidatePath("/admin/makaleler");
   revalidatePath("/editor/makaleler");
 
-  const categoryIds = [opts.categoryId, opts.previousCategoryId].filter(
-    (id): id is string => Boolean(id),
-  );
+  const categoryIds = [...new Set((opts.categoryIds ?? []).filter(Boolean))];
   if (categoryIds.length === 0) return;
 
   const categories = await prisma.category.findMany({
-    where: { id: { in: [...new Set(categoryIds)] } },
+    where: { id: { in: categoryIds } },
     select: { slug: true, parentId: true, parent: { select: { slug: true } } },
   });
 
@@ -138,6 +150,7 @@ async function syncGalleryImages(
 function articleFields(
   data: ReturnType<typeof articleSchema.parse>,
   publish: { status: string; publishedAt: Date | null; scheduledAt: Date | null; isLiveBlog: boolean },
+  primaryCategoryId: string,
 ) {
   return {
     title: data.title,
@@ -146,7 +159,7 @@ function articleFields(
     coverImageUrl: emptyToNull(data.coverImageUrl),
     videoUrl: emptyToNull(data.videoUrl),
     videoEmbed: emptyToNull(data.videoEmbed),
-    categoryId: data.categoryId,
+    categoryId: primaryCategoryId,
     status: publish.status as import("@prisma/client").ArticleStatus,
     isBreaking: data.isBreaking,
     isFeatured: data.isFeatured,
@@ -182,6 +195,10 @@ export async function createArticleAction(raw: Record<string, unknown>) {
   }
 
   const data = parsed.data;
+  const categoryIds = uniqueCategoryIds(data);
+  if (categoryIds.length === 0) return { error: "En az bir kategori seçin." };
+  const categoryCount = await prisma.category.count({ where: { id: { in: categoryIds } } });
+  if (categoryCount !== categoryIds.length) return { error: "Geçersiz kategori." };
   const slug = slugify(data.slug || data.title);
 
   const existing = await prisma.article.findUnique({ where: { slug } });
@@ -193,13 +210,14 @@ export async function createArticleAction(raw: Record<string, unknown>) {
 
   const article = await prisma.article.create({
     data: {
-      ...articleFields(data, publish),
+      ...articleFields(data, publish, categoryIds[0]),
       slug,
       authorId: session.user.id,
       tags: { connect: await resolveTags(parseTagNames(data.tagNames)) },
     },
   });
 
+  await syncArticleCategories(article.id, categoryIds);
   await syncGalleryImages(article.id, data.galleryImages);
 
   if (publish.status === "PUBLISHED") {
@@ -218,7 +236,7 @@ export async function createArticleAction(raw: Record<string, unknown>) {
   }
 
   const base = session.user.role === "ADMIN" ? "/admin" : "/editor";
-  await revalidateArticlePaths({ slug, categoryId: data.categoryId });
+  await revalidateArticlePaths({ slug, categoryIds });
   redirect(`${base}/makaleler/${article.id}/basarili?islem=eklendi`);
 }
 
@@ -233,6 +251,10 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
   }
 
   const data = parsed.data;
+  const categoryIds = uniqueCategoryIds(data);
+  if (categoryIds.length === 0) return { error: "En az bir kategori seçin." };
+  const categoryCount = await prisma.category.count({ where: { id: { in: categoryIds } } });
+  if (categoryCount !== categoryIds.length) return { error: "Geçersiz kategori." };
   const slug = slugify(data.slug || data.title);
 
   const existing = await prisma.article.findUnique({ where: { slug } });
@@ -240,7 +262,10 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
     return { error: "Bu slug zaten kullanılıyor." };
   }
 
-  const current = await prisma.article.findUnique({ where: { id } });
+  const current = await prisma.article.findUnique({
+    where: { id },
+    include: { extraCategories: { select: { categoryId: true } } },
+  });
   if (!current) return { error: "Haber bulunamadı." };
   if (!(await getEditableArticle(session, id))) {
     return { error: "Bu haberi düzenleme yetkiniz yok." };
@@ -266,12 +291,13 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
   const updated = await prisma.article.update({
     where: { id },
     data: {
-      ...articleFields(data, publish),
+      ...articleFields(data, publish, categoryIds[0]),
       slug,
       tags: { set: [], connect: await resolveTags(parseTagNames(data.tagNames)) },
     },
   });
 
+  await syncArticleCategories(id, categoryIds);
   await syncGalleryImages(id, data.galleryImages);
 
   if (publish.status === "PUBLISHED" && !wasPublished) {
@@ -298,10 +324,10 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
   });
 
   const base = session.user.role === "ADMIN" ? "/admin" : "/editor";
+  const previousIds = [current.categoryId, ...current.extraCategories.map((row) => row.categoryId)];
   await revalidateArticlePaths({
     slug,
-    categoryId: data.categoryId,
-    previousCategoryId: current.categoryId,
+    categoryIds: [...categoryIds, ...previousIds],
   });
   redirect(`${base}/makaleler/${id}/basarili?islem=duzenlendi`);
 }
@@ -350,11 +376,17 @@ export async function updateArticleCategoryAction(id: string, categoryId: string
     where: { id },
     data: { categoryId },
   });
+  await prisma.articleCategory.createMany({
+    data: [
+      { articleId: id, categoryId },
+      { articleId: id, categoryId: article.categoryId },
+    ],
+    skipDuplicates: true,
+  });
 
   await revalidateArticlePaths({
     slug: article.slug,
-    categoryId,
-    previousCategoryId: article.categoryId,
+    categoryIds: [categoryId, article.categoryId],
   });
   return { success: true as const };
 }
@@ -363,10 +395,14 @@ export async function deleteArticleAction(id: string) {
   const session = await requireRole(["ADMIN", "EDITOR"]);
   const article = await getEditableArticle(session, id);
   if (!article) return;
+  const extras = await prisma.articleCategory.findMany({
+    where: { articleId: id },
+    select: { categoryId: true },
+  });
   await prisma.article.delete({ where: { id } });
   await revalidateArticlePaths({
     slug: article.slug,
-    categoryId: article.categoryId,
+    categoryIds: [article.categoryId, ...extras.map((row) => row.categoryId)],
   });
 }
 
@@ -374,14 +410,19 @@ export async function refreshArticleCacheAction(slug: string) {
   const session = await requireRole(["ADMIN", "EDITOR"]);
   const row = await prisma.article.findUnique({
     where: { slug },
-    select: { id: true, authorId: true, categoryId: true },
+    select: {
+      id: true,
+      authorId: true,
+      categoryId: true,
+      extraCategories: { select: { categoryId: true } },
+    },
   });
   if (!row || !canEditArticle(session, row)) {
     return { error: "Haber bulunamadı veya yetkiniz yok." };
   }
   await revalidateArticlePaths({
     slug,
-    categoryId: row.categoryId,
+    categoryIds: [row.categoryId, ...row.extraCategories.map((x) => x.categoryId)],
   });
   return { success: true as const };
 }

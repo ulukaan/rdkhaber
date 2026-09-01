@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 export function Table({ children }: { children: React.ReactNode }) {
   return (
     <div className="panel-table-scroll -mx-3 overflow-x-auto rounded-xl border border-border bg-white shadow-sm sm:mx-0">
-      <table className="w-full min-w-[560px] border-collapse text-left text-sm [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr:hover]:bg-surface/60">
+      <table className="w-full min-w-[640px] border-collapse text-left text-sm [&_tbody_tr:last-child_td]:border-b-0 [&_tbody_tr:hover]:bg-surface/60">
         {children}
       </table>
     </div>

@@ -5,12 +5,24 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 type Social = { href: string; label: string };
 
 type Props = {
+  siteName: string;
+  logoUrl?: string;
   categories: Array<{ name: string; slug: string }>;
   whatsappNumber: string;
   socials: Social[];
+  services?: Array<{ label: string; href: string }>;
+  corporate?: Array<{ label: string; href: string }>;
 };
 
-export async function MobileMenuWithSession({ categories, whatsappNumber, socials }: Props) {
+export async function MobileMenuWithSession({
+  siteName,
+  logoUrl,
+  categories,
+  whatsappNumber,
+  socials,
+  services,
+  corporate,
+}: Props) {
   const session = await auth();
 
   const account = session?.user
@@ -27,10 +39,14 @@ export async function MobileMenuWithSession({ categories, whatsappNumber, social
 
   return (
     <MobileMenu
+      siteName={siteName}
+      logoUrl={logoUrl}
       categories={categories}
       whatsappNumber={whatsappNumber}
       account={account}
       socials={socials}
+      services={services}
+      corporate={corporate}
     />
   );
 }

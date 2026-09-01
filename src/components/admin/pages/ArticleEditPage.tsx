@@ -48,6 +48,12 @@ export async function ArticleEditPage({ id }: { id: string }) {
             caption: img.caption ?? "",
           })),
           categoryId: article.categoryId,
+          categoryIds: [
+            article.categoryId,
+            ...article.extraCategories
+              .map((row) => row.categoryId)
+              .filter((id) => id !== article.categoryId),
+          ],
           tagNames: article.tags.map((t) => t.name).join(", "),
           status: article.status,
           isBreaking: article.isBreaking,

@@ -98,6 +98,7 @@ model Category {
   createdAt        DateTime @default(now())
 
   articles    Article[]
+  articleLinks ArticleCategory[]
   botSources  HaberBotSource[]
 
   @@index([order])
@@ -163,12 +164,15 @@ model Article {
 
   categoryId    String
   category      Category      @relation(fields: [categoryId], references: [id])
+  extraCategories ArticleCategory[]
 
   tags          Tag[]         @relation("ArticleTags")
   comments      Comment[]
   images        ArticleImage[]
   bookmarks     ArticleBookmark[]
   reads         ArticleRead[]
+  reactions     ArticleReaction[]
+  polls         Poll[]
   revisions     ArticleRevision[]
   liveUpdates   LiveBlogUpdate[]
   corrections   ArticleCorrection[]
@@ -180,6 +184,17 @@ model Article {
   @@index([status, isFeatured, publishedAt])
   @@index([status, viewCount])
   @@index([sourceUrl])
+}
+
+/** Habere ek kategoriler — categoryId ana kategoridir. */
+model ArticleCategory {
+  articleId  String
+  categoryId String
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, categoryId])
+  @@index([categoryId])
 }
 
 /** Üyenin kaydettiği haberler */
@@ -208,6 +223,20 @@ model ArticleRead {
 
   @@unique([userId, articleId])
   @@index([userId, readAt])
+}
+
+/** Habere hızlı ifade (emoji tepki) — ziyaretçi çerezi ile bir kez. */
+model ArticleReaction {
+  id        String   @id @default(cuid())
+  articleId String
+  visitorId String
+  type      String
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, visitorId])
+  @@index([articleId, type])
 }
 
 /** Üyenin takip ettiği yazarlar */
@@ -264,10 +293,13 @@ model Media {
   filename     String
   mimeType     String
   size         Int
+  contentHash  String?
   createdAt    DateTime @default(now())
 
   uploadedById String?
   uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+
+  @@index([contentHash])
 }
 
 // Foto Galeri — birden çok görselden oluşan haber galerileri
@@ -544,4 +576,53 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([userId, createdAt])
+}
+
+/** Site anketi — ana sayfa veya habere bağlı. */
+model Poll {
+  id            String    @id @default(cuid())
+  question      String
+  description   String?   @db.Text
+  coverImageUrl String?
+  articleId     String?
+  article     Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  active      Boolean   @default(true)
+  showResults Boolean   @default(true)
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  options PollOption[]
+  votes   PollVote[]
+
+  @@index([active, endsAt])
+  @@index([articleId])
+}
+
+model PollOption {
+  id       String  @id @default(cuid())
+  pollId   String
+  poll     Poll    @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  label    String
+  imageUrl String?
+  order    Int     @default(0)
+
+  votes PollVote[]
+
+  @@index([pollId, order])
+}
+
+/** Anonim ziyaretçi oyu — çerez ile tekil. */
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  visitorId String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, visitorId])
+  @@index([pollId, optionId])
 }

@@ -4,20 +4,36 @@ import { sendBreakingNewsPush } from "@/lib/web-push";
 import { indexArticleInMeilisearch } from "@/lib/search-index";
 import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { notifyAdmins } from "@/lib/notifications";
+import { notifyAuthorFollowers } from "@/lib/engagement-notify";
+import { saveGeneratedSharePost } from "@/lib/save-share-post";
 
-type ArticleRow = {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  content: string;
-  isBreaking: boolean;
-  publishedAt: Date | null;
-};
-
-/** Yayına alınan haber için yan etkiler: sosyal, push, arama indeksi. */
-export async function onArticlePublished(article: ArticleRow, opts?: { wasPublished?: boolean }) {
+/** Yayına alınan haber için yan etkiler: sosyal, push, arama indeksi, takipçi bildirimi. */
+export async function onArticlePublished(
+  article: {
+    id: string;
+    title: string;
+    slug: string;
+    summary: string;
+    content: string;
+    isBreaking: boolean;
+    publishedAt: Date | null;
+    authorId?: string;
+    authorName?: string;
+  },
+  opts?: { wasPublished?: boolean },
+) {
   if (opts?.wasPublished) return;
+
+  let authorId = article.authorId;
+  let authorName = article.authorName;
+  if (!authorId || !authorName) {
+    const row = await prisma.article.findUnique({
+      where: { id: article.id },
+      select: { authorId: true, author: { select: { name: true } } },
+    });
+    authorId = row?.authorId ?? "";
+    authorName = row?.author?.name ?? "Yazar";
+  }
 
   await Promise.all([
     sharePublishedArticle({
@@ -26,6 +42,7 @@ export async function onArticlePublished(article: ArticleRow, opts?: { wasPublis
       summary: article.summary,
       isBreaking: article.isBreaking,
     }),
+    saveGeneratedSharePost(article.id),
     article.isBreaking ? sendBreakingNewsPush({ title: article.title, slug: article.slug }) : Promise.resolve(),
     indexArticleInMeilisearch({
       id: article.id,
@@ -35,6 +52,16 @@ export async function onArticlePublished(article: ArticleRow, opts?: { wasPublis
       content: article.content,
       publishedAt: article.publishedAt,
     }),
+    ...(authorId
+      ? [
+          notifyAuthorFollowers({
+            title: article.title,
+            slug: article.slug,
+            authorId,
+            authorName,
+          }),
+        ]
+      : []),
   ]);
 
   revalidatePublicSite();

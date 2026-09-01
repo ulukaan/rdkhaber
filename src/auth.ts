@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { randomBytes } from "node:crypto";
 import type { Role } from "@prisma/client";
+import authConfig from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { rateLimit } from "@/lib/rate-limit";
@@ -10,9 +11,7 @@ import { rateLimit } from "@/lib/rate-limit";
 const REVALIDATE_MS = 5 * 60_000;
 
 export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt", maxAge: 60 * 60 * 12 },
-  pages: { signIn: "/giris" },
+  ...authConfig,
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
@@ -34,7 +33,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         const totpVerified = credentials?.totpVerified === "1";
         if (!email || !password) return null;
 
-        const limited = rateLimit(`login:${email.toLowerCase()}`, {
+        const limited = await rateLimit(`login:${email.toLowerCase()}`, {
           limit: 5,
           windowMs: 15 * 60_000,
         });
@@ -59,6 +58,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider !== "google" || !user.email) return true;
 

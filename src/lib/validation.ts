@@ -115,7 +115,8 @@ export const articleSchema = z.object({
     )
     .optional()
     .default([]),
-  categoryId: z.string().min(1, "Kategori seçin"),
+  categoryId: z.string().optional().default(""),
+  categoryIds: z.array(z.string()).optional().default([]),
   tagNames: z.string().optional(),
   status: z.enum(["DRAFT", "REVIEW", "PUBLISHED", "ARCHIVED"]),
   isBreaking: z.coerce.boolean().default(false),
@@ -266,4 +267,23 @@ export const composeMailSchema = z.object({
   to: z.string().email("Geçerli alıcı e-postası girin"),
   subject: z.string().min(1, "Konu gerekli").max(200),
   body: z.string().min(1, "Mesaj gerekli").max(50_000),
+});
+
+export const pollSchema = z.object({
+  question: z.string().min(5, "Soru en az 5 karakter olmalı").max(200),
+  description: z.string().max(500).optional().or(z.literal("")),
+  coverImageUrl: optionalSafeMediaUrl,
+  articleSlug: z.string().max(200).optional().or(z.literal("")),
+  active: z.boolean().default(true),
+  showResults: z.boolean().default(true),
+  endsAt: z.string().optional().or(z.literal("")),
+  options: z
+    .array(
+      z.object({
+        label: z.string().min(1, "Seçenek boş olamaz").max(120),
+        imageUrl: optionalSafeMediaUrl,
+      }),
+    )
+    .min(2, "En az 2 seçenek gerekli")
+    .max(8, "En fazla 8 seçenek"),
 });

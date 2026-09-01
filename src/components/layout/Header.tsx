@@ -15,7 +15,8 @@ import { HeaderTopBarServer } from "@/components/layout/HeaderTopBarServer";
 import { MobileMenuWithSession } from "@/components/layout/MobileMenuWithSession";
 import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { mobileStripFromCategories } from "@/lib/mobile-category-strip";
+import { NotificationBellServer } from "@/components/layout/NotificationBellServer";
+import { GuestLibrarySync } from "@/components/account/GuestLibrarySync";
 
 function HeaderExtrasSkeleton() {
   return <div className="h-9 animate-pulse bg-ink/5" aria-hidden />;
@@ -39,7 +40,6 @@ export async function Header() {
 
   const serviceLinks = flattenNavLinks(serviceNav);
   const corporateLinks = flattenNavLinks(corporateNav);
-  const mobileStrip = mobileStripFromCategories(categories);
 
   return (
     <HeaderShell
@@ -61,7 +61,12 @@ export async function Header() {
                 <TarifParkLink />
               </nav>
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-                <ThemeToggle className="hidden sm:inline-flex" />
+                <ThemeToggle />
+                <div className="hidden md:block">
+                  <Suspense fallback={null}>
+                    <NotificationBellServer />
+                  </Suspense>
+                </div>
                 <div className="hidden md:block">
                   <Suspense fallback={null}>
                     <AccountMenu />
@@ -76,15 +81,20 @@ export async function Header() {
                 />
                 <Suspense fallback={null}>
                   <MobileMenuWithSession
+                    siteName={settings.siteName}
+                    logoUrl={settings.logoUrl}
                     categories={categories}
                     whatsappNumber={settings.whatsappNumber}
                     socials={socials}
+                    services={serviceLinks}
+                    corporate={corporateLinks}
                   />
                 </Suspense>
               </div>
             </Container>
           </div>
-          <MobileCategoryStrip items={mobileStrip} />
+          <MobileCategoryStrip items={headerNav} />
+          <GuestLibrarySync />
         </>
       }
       extras={

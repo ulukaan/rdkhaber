@@ -9,7 +9,7 @@ export function CommentRowActions({ id, approved }: { id: string; approved: bool
   const [pending, start] = useTransition();
 
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className="panel-row-actions flex items-center justify-end gap-3">
       {!approved ? (
         <button
           type="button"

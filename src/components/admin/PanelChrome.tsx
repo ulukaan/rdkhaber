@@ -6,6 +6,8 @@ import type { Session } from "next-auth";
 import { PanelSidebar } from "@/components/admin/PanelSidebar";
 import { PanelTopbar } from "@/components/admin/PanelTopbar";
 
+const SIDEBAR_STORAGE_KEY = "rdk-panel-sidebar";
+
 export function PanelChrome({
   role,
   user,
@@ -21,21 +23,48 @@ export function PanelChrome({
   commentBadge: number;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "collapsed";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
-    if (!open) return;
+    document.documentElement.style.setProperty(
+      "--panel-sidebar-w",
+      collapsed ? "72px" : "260px",
+    );
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setMobileOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [mobileOpen]);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "collapsed" : "expanded");
+      } catch {
+        // geç
+      }
+      return next;
+    });
+  }
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-panel-bg">
@@ -44,33 +73,37 @@ export function PanelChrome({
         role={role}
         siteName={siteName}
         logoUrl={logoUrl}
-        onMenu={() => setOpen(true)}
+        onMenu={() => setMobileOpen(true)}
+        onSidebarToggle={toggleCollapsed}
+        sidebarCollapsed={collapsed}
       />
 
       <div className="flex min-h-0 flex-1">
         <PanelSidebar
           role={role}
           commentBadge={commentBadge}
+          collapsed={collapsed}
+          onToggleCollapsed={toggleCollapsed}
           className="hidden h-full lg:flex"
         />
 
-        {open ? (
+        {mobileOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden" role="presentation">
             <button
               type="button"
               aria-label="Menüyü kapat"
-              onClick={() => setOpen(false)}
+              onClick={() => setMobileOpen(false)}
               className="absolute inset-0 bg-ink/55"
             />
             <div
-              className="relative flex h-full w-[min(100%,288px)] max-w-[85vw] flex-col shadow-2xl"
+              className="relative flex h-full w-[min(100%,300px)] max-w-[88vw] flex-col shadow-2xl"
               style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
             >
               <PanelSidebar
                 role={role}
                 commentBadge={commentBadge}
-                onNavigate={() => setOpen(false)}
-                onClose={() => setOpen(false)}
+                onNavigate={() => setMobileOpen(false)}
+                onClose={() => setMobileOpen(false)}
                 touchFriendly
               />
             </div>

@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
-import { PageHeader } from "@/components/admin/PageHeader";
-import { TwoFactorForm } from "@/components/admin/TwoFactorForm";
+import { StaffSecurityPanel } from "@/components/admin/StaffSecurityPanel";
 
-export const metadata = { title: "Güvenlik" };
+export const metadata = { title: "Güvenlik (2FA)" };
 
-export default async function SecurityPage() {
+export default async function AdminSecurityPage() {
   const session = await requireRole(["ADMIN"]);
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -13,12 +12,9 @@ export default async function SecurityPage() {
   });
 
   return (
-    <>
-      <PageHeader
-        title="Güvenlik"
-        description="Yönetici hesabı için iki adımlı doğrulama ve oturum güvenliği."
-      />
-      <TwoFactorForm initialEnabled={Boolean(user?.totpEnabled)} />
-    </>
+    <StaffSecurityPanel
+      initialEnabled={Boolean(user?.totpEnabled)}
+      role={session.user.role}
+    />
   );
 }

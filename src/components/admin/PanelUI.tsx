@@ -42,7 +42,7 @@ export function SectionHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-3 flex flex-wrap items-end justify-between gap-3", className)}>
+    <div className={cn("mb-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between", className)}>
       <div className="min-w-0">
         <h3 className="flex items-center gap-2 text-sm font-bold text-ink">
           <span className="h-4 w-1 rounded-full bg-brand" aria-hidden />
@@ -50,7 +50,11 @@ export function SectionHeader({
         </h3>
         {description ? <p className="mt-0.5 text-xs text-ink-soft">{description}</p> : null}
       </div>
-      {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
+      {action ? (
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center [&_a]:justify-center [&_button]:w-full sm:[&_a]:w-auto sm:[&_button]:w-auto">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }

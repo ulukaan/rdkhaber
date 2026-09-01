@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { HaberBotSourceForm } from "@/components/admin/HaberBotSourceForm";
 import { HaberBotWordForm } from "@/components/admin/HaberBotWordForm";
@@ -55,6 +63,54 @@ export default async function HaberBotPage() {
 
       <div className="mt-8">
         <SectionHeader title="Kaynaklar" description="Çekim için açık olan siteler." />
+
+        <PanelMobileOnly>
+          {sources.length === 0 ? (
+            <PanelMobileEmpty>Henüz kaynak yok. Yukarıdan site ekleyin.</PanelMobileEmpty>
+          ) : (
+            <PanelMobileList>
+              {sources.map((source) => (
+                <PanelMobileCard key={source.id}>
+                  <PanelMobileCardBody
+                    footer={
+                      <div className="flex flex-col gap-3">
+                        <HaberBotToggle
+                          id={source.id}
+                          active={source.enabled}
+                          action={toggleHaberBotSourceAction}
+                        />
+                        <div className="panel-row-actions flex flex-wrap items-center justify-end gap-2">
+                          <HaberBotFetchButton sourceId={source.id} />
+                          <DeleteButton
+                            id={source.id}
+                            action={deleteHaberBotSourceAction}
+                            confirmText="Bu kaynağı silmek istiyor musunuz?"
+                          />
+                        </div>
+                      </div>
+                    }
+                  >
+                    <p className="font-semibold text-ink">{source.name}</p>
+                    <p className="mt-1 break-all text-xs text-ink-soft">{source.url}</p>
+                    {source.lastError ? (
+                      <p className="mt-2 text-xs font-medium text-brand">{source.lastError}</p>
+                    ) : null}
+                    <p className="mt-2 text-xs text-ink-soft">
+                      {source.category.name} · Son {source.maxItems} ·{" "}
+                      {source.importStatus === "PUBLISHED" ? "Yayınla" : "Taslak"}
+                    </p>
+                    <p className="mt-1 text-[11px] text-ink-soft">
+                      Son çekim:{" "}
+                      {source.lastFetchedAt ? formatRelativeTime(source.lastFetchedAt) : "—"}
+                    </p>
+                  </PanelMobileCardBody>
+                </PanelMobileCard>
+              ))}
+            </PanelMobileList>
+          )}
+        </PanelMobileOnly>
+
+        <PanelDesktopOnly>
         <Table>
           <thead>
             <tr>
@@ -109,6 +165,7 @@ export default async function HaberBotPage() {
             )}
           </tbody>
         </Table>
+        </PanelDesktopOnly>
       </div>
 
       <div className="mt-8">
@@ -116,6 +173,41 @@ export default async function HaberBotPage() {
           title="Kelime listesi"
           description="Çekim sırasında başlık, spot ve metne uygulanır."
         />
+
+        <PanelMobileOnly>
+          {words.length === 0 ? (
+            <PanelMobileEmpty>Henüz kural yok. Tek tek ekleyin veya kalıbı yapıştırın.</PanelMobileEmpty>
+          ) : (
+            <PanelMobileList>
+              {words.map((word) => (
+                <PanelMobileCard key={word.id}>
+                  <PanelMobileCardBody
+                    footer={
+                      <div className="flex items-center justify-between gap-2">
+                        <HaberBotToggle
+                          id={word.id}
+                          active={word.active}
+                          action={toggleHaberBotWordAction}
+                        />
+                        <DeleteButton id={word.id} action={deleteHaberBotWordAction} />
+                      </div>
+                    }
+                  >
+                    <p className="text-sm">
+                      <span className="font-semibold text-ink">{word.find}</span>
+                      <span className="text-ink-soft"> → </span>
+                      <span className="text-ink-soft">
+                        {word.replace || <span className="italic">sil</span>}
+                      </span>
+                    </p>
+                  </PanelMobileCardBody>
+                </PanelMobileCard>
+              ))}
+            </PanelMobileList>
+          )}
+        </PanelMobileOnly>
+
+        <PanelDesktopOnly>
         <Table>
           <thead>
             <tr>
@@ -152,10 +244,51 @@ export default async function HaberBotPage() {
             )}
           </tbody>
         </Table>
+        </PanelDesktopOnly>
       </div>
 
       <div className="mt-8">
         <SectionHeader title="Çekim kaydı" description="Son çekilen, atlanan ve hatalı haberler." />
+
+        <PanelMobileOnly>
+          {logs.length === 0 ? (
+            <PanelMobileEmpty>Henüz çekim yok.</PanelMobileEmpty>
+          ) : (
+            <PanelMobileList>
+              {logs.map((log) => {
+                const badge = LOG_LABEL[log.status] ?? LOG_LABEL.error;
+                return (
+                  <PanelMobileCard key={log.id}>
+                    <PanelMobileCardBody>
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <Badge variant={badge.variant}>{badge.text}</Badge>
+                        <span className="text-[11px] text-ink-soft">
+                          {formatRelativeTime(log.createdAt)}
+                        </span>
+                      </div>
+                      {log.articleId ? (
+                        <Link
+                          href={`/admin/makaleler/${log.articleId}`}
+                          className="text-sm font-semibold text-ink hover:text-brand"
+                        >
+                          {log.title}
+                        </Link>
+                      ) : (
+                        <p className="text-sm font-medium text-ink">{log.title}</p>
+                      )}
+                      {log.message ? (
+                        <p className="mt-1 text-xs text-ink-soft">{log.message}</p>
+                      ) : null}
+                      <p className="mt-2 text-xs text-ink-soft">{log.source?.name ?? "—"}</p>
+                    </PanelMobileCardBody>
+                  </PanelMobileCard>
+                );
+              })}
+            </PanelMobileList>
+          )}
+        </PanelMobileOnly>
+
+        <PanelDesktopOnly>
         <Table>
           <thead>
             <tr>
@@ -201,6 +334,7 @@ export default async function HaberBotPage() {
             )}
           </tbody>
         </Table>
+        </PanelDesktopOnly>
       </div>
     </>
   );

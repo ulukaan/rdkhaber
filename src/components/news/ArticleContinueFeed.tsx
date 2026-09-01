@@ -6,6 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { CoverImage } from "@/components/news/CoverImage";
 import { VideoEmbed } from "@/components/news/VideoEmbed";
 import { ShareBar } from "@/components/news/ShareBar";
+import { QuickReactionBar } from "@/components/news/QuickReactionBar";
 import { ArticleMetaBar } from "@/components/news/ArticleMetaBar";
 import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { ArticleSidebarPanels } from "@/components/news/ArticleSidebarPanels";
@@ -16,6 +17,7 @@ import { CommentForm } from "@/components/forms/CommentForm";
 import { readingTimeMinutes, formatRelativeTime, cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import { categoryHref } from "@/lib/category-path";
+import { articleListenText } from "@/lib/article-html";
 import { authorHref } from "@/lib/author-path";
 import type { ArticleSummary } from "@/types/article";
 import type { MarketItem } from "@/lib/rates";
@@ -41,6 +43,8 @@ export type ContinueArticle = {
 
 type ContinueSidebar = {
   mostRead: ArticleSummary[];
+  trending?: ArticleSummary[];
+  mostCommented?: ArticleSummary[];
   latest: ArticleSummary[];
   parityItems: MarketItem[];
   prayers: PrayerDay | null;
@@ -196,6 +200,11 @@ function ContinueArticleBlock({
             shareTitle={article.title}
             viewCount={article.viewCount}
             articleId={article.id}
+            listenText={articleListenText({
+              title: article.title,
+              summary: article.summary,
+              html: article.content,
+            })}
           />
         ) : null}
         <RecordArticleRead articleId={article.id} />
@@ -228,11 +237,12 @@ function ContinueArticleBlock({
 
             <div className="mt-7 rounded-none border border-border bg-white px-4 py-6 sm:px-7 sm:py-8">
               <div
-                className={proseClass}
+                className={proseClass + " article-html"}
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
             </div>
 
+            <QuickReactionBar articleId={article.id} />
             <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {tags.length > 0 ? (
@@ -257,6 +267,8 @@ function ContinueArticleBlock({
             <ArticleSidebarPanels
               related={(article.related ?? []).filter((a) => a.id !== article.id)}
               mostRead={sidebar.mostRead.filter((a) => a.id !== article.id)}
+              trending={(sidebar.trending ?? []).filter((a) => a.id !== article.id)}
+              mostCommented={(sidebar.mostCommented ?? []).filter((a) => a.id !== article.id)}
               latest={sidebar.latest.filter((a) => a.id !== article.id)}
               categoryName={article.category.name}
               categorySlug={article.category.slug}

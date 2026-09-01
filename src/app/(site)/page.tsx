@@ -2,7 +2,10 @@ import { getCategoriesWithChildren } from "@/lib/categories";
 import {
   getFeaturedArticles,
   getLatestArticles,
+  getMostBookmarkedArticles,
+  getMostCommentedArticles,
   getMostReadArticles,
+  getTrendingArticles,
   getVideoArticles,
   getArticlesByCategory,
   getEditorArticles,
@@ -38,11 +41,17 @@ import { getLiveScores } from "@/lib/livescore";
 import { categoryHref } from "@/lib/category-path";
 import { getLatestInstagramPost } from "@/lib/instagram";
 import { InstagramLatestCard } from "@/components/home/InstagramLatestCard";
+import { PollWidget } from "@/components/news/PollWidget";
+import { getActiveHomepagePoll, getPollStateForServer } from "@/actions/poll-vote";
+import { auth } from "@/auth";
+import { getPersonalizedArticles } from "@/lib/personalized";
+import { ForYouSection } from "@/components/news/ForYouSection";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const settings = await getSettings();
+  const session = await auth();
 
   const needRates = settings.showParity !== "0" || settings.showRates !== "0";
   const needPrayer = settings.showImsakiye !== "0";
@@ -51,12 +60,17 @@ export default async function HomePage() {
   const needLiveScore = settings.showLiveScore !== "0";
   const needCards = settings.showCategoryCards !== "0";
   const needSpotlight = settings.showCategorySpotlight !== "0";
+  const needPoll = settings.showPoll !== "0";
+  const needForYou = settings.showForYou !== "0" && Boolean(session?.user);
   const instagramProfile = settings.instagramUrl?.trim();
 
   const [
     featured,
     latest,
     mostRead,
+    trendingWeek,
+    mostCommented,
+    mostBookmarked,
     videos,
     categories,
     gundem,
@@ -71,10 +85,15 @@ export default async function HomePage() {
     liveScores,
     featuredRailAd,
     instagramPost,
+    homepagePoll,
+    forYouArticles,
   ] = await Promise.all([
     getFeaturedArticles(12),
     getLatestArticles(24),
     settings.showMostRead !== "0" ? getMostReadArticles(6) : Promise.resolve([]),
+    settings.showTrendingWeek !== "0" ? getTrendingArticles(6) : Promise.resolve([]),
+    settings.showMostCommented !== "0" ? getMostCommentedArticles(6) : Promise.resolve([]),
+    settings.showMostBookmarked !== "0" ? getMostBookmarkedArticles(6) : Promise.resolve([]),
     settings.showVideos !== "0" ? getVideoArticles(6) : Promise.resolve([]),
     getCategoriesWithChildren(),
     getArticlesByCategory("gundem", 5),
@@ -95,7 +114,14 @@ export default async function HomePage() {
     instagramProfile
       ? getLatestInstagramPost(instagramProfile)
       : Promise.resolve(null),
+    needPoll ? getActiveHomepagePoll() : Promise.resolve(null),
+    needForYou && session?.user
+      ? getPersonalizedArticles(session.user.id, 6)
+      : Promise.resolve([]),
   ]);
+
+  const homepagePollState =
+    homepagePoll?.id ? await getPollStateForServer(homepagePoll.id) : null;
 
   const interviews =
     interviewsRaw.length > 0
@@ -255,6 +281,10 @@ export default async function HomePage() {
         <LiveScoreStrip data={liveScores} />
       ) : null}
 
+      {settings.showForYou !== "0" && forYouArticles.length > 0 ? (
+        <ForYouSection articles={forYouArticles} />
+      ) : null}
+
       {/* 3) Haber — önce günün manşeti + ilk kategori grubu */}
       {settings.showDayHeadlines !== "0" ? <DayHeadlinesSection articles={dayHeadlines} /> : null}
       {settings.showCategoryCards !== "0" && categoryLead.length > 0 ? (
@@ -340,12 +370,53 @@ export default async function HomePage() {
         <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
           <AdUnit code="069" className="py-0" />
           {instagramPost ? <InstagramLatestCard post={instagramPost} /> : null}
+          {settings.showPoll !== "0" && homepagePollState?.id ? (
+            <PollWidget pollId={homepagePollState.id} initial={homepagePollState} compact />
+          ) : null}
           <AdUnit code="300" className="py-0" />
           {settings.showMostRead !== "0" ? (
             <div className="border border-border bg-white p-4">
-              <SectionHeading title="Çok Okunanlar" className="mb-2" />
+              <SectionHeading title="Çok Okunanlar" href="/enler#cok-okunanlar" className="mb-2" />
               <div>
                 {mostRead.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showTrendingWeek !== "0" && trendingWeek.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading title="Haftanın Trendi" href="/enler#haftanin-trendi" className="mb-2" />
+              <div>
+                {trendingWeek.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showMostCommented !== "0" && mostCommented.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading
+                title="En Çok Yorumlanan"
+                href="/enler#en-cok-yorumlanan"
+                className="mb-2"
+              />
+              <div>
+                {mostCommented.map((a, i) => (
+                  <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {settings.showMostBookmarked !== "0" && mostBookmarked.length > 0 ? (
+            <div className="border border-border bg-white p-4">
+              <SectionHeading
+                title="En Çok Kaydedilen"
+                href="/enler#en-cok-kaydedilen"
+                className="mb-2"
+              />
+              <div>
+                {mostBookmarked.map((a, i) => (
                   <NewsCard key={a.id} article={a} variant="compact" rank={i + 1} />
                 ))}
               </div>

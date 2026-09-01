@@ -9,6 +9,7 @@ const scripts = [
   "ensure-profile-tables.mjs",
   "ensure-platform-tables.mjs",
   "ensure-news-essentials.mjs",
+  "ensure-media-columns.mjs",
 ];
 
 async function runScript(name) {

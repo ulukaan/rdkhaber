@@ -29,6 +29,7 @@ export function CoverImage({
 
   if (src && !failed) {
     const remote = /^https?:\/\//i.test(src);
+    const localUpload = src.startsWith("/uploads/");
     return (
       <div className={cn("relative overflow-hidden bg-surface", className)}>
         <Image
@@ -37,7 +38,7 @@ export function CoverImage({
           fill
           priority={priority}
           sizes={sizes ?? "100vw"}
-          unoptimized={remote}
+          unoptimized={remote || localUpload}
           className="object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
           style={objectPosition ? { objectPosition } : undefined}
           onError={() => setFailed(true)}

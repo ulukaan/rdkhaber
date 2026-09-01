@@ -2,6 +2,15 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
+function inCategorySlugs(slugs: string[]) {
+  return {
+    OR: [
+      { category: { slug: { in: slugs } } },
+      { extraCategories: { some: { category: { slug: { in: slugs } } } } },
+    ],
+  };
+}
+
 export const articleSummarySelect = {
   id: true,
   title: true,
@@ -121,6 +130,62 @@ export function getMostReadArticles(take = 5) {
   });
 }
 
+type ArticleSummaryRow = Awaited<ReturnType<typeof getMostReadArticles>>[number];
+
+async function fetchPublishedArticlesByIds(ids: string[]): Promise<ArticleSummaryRow[]> {
+  if (ids.length === 0) return [];
+  const articles = await prisma.article.findMany({
+    where: { id: { in: ids }, status: "PUBLISHED" },
+    select: articleSummarySelect,
+  });
+  const byId = new Map(articles.map((article) => [article.id, article]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((article): article is ArticleSummaryRow => Boolean(article));
+}
+
+/** Son N günde yayınlanan haberler — okunma sayısına göre trend */
+export function getTrendingArticles(take = 5, days = 7) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  return prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { gte: since },
+    },
+    orderBy: { viewCount: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
+/** Onaylı yorum sayısına göre en çok tartışılan haberler */
+export async function getMostCommentedArticles(take = 5) {
+  const groups = await prisma.comment.groupBy({
+    by: ["articleId"],
+    where: {
+      approved: true,
+      article: { status: "PUBLISHED" },
+    },
+    _count: { articleId: true },
+    orderBy: { _count: { articleId: "desc" } },
+    take,
+  });
+  return fetchPublishedArticlesByIds(groups.map((group) => group.articleId));
+}
+
+/** Üyelerin en çok kaydettiği haberler */
+export async function getMostBookmarkedArticles(take = 5) {
+  const groups = await prisma.articleBookmark.groupBy({
+    by: ["articleId"],
+    where: { article: { status: "PUBLISHED" } },
+    _count: { articleId: true },
+    orderBy: { _count: { articleId: "desc" } },
+    take,
+  });
+  return fetchPublishedArticlesByIds(groups.map((group) => group.articleId));
+}
+
 export function getVideoArticles(take = 6) {
   return prisma.article.findMany({
     where: { status: "PUBLISHED", videoUrl: { not: null } },
@@ -140,7 +205,7 @@ export function getArticlesByCategory(
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
-      category: { slug: { in: slugs } },
+      ...inCategorySlugs(slugs),
       ...(extra?.videoOnly
         ? { AND: [{ videoUrl: { not: null } }, { videoUrl: { not: "" } }] }
         : {}),
@@ -158,6 +223,11 @@ export async function getArticleBySlug(slug: string) {
     include: {
       author: { select: { id: true, name: true, slug: true, avatarUrl: true, bio: true, role: true } },
       category: { select: { name: true, slug: true, color: true } },
+      extraCategories: {
+        select: {
+          category: { select: { name: true, slug: true, color: true } },
+        },
+      },
       tags: { select: { name: true, slug: true } },
       images: {
         orderBy: { order: "asc" },
@@ -256,6 +326,7 @@ export function getArticleForEdit(id: string) {
     include: {
       tags: { select: { name: true } },
       category: { select: { name: true, color: true } },
+      extraCategories: { select: { categoryId: true } },
       images: {
         orderBy: { order: "asc" },
         select: { id: true, imageUrl: true, caption: true, order: true },
@@ -264,11 +335,12 @@ export function getArticleForEdit(id: string) {
   });
 }
 
-export function getRelatedArticles(categorySlug: string, excludeId: string, take = 4) {
+export function getRelatedArticles(categorySlug: string | string[], excludeId: string, take = 4) {
+  const slugs = Array.isArray(categorySlug) ? categorySlug : [categorySlug];
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
-      category: { slug: categorySlug },
+      ...inCategorySlugs(slugs),
       id: { not: excludeId },
     },
     orderBy: { publishedAt: "desc" },

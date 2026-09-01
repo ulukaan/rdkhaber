@@ -1,38 +1,51 @@
 "use client";
 
 import { createContext, useContext, useLayoutEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type Theme = "light" | "dark";
+
+const STORAGE_KEY = "rdk_theme";
 
 const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
   theme: "light",
   toggle: () => {},
 });
 
-function readTheme(): Theme {
+function isStaffPath(path: string) {
+  return path.startsWith("/admin") || path.startsWith("/editor");
+}
+
+function readStoredTheme(): Theme {
   if (typeof window === "undefined") return "light";
-  const stored = localStorage.getItem("rdk_theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return stored === "dark" || stored === "light" ? stored : prefersDark ? "dark" : "light";
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  return stored === "dark" ? "dark" : "light";
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(readTheme);
+  const pathname = usePathname() ?? "/";
+  const staff = isStaffPath(pathname);
+  const [theme, setTheme] = useState<Theme>(() => readStoredTheme());
 
   useLayoutEffect(() => {
+    if (staff) {
+      document.documentElement.removeAttribute("data-theme");
+      return;
+    }
     document.documentElement.dataset.theme = theme;
-  }, [theme]);
+  }, [staff, theme]);
 
   const toggle = () => {
+    if (staff) return;
     setTheme((current) => {
       const next = current === "light" ? "dark" : "light";
-      localStorage.setItem("rdk_theme", next);
+      window.localStorage.setItem(STORAGE_KEY, next);
       document.documentElement.dataset.theme = next;
       return next;
     });
   };
 
-  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme: staff ? "light" : theme, toggle }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

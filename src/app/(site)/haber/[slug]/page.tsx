@@ -4,7 +4,9 @@ import Link from "next/link";
 import {
   getArticleBySlug,
   getRelatedArticles,
+  getMostCommentedArticles,
   getMostReadArticles,
+  getTrendingArticles,
   getLatestArticles,
   getBreakingArticles,
   getRandomSpotlightArticles,
@@ -22,19 +24,25 @@ import { readingTimeMinutes } from "@/lib/utils";
 import { AdUnit } from "@/components/ads/AdUnit";
 import { ArticleMetaBar } from "@/components/news/ArticleMetaBar";
 import { ShareBar } from "@/components/news/ShareBar";
+import { QuickReactionBar } from "@/components/news/QuickReactionBar";
+import { PollWidget } from "@/components/news/PollWidget";
+import { getArticlePoll, getPollStateForServer } from "@/actions/poll-vote";
 import { TipCallout } from "@/components/news/TipCallout";
 import { ArticleContinueFeed } from "@/components/news/ArticleContinueFeed";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
 import { ArticleCategoryChrome } from "@/components/news/ArticleCategoryChrome";
 import { ArticleImageGallery } from "@/components/news/ArticleImageGallery";
 import { AuthorByline } from "@/components/news/AuthorByline";
-import { sanitizeArticleHtml } from "@/lib/article-html";
+import { articleListenText, sanitizeArticleHtml } from "@/lib/article-html";
 import { authorHref } from "@/lib/authors";
 import { buildNewsArticleJsonLd } from "@/lib/json-ld";
 import { RecordArticleRead } from "@/components/account/RecordArticleRead";
 import { CorrectionBanner } from "@/components/news/CorrectionBanner";
 import { LiveBlogTimeline } from "@/components/news/LiveBlogTimeline";
 import { PushSubscribeButton } from "@/components/pwa/PushSubscribeButton";
+import { categoryHref } from "@/lib/category-path";
+import { sharePostPath } from "@/lib/share-post";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata({
   params,
@@ -44,6 +52,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) return { title: "Haber Bulunamadı" };
+  const shareImage = `${getSiteUrl()}${sharePostPath(article.slug)}`;
   return {
     title: article.seoTitle?.trim() || article.title,
     description: article.seoDescription?.trim() || article.summary,
@@ -55,10 +64,16 @@ export async function generateMetadata({
       type: "article",
       title: article.seoTitle?.trim() || article.title,
       description: article.seoDescription?.trim() || article.summary,
-      images: article.coverImageUrl ? [article.coverImageUrl] : undefined,
+      images: [{ url: shareImage, width: 1080, height: 1350, alt: article.title }],
       publishedTime: article.publishedAt?.toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
       authors: [article.author.name],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seoTitle?.trim() || article.title,
+      description: article.seoDescription?.trim() || article.summary,
+      images: [shareImage],
     },
   };
 }
@@ -74,15 +89,26 @@ export default async function ArticlePage({
 
   incrementViewCount(article.id).catch(() => {});
 
-  const [related, mostRead, settings, latest, breaking, rates, prayers] = await Promise.all([
-    getRelatedArticles(article.category.slug, article.id, 6),
+  const extraCategories = article.extraCategories
+    .map((row) => row.category)
+    .filter((c) => c.slug !== article.category.slug);
+  const relatedSlugs = [article.category.slug, ...extraCategories.map((c) => c.slug)];
+
+  const [related, mostRead, trending, mostCommented, settings, latest, breaking, rates, prayers, articlePoll] =
+    await Promise.all([
+    getRelatedArticles(relatedSlugs, article.id, 6),
     getMostReadArticles(8),
+    getTrendingArticles(8),
+    getMostCommentedArticles(8),
     getSettings(),
     getLatestArticles(8),
     getBreakingArticles(5),
     getRates(),
     getPrayerTimes(),
+    getArticlePoll(article.id),
   ]);
+
+  const articlePollState = articlePoll?.id ? await getPollStateForServer(articlePoll.id) : null;
 
   const excludeIds = [article.id];
   const feedRows = await getRandomSpotlightArticles(excludeIds, 1);
@@ -117,6 +143,8 @@ export default async function ArticlePage({
 
   const relatedForSidebar = related.filter((a) => a.id !== article.id);
   const mostReadForSidebar = mostRead.filter((a) => a.id !== article.id);
+  const trendingForSidebar = trending.filter((a) => a.id !== article.id);
+  const mostCommentedForSidebar = mostCommented.filter((a) => a.id !== article.id);
 
   const jsonLd = buildNewsArticleJsonLd({
     title: article.title,
@@ -151,6 +179,20 @@ export default async function ArticlePage({
             slug={article.category.slug}
             color={article.category.color}
           />
+          {extraCategories.length > 0 ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {extraCategories.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={categoryHref(c.slug)}
+                  className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: c.color || "var(--brand)" }}
+                >
+                  {c.name}
+                </Link>
+              ))}
+            </div>
+          ) : null}
 
           <AdUnit code="131" />
 
@@ -178,6 +220,11 @@ export default async function ArticlePage({
           shareTitle={article.title}
           viewCount={article.viewCount}
           articleId={article.id}
+          listenText={articleListenText({
+            title: article.title,
+            summary: article.summary,
+            html: article.content,
+          })}
         />
         <RecordArticleRead articleId={article.id} />
         <AdUnit code="1001" />
@@ -223,6 +270,12 @@ export default async function ArticlePage({
             <AdUnit code="1004" />
             <AdUnit code="138" />
 
+            <QuickReactionBar articleId={article.id} />
+            {articlePollState?.id ? (
+              <div className="mt-8">
+                <PollWidget pollId={articlePollState.id} initial={articlePollState} />
+              </div>
+            ) : null}
             <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {article.tags.length > 0 ? (
@@ -247,6 +300,8 @@ export default async function ArticlePage({
           <ArticleSidebar
             related={relatedForSidebar}
             mostRead={mostReadForSidebar}
+            trending={trendingForSidebar}
+            mostCommented={mostCommentedForSidebar}
             latest={latestForSidebar}
             categoryName={article.category.name}
             categorySlug={article.category.slug}
@@ -262,6 +317,8 @@ export default async function ArticlePage({
         whatsappNumber={settings.whatsappNumber}
         sidebar={{
           mostRead: mostReadForSidebar,
+          trending: trendingForSidebar,
+          mostCommented: mostCommentedForSidebar,
           latest: latestForSidebar,
           parityItems: settings.showParity !== "0" ? parityItems : [],
           prayers: settings.showImsakiye !== "0" ? prayers : null,

@@ -1,6 +1,3 @@
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
-import { randomUUID } from "crypto";
 import { ArticleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
@@ -32,7 +29,7 @@ async function saveCover(url: string | null, uploadedById: string): Promise<stri
   if (!url) return null;
   try {
     const { safeFetch } = await import("@/lib/safe-fetch");
-    const { detectUploadMime, extensionForMime, isImageMime } = await import("@/lib/upload-safe");
+    const { detectUploadMime, isImageMime } = await import("@/lib/upload-safe");
     const res = await safeFetch(url, {
       headers: { Accept: "image/*,*/*" },
       signal: AbortSignal.timeout(15000),
@@ -42,26 +39,15 @@ async function saveCover(url: string | null, uploadedById: string): Promise<stri
     if (buffer.length < 32 || buffer.length > 8 * 1024 * 1024) return null;
     const mime = detectUploadMime(buffer);
     if (!mime || !isImageMime(mime)) return null;
-    const ext = extensionForMime(mime);
-    if (!ext) return null;
 
-    const dir = path.join(process.cwd(), "public", "uploads", "bot");
-    await mkdir(dir, { recursive: true });
-    const filename = `${randomUUID()}.${ext}`;
-    await writeFile(path.join(dir, filename), buffer);
-    const localUrl = `/uploads/bot/${filename}`;
-
-    await prisma.media.create({
-      data: {
-        url: localUrl,
-        filename,
-        mimeType: mime,
-        size: buffer.length,
-        uploadedById,
-      },
+    const { saveStaffMedia } = await import("@/lib/media-upload");
+    const saved = await saveStaffMedia({
+      buffer,
+      originalName: `bot-${Date.now()}.jpg`,
+      uploadedById,
+      subfolder: "bot",
     });
-
-    return localUrl;
+    return saved.url;
   } catch {
     return null;
   }
@@ -166,6 +152,7 @@ export async function runHaberBotSource(sourceId: string, authorId: string): Pro
             reporterName: post.author,
             authorId,
             categoryId: source.categoryId,
+            extraCategories: { create: { categoryId: source.categoryId } },
           },
         });
 

@@ -17,7 +17,7 @@ export async function loginAction(input: {
 }) {
   const h = await headers();
   const ip = clientIp(h);
-  const limited = rateLimit(`login:${input.email.toLowerCase()}`, {
+  const limited = await rateLimit(`login:${input.email.toLowerCase()}`, {
     limit: 5,
     windowMs: 15 * 60_000,
   });

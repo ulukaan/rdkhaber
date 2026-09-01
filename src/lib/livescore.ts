@@ -3,12 +3,15 @@ import { cache } from "react";
 const API_URL =
   "https://fast.fanatik.com.tr/api/v1/soccer/widgets/data/live-match-statuses-horizontal-lite";
 const LOGO_CDN = "https://fast-images.fanatik.com.tr";
-const AUTH = Buffer.from(
-  process.env.LIVESCORE_API_AUTH ?? "frontend:x@FJ2U7g!T4n",
-).toString("base64");
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 const REVALIDATE = 60;
+
+function livescoreAuthHeader(): string | null {
+  const raw = process.env.LIVESCORE_API_AUTH?.trim();
+  if (!raw) return null;
+  return Buffer.from(raw).toString("base64");
+}
 
 export type LiveScorePhase = "upcoming" | "live" | "finished" | "other";
 
@@ -145,10 +148,13 @@ function sortMatches(a: LiveScoreMatch, b: LiveScoreMatch) {
 }
 
 export const getLiveScores = cache(async (): Promise<LiveScoreSnapshot | null> => {
+  const authHeader = livescoreAuthHeader();
+  if (!authHeader) return null;
+
   try {
     const res = await fetch(API_URL, {
       headers: {
-        Authorization: `Basic ${AUTH}`,
+        Authorization: `Basic ${authHeader}`,
         Accept: "application/json",
         "User-Agent": UA,
       },

@@ -5,6 +5,7 @@ import { clientFormSubmit } from "@/lib/client-form";
 import { useState } from "react";
 import {
   BarChart3,
+  Bookmark,
   Clapperboard,
   Folders,
   GalleryHorizontal,
@@ -12,6 +13,7 @@ import {
   LayoutGrid,
   LineChart,
   List,
+  MessageCircle,
   Mic,
   Newspaper,
   PenLine,
@@ -22,6 +24,7 @@ import {
   Sunrise,
   Trophy,
   TrendingUp,
+  Flame,
   Tv,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -149,6 +152,36 @@ const GROUPS: Array<{
         label: "Çok okunanlar",
         hint: "Sağ sütun listesi",
         Icon: BarChart3,
+      },
+      {
+        key: "showTrendingWeek",
+        label: "Haftanın trendi",
+        hint: "Son 7 günde en çok okunanlar",
+        Icon: Flame,
+      },
+      {
+        key: "showMostCommented",
+        label: "En çok yorumlanan",
+        hint: "Onaylı yorum sayısına göre",
+        Icon: MessageCircle,
+      },
+      {
+        key: "showMostBookmarked",
+        label: "En çok kaydedilen",
+        hint: "Üyelerin kaydettiği haberler",
+        Icon: Bookmark,
+      },
+      {
+        key: "showPoll",
+        label: "Anket",
+        hint: "Aktif ana sayfa anketini göster",
+        Icon: BarChart3,
+      },
+      {
+        key: "showForYou",
+        label: "Senin için",
+        hint: "Giriş yapmış üyelere kişisel öneri bloğu",
+        Icon: Sparkles,
       },
     ],
   },

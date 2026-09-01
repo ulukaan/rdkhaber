@@ -10,6 +10,10 @@ import {
 } from "@/components/icons/SocialIcons";
 import { BookmarkButton } from "@/components/account/BookmarkButton";
 import { resolveShareUrl } from "@/lib/share-url";
+import { cn } from "@/lib/utils";
+
+const tileClass =
+  "flex min-h-[4.75rem] w-full flex-col items-center justify-center gap-1.5 rounded-lg bg-surface px-1 py-3 text-[11px] font-bold text-ink transition-colors hover:bg-border/60";
 
 export function ShareBar({ url, title, articleId }: { url: string; title: string; articleId?: string }) {
   const [copied, setCopied] = useState(false);
@@ -22,25 +26,25 @@ export function ShareBar({ url, title, articleId }: { url: string; title: string
     {
       label: "WhatsApp",
       href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
-      className: "bg-[#25D366] hover:bg-[#1ebe57]",
+      iconClass: "bg-[#25D366]",
       icon: <WhatsAppIcon className="h-3.5 w-3.5" />,
     },
     {
       label: "Facebook",
       href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      className: "bg-[#1877F2] hover:bg-[#1466d2]",
+      iconClass: "bg-[#1877F2]",
       icon: <FacebookIcon className="h-3.5 w-3.5" />,
     },
     {
       label: "X",
       href: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
-      className: "bg-ink hover:bg-ink/90",
+      iconClass: "bg-[#14171a] ring-1 ring-white/20",
       icon: <XIcon className="h-3.5 w-3.5" />,
     },
     {
       label: "Telegram",
       href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
-      className: "bg-[#229ED9] hover:bg-[#1b8fc4]",
+      iconClass: "bg-[#229ED9]",
       icon: <TelegramIcon className="h-3.5 w-3.5" />,
     },
   ];
@@ -60,36 +64,44 @@ export function ShareBar({ url, title, articleId }: { url: string; title: string
       className="mt-8 overflow-hidden border border-border bg-white"
       aria-labelledby="share-heading"
     >
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div>
-          <h2 id="share-heading" className="text-sm font-extrabold text-ink">
-            Bu haberi paylaş
-          </h2>
-          <p className="mt-1 text-xs text-ink-soft">Sosyal medyada duyurun veya bağlantıyı kopyalayın.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {links.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex h-10 items-center gap-1.5 px-3.5 text-xs font-bold text-white transition-colors ${item.className}`}
+      <div className="border-b border-border px-4 py-3 sm:px-5">
+        <h2 id="share-heading" className="text-sm font-extrabold text-ink">
+          Bu haberi paylaş
+        </h2>
+        <p className="mt-0.5 text-xs text-ink-soft">Sosyal medyada duyurun veya bağlantıyı kopyalayın.</p>
+      </div>
+      <div
+        className={cn(
+          "grid gap-2 p-3",
+          articleId ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-3 sm:grid-cols-5",
+        )}
+      >
+        {links.map((item) => (
+          <a
+            key={item.label}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={tileClass}
+          >
+            <span
+              className={cn(
+                "inline-flex h-8 w-8 items-center justify-center rounded-full text-white",
+                item.iconClass,
+              )}
             >
               {item.icon}
-              {item.label}
-            </a>
-          ))}
-          <button
-            type="button"
-            onClick={copyLink}
-            className="inline-flex h-10 items-center gap-1.5 border border-border bg-surface px-3.5 text-xs font-bold text-ink hover:border-brand hover:text-brand"
-          >
+            </span>
+            {item.label}
+          </a>
+        ))}
+        <button type="button" onClick={copyLink} className={tileClass}>
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-ink">
             {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-            {copied ? "Kopyalandı" : "Bağlantı"}
-          </button>
-          {articleId ? <BookmarkButton articleId={articleId} variant="bar" /> : null}
-        </div>
+          </span>
+          {copied ? "Kopyalandı" : "Bağlantı"}
+        </button>
+        {articleId ? <BookmarkButton articleId={articleId} variant="tile" /> : null}
       </div>
     </section>
   );
