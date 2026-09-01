@@ -6,6 +6,14 @@ import { Mail, Newspaper } from "lucide-react";
 import { sendArticleNewsletterAction } from "@/actions/newsletter";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { FormCard } from "@/components/admin/FormCard";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -173,67 +181,134 @@ export function NewsletterSubscriberTable({
         </div>
       </FormCard>
 
-      <Table>
-        <thead>
-          <tr>
-            <Th className="w-10">
-              <input
-                type="checkbox"
-                checked={allActiveSelected}
-                onChange={(e) => toggleAllActive(e.target.checked)}
-                aria-label="Tüm aktif aboneleri seç"
-                className="h-4 w-4 rounded border-border"
-                disabled={activeSubscribers.length === 0}
-              />
-            </Th>
-            <Th>E-posta</Th>
-            <Th>Ad</Th>
-            <Th>Kaynak</Th>
-            <Th>Durum</Th>
-            <Th>Tarih</Th>
-            <Th className="text-right">İşlem</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {subscribers.length === 0 ? (
-            <EmptyRow colSpan={7}>Henüz abone yok.</EmptyRow>
-          ) : (
-            subscribers.map((s) => {
-              const isActive = s.status === "ACTIVE";
-              return (
-                <tr key={s.id} className={selected.has(s.id) ? "bg-brand/[0.03]" : undefined}>
-                  <Td>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(s.id)}
-                      onChange={(e) => toggleOne(s.id, e.target.checked)}
-                      disabled={!isActive}
-                      aria-label={`${s.email} seç`}
-                      className="h-4 w-4 rounded border-border disabled:opacity-40"
-                    />
-                  </Td>
-                  <Td className="font-semibold text-ink">{s.email}</Td>
-                  <Td className="text-ink-soft">{s.name || "—"}</Td>
-                  <Td className="text-xs text-ink-soft">{sourceLabel(s.source)}</Td>
-                  <Td>
-                    <Badge variant={isActive ? "brand" : "outline"}>
-                      {isActive ? "Aktif" : "Ayrıldı"}
-                    </Badge>
-                  </Td>
-                  <Td className="whitespace-nowrap text-xs text-ink-soft">
-                    {formatDate(new Date(s.createdAt))}
-                  </Td>
-                  <Td>
-                    <div className="flex justify-end">
-                      <DeleteButton id={s.id} action={deleteNewsletterSubscriberAction} />
-                    </div>
-                  </Td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </Table>
+      <PanelMobileOnly>
+        {subscribers.length === 0 ? (
+          <PanelMobileEmpty>Henüz abone yok.</PanelMobileEmpty>
+        ) : (
+          <>
+            {activeSubscribers.length > 0 ? (
+              <label className="mb-3 flex min-h-11 items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  checked={allActiveSelected}
+                  onChange={(e) => toggleAllActive(e.target.checked)}
+                  aria-label="Tüm aktif aboneleri seç"
+                  className="h-4 w-4 rounded border-border"
+                />
+                Tüm aktif aboneleri seç
+              </label>
+            ) : null}
+            <PanelMobileList>
+              {subscribers.map((s) => {
+                const isActive = s.status === "ACTIVE";
+                return (
+                  <PanelMobileCard
+                    key={s.id}
+                    className={selected.has(s.id) ? "ring-2 ring-brand/20" : undefined}
+                  >
+                    <PanelMobileCardBody
+                      footer={
+                        <div className="panel-row-actions flex items-center justify-between gap-2">
+                          <label className="flex min-h-11 items-center gap-2 text-sm text-ink-soft">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(s.id)}
+                              onChange={(e) => toggleOne(s.id, e.target.checked)}
+                              disabled={!isActive}
+                              aria-label={`${s.email} seç`}
+                              className="h-4 w-4 rounded border-border disabled:opacity-40"
+                            />
+                            Seç
+                          </label>
+                          <DeleteButton id={s.id} action={deleteNewsletterSubscriberAction} />
+                        </div>
+                      }
+                    >
+                      <p className="break-all font-semibold text-ink">{s.email}</p>
+                      {s.name ? (
+                        <p className="mt-1 text-sm text-ink-soft">{s.name}</p>
+                      ) : null}
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge variant={isActive ? "brand" : "outline"}>
+                          {isActive ? "Aktif" : "Ayrıldı"}
+                        </Badge>
+                        <span className="text-xs text-ink-soft">{sourceLabel(s.source)}</span>
+                        <span className="text-xs text-ink-soft">
+                          {formatDate(new Date(s.createdAt))}
+                        </span>
+                      </div>
+                    </PanelMobileCardBody>
+                  </PanelMobileCard>
+                );
+              })}
+            </PanelMobileList>
+          </>
+        )}
+      </PanelMobileOnly>
+
+      <PanelDesktopOnly>
+        <Table>
+          <thead>
+            <tr>
+              <Th className="w-10">
+                <input
+                  type="checkbox"
+                  checked={allActiveSelected}
+                  onChange={(e) => toggleAllActive(e.target.checked)}
+                  aria-label="Tüm aktif aboneleri seç"
+                  className="h-4 w-4 rounded border-border"
+                  disabled={activeSubscribers.length === 0}
+                />
+              </Th>
+              <Th>E-posta</Th>
+              <Th>Ad</Th>
+              <Th>Kaynak</Th>
+              <Th>Durum</Th>
+              <Th>Tarih</Th>
+              <Th className="text-right">İşlem</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {subscribers.length === 0 ? (
+              <EmptyRow colSpan={7}>Henüz abone yok.</EmptyRow>
+            ) : (
+              subscribers.map((s) => {
+                const isActive = s.status === "ACTIVE";
+                return (
+                  <tr key={s.id} className={selected.has(s.id) ? "bg-brand/[0.03]" : undefined}>
+                    <Td>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(s.id)}
+                        onChange={(e) => toggleOne(s.id, e.target.checked)}
+                        disabled={!isActive}
+                        aria-label={`${s.email} seç`}
+                        className="h-4 w-4 rounded border-border disabled:opacity-40"
+                      />
+                    </Td>
+                    <Td className="font-semibold text-ink">{s.email}</Td>
+                    <Td className="text-ink-soft">{s.name || "—"}</Td>
+                    <Td className="text-xs text-ink-soft">{sourceLabel(s.source)}</Td>
+                    <Td>
+                      <Badge variant={isActive ? "brand" : "outline"}>
+                        {isActive ? "Aktif" : "Ayrıldı"}
+                      </Badge>
+                    </Td>
+                    <Td className="whitespace-nowrap text-xs text-ink-soft">
+                      {formatDate(new Date(s.createdAt))}
+                    </Td>
+                    <Td>
+                      <div className="flex justify-end">
+                        <DeleteButton id={s.id} action={deleteNewsletterSubscriberAction} />
+                      </div>
+                    </Td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </Table>
+      </PanelDesktopOnly>
     </div>
   );
 }

@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MailboxNav } from "@/components/admin/MailboxNav";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
@@ -36,40 +44,65 @@ export default async function MailboxSentPage() {
       />
       <MailboxNav pathname="/admin/eposta/giden" />
 
-      <Table>
-        <thead>
-          <tr>
-            <Th>Alıcı</Th>
-            <Th>Konu</Th>
-            <Th>Kaynak</Th>
-            <Th>Tarih</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.length === 0 ? (
-            <EmptyRow colSpan={4}>Henüz giden e-posta kaydı yok.</EmptyRow>
-          ) : (
-            messages.map((m) => (
-              <tr key={m.id}>
-                <Td>
-                  <Link href={`/admin/eposta/${m.id}`} className="font-semibold text-ink hover:text-brand">
-                    {m.toAddress}
-                  </Link>
-                </Td>
-                <Td>
-                  <Link href={`/admin/eposta/${m.id}`} className="line-clamp-1 text-ink-soft hover:text-brand">
-                    {m.subject}
-                  </Link>
-                </Td>
-                <Td>
-                  <Badge variant="outline">{SOURCE_LABELS[m.source] ?? m.source}</Badge>
-                </Td>
-                <Td className="whitespace-nowrap text-xs text-ink-soft">{formatDate(m.createdAt)}</Td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      <PanelMobileOnly>
+        {messages.length === 0 ? (
+          <PanelMobileEmpty>Henüz giden e-posta kaydı yok.</PanelMobileEmpty>
+        ) : (
+          <PanelMobileList>
+            {messages.map((m) => (
+              <PanelMobileCard key={m.id}>
+                <Link href={`/admin/eposta/${m.id}`} className="block">
+                  <PanelMobileCardBody>
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{SOURCE_LABELS[m.source] ?? m.source}</Badge>
+                      <span className="text-[11px] text-ink-soft">{formatDate(m.createdAt)}</span>
+                    </div>
+                    <p className="truncate text-sm font-bold text-ink">{m.toAddress}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{m.subject}</p>
+                  </PanelMobileCardBody>
+                </Link>
+              </PanelMobileCard>
+            ))}
+          </PanelMobileList>
+        )}
+      </PanelMobileOnly>
+
+      <PanelDesktopOnly>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Alıcı</Th>
+              <Th>Konu</Th>
+              <Th>Kaynak</Th>
+              <Th>Tarih</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {messages.length === 0 ? (
+              <EmptyRow colSpan={4}>Henüz giden e-posta kaydı yok.</EmptyRow>
+            ) : (
+              messages.map((m) => (
+                <tr key={m.id}>
+                  <Td>
+                    <Link href={`/admin/eposta/${m.id}`} className="font-semibold text-ink hover:text-brand">
+                      {m.toAddress}
+                    </Link>
+                  </Td>
+                  <Td>
+                    <Link href={`/admin/eposta/${m.id}`} className="line-clamp-1 text-ink-soft hover:text-brand">
+                      {m.subject}
+                    </Link>
+                  </Td>
+                  <Td>
+                    <Badge variant="outline">{SOURCE_LABELS[m.source] ?? m.source}</Badge>
+                  </Td>
+                  <Td className="whitespace-nowrap text-xs text-ink-soft">{formatDate(m.createdAt)}</Td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </Table>
+      </PanelDesktopOnly>
     </>
   );
 }

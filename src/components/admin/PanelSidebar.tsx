@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ExternalLink, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
@@ -201,22 +201,17 @@ function NavSection({
 }) {
   const hasActive = items.some((item) => isNavActive(pathname, item.href, home, item.exact));
   const storageKey = `rdk-panel-section-${id}`;
-  const [open, setOpen] = useState(hasActive);
-
-  useEffect(() => {
-    if (collapsed) return;
-    if (hasActive) {
-      setOpen(true);
-      return;
-    }
+  const [open, setOpen] = useState(() => {
     try {
       const stored = localStorage.getItem(storageKey);
-      if (stored === "closed") setOpen(false);
-      else if (stored === "open") setOpen(true);
+      if (stored === "closed") return false;
+      if (stored === "open") return true;
     } catch {
       // localStorage yoksa geç
     }
-  }, [storageKey, hasActive, collapsed]);
+    return hasActive;
+  });
+  const isOpen = hasActive || open;
 
   function toggleOpen() {
     if (collapsed) return;
@@ -231,7 +226,7 @@ function NavSection({
     });
   }
 
-  const showItems = collapsed || open;
+  const showItems = collapsed || isOpen;
 
   return (
     <div className={cn("mb-3 last:mb-0", collapsed && "mb-2")}>
@@ -241,7 +236,7 @@ function NavSection({
         <button
           type="button"
           onClick={toggleOpen}
-          aria-expanded={open}
+          aria-expanded={isOpen}
           className={cn(
             "mb-1.5 flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-panel-alt/60",
             sectionLabelClass,
@@ -251,7 +246,7 @@ function NavSection({
           <ChevronDown
             className={cn(
               "h-4 w-4 shrink-0 text-white/60 transition-transform duration-200",
-              open && "rotate-180",
+              isOpen && "rotate-180",
             )}
             aria-hidden
           />

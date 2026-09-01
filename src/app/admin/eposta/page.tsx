@@ -4,6 +4,14 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { MailboxNav } from "@/components/admin/MailboxNav";
 import { MailboxSyncButton } from "@/components/admin/MailboxSyncButton";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getImapConfig } from "@/lib/imap-config";
@@ -60,42 +68,69 @@ export default async function MailboxInboxPage() {
         </p>
       )}
 
-      <Table>
-        <thead>
-          <tr>
-            <Th>Gönderen</Th>
-            <Th>Konu</Th>
-            <Th>Tarih</Th>
-            <Th className="text-right">Durum</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.length === 0 ? (
-            <EmptyRow colSpan={4}>
-              Gelen e-posta yok. &quot;Gelen kutusunu al&quot; ile senkronize edin.
-            </EmptyRow>
-          ) : (
-            messages.map((m) => (
-              <tr key={m.id} className={!m.isRead ? "bg-brand/[0.03]" : undefined}>
-                <Td>
-                  <Link href={`/admin/eposta/${m.id}`} className="block font-semibold text-ink hover:text-brand">
-                    {m.fromAddress}
-                  </Link>
-                </Td>
-                <Td>
-                  <Link href={`/admin/eposta/${m.id}`} className="line-clamp-1 text-ink-soft hover:text-brand">
-                    {m.subject}
-                  </Link>
-                </Td>
-                <Td className="whitespace-nowrap text-xs text-ink-soft">{formatDate(m.createdAt)}</Td>
-                <Td className="text-right">
-                  {!m.isRead ? <Badge variant="brand">Yeni</Badge> : <span className="text-xs text-ink-soft">Okundu</span>}
-                </Td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      <PanelMobileOnly>
+        {messages.length === 0 ? (
+          <PanelMobileEmpty>
+            Gelen e-posta yok. &quot;Gelen kutusunu al&quot; ile senkronize edin.
+          </PanelMobileEmpty>
+        ) : (
+          <PanelMobileList>
+            {messages.map((m) => (
+              <PanelMobileCard key={m.id}>
+                <Link href={`/admin/eposta/${m.id}`} className="block">
+                  <PanelMobileCardBody>
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      {!m.isRead ? <Badge variant="brand">Yeni</Badge> : null}
+                      <span className="text-[11px] text-ink-soft">{formatDate(m.createdAt)}</span>
+                    </div>
+                    <p className="truncate text-sm font-bold text-ink">{m.fromAddress}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{m.subject}</p>
+                  </PanelMobileCardBody>
+                </Link>
+              </PanelMobileCard>
+            ))}
+          </PanelMobileList>
+        )}
+      </PanelMobileOnly>
+
+      <PanelDesktopOnly>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Gönderen</Th>
+              <Th>Konu</Th>
+              <Th>Tarih</Th>
+              <Th className="text-right">Durum</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {messages.length === 0 ? (
+              <EmptyRow colSpan={4}>
+                Gelen e-posta yok. &quot;Gelen kutusunu al&quot; ile senkronize edin.
+              </EmptyRow>
+            ) : (
+              messages.map((m) => (
+                <tr key={m.id} className={!m.isRead ? "bg-brand/[0.03]" : undefined}>
+                  <Td>
+                    <Link href={`/admin/eposta/${m.id}`} className="block font-semibold text-ink hover:text-brand">
+                      {m.fromAddress}
+                    </Link>
+                  </Td>
+                  <Td>
+                    <Link href={`/admin/eposta/${m.id}`} className="line-clamp-1 text-ink-soft hover:text-brand">
+                      {m.subject}
+                    </Link>
+                  </Td>
+                  <Td className="whitespace-nowrap text-xs text-ink-soft">{formatDate(m.createdAt)}</Td>
+                  <Td className="text-right">
+                    {!m.isRead ? <Badge variant="brand">Yeni</Badge> : <span className="text-xs text-ink-soft">Okundu</span>}
+                  </Td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </Table>
+      </PanelDesktopOnly>
     </>
   );
 }
