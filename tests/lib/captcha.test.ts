@@ -26,10 +26,16 @@ describe("captcha helpers", () => {
     expect(captchaConfigured()).toBe(true);
   });
 
-  it("prod'da anahtar yokken doğrulama reddedilir", async () => {
+  it("anahtar yokken doğrulama atlanır (prod dahil)", async () => {
     vi.stubEnv("NODE_ENV", "production");
     delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
     delete process.env.TURNSTILE_SECRET_KEY;
+    await expect(verifyTurnstileToken("")).resolves.toBe(true);
+  });
+
+  it("anahtar varken boş token reddedilir", async () => {
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = "site-key";
+    process.env.TURNSTILE_SECRET_KEY = "secret-key";
     await expect(verifyTurnstileToken("")).resolves.toBe(false);
   });
 

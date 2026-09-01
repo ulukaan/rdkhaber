@@ -1,7 +1,7 @@
-/** Cloudflare Turnstile doğrulaması — prod'da anahtar yoksa reddedilir. */
+/** Cloudflare Turnstile doğrulaması — anahtarlar tanımlı değilse captcha atlanır. */
 export async function verifyTurnstileToken(token: string, remoteIp?: string) {
   if (!captchaConfigured()) {
-    return process.env.NODE_ENV !== "production";
+    return true;
   }
 
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
@@ -34,7 +34,7 @@ export function captchaConfigured() {
   return Boolean(turnstileSiteKey() && process.env.TURNSTILE_SECRET_KEY?.trim());
 }
 
-/** Prod'da captcha zorunlu mu? */
+/** Captcha zorunlu mu? (yalnızca anahtarlar tanımlıysa) */
 export function captchaRequired() {
-  return process.env.NODE_ENV === "production";
+  return captchaConfigured();
 }
