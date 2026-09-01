@@ -5,6 +5,8 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 type Social = { href: string; label: string };
 
 type Props = {
+  siteName: string;
+  logoUrl?: string;
   categories: Array<{ name: string; slug: string }>;
   whatsappNumber: string;
   socials: Social[];
@@ -13,6 +15,8 @@ type Props = {
 };
 
 export async function MobileMenuWithSession({
+  siteName,
+  logoUrl,
   categories,
   whatsappNumber,
   socials,
@@ -35,6 +39,8 @@ export async function MobileMenuWithSession({
 
   return (
     <MobileMenu
+      siteName={siteName}
+      logoUrl={logoUrl}
       categories={categories}
       whatsappNumber={whatsappNumber}
       account={account}
