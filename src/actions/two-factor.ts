@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
+import { isStaffRole } from "@/lib/staff-security";
 import {
   generateTotpSecret,
   getTotpUri,
@@ -13,11 +14,13 @@ import {
 import { getSettings } from "@/lib/settings";
 import { writeAuditLog } from "@/lib/audit-log";
 
+const STAFF_ROLES = ["ADMIN", "EDITOR"] as const;
+
 export async function startTotpSetupAction() {
-  const session = await requireRole(["ADMIN"]);
+  const session = await requireRole([...STAFF_ROLES]);
   const secret = generateTotpSecret();
   const settings = await getSettings();
-  const uri = getTotpUri(secret, session.user.email ?? "admin", settings.siteName);
+  const uri = getTotpUri(secret, session.user.email ?? "staff", settings.siteName);
 
   await prisma.user.update({
     where: { id: session.user.id },
@@ -28,7 +31,7 @@ export async function startTotpSetupAction() {
 }
 
 export async function enableTotpAction(code: string) {
-  const session = await requireRole(["ADMIN"]);
+  const session = await requireRole([...STAFF_ROLES]);
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { totpSecret: true },
@@ -43,12 +46,17 @@ export async function enableTotpAction(code: string) {
     data: { totpEnabled: true },
   });
   await writeAuditLog({ userId: session.user.id, action: "security.2fa.enabled" });
+  revalidatePath("/hesabim/guvenlik");
   revalidatePath("/admin/guvenlik");
   return { success: true as const };
 }
 
 export async function disableTotpAction(code: string) {
-  const session = await requireRole(["ADMIN"]);
+  const session = await requireRole([...STAFF_ROLES]);
+  if (process.env.NODE_ENV === "production" && isStaffRole(session.user.role)) {
+    return { error: "Personel hesaplarında 2FA kapatılamaz." };
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { totpSecret: true },
@@ -63,12 +71,13 @@ export async function disableTotpAction(code: string) {
     data: { totpEnabled: false, totpSecret: null },
   });
   await writeAuditLog({ userId: session.user.id, action: "security.2fa.disabled" });
+  revalidatePath("/hesabim/guvenlik");
   revalidatePath("/admin/guvenlik");
   return { success: true as const };
 }
 
 export async function getTotpStatusAction() {
-  const session = await requireRole(["ADMIN"]);
+  const session = await requireRole([...STAFF_ROLES]);
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { totpEnabled: true },

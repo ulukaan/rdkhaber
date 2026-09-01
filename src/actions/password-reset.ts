@@ -19,7 +19,7 @@ function hashToken(token: string) {
 
 export async function requestPasswordResetAction(values: { email: string }) {
   const h = await headers();
-  const limited = rateLimit(`forgot:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(`forgot:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla deneme. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
@@ -97,7 +97,7 @@ export async function resetPasswordAction(values: {
   passwordConfirm: string;
 }) {
   const h = await headers();
-  const limited = rateLimit(`reset:${clientIp(h)}`, { limit: 10, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(`reset:${clientIp(h)}`, { limit: 10, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla deneme. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }

@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import {
   emptyReactionState,
   isReactionId,
@@ -73,6 +75,15 @@ export async function setArticleReactionAction(
     select: { id: true },
   });
   if (!article) return { error: "Haber bulunamadı." };
+
+  const h = await headers();
+  const limited = await rateLimit(`reaction:${clientIp(h)}`, {
+    limit: 60,
+    windowMs: 15 * 60_000,
+  });
+  if (!limited.ok) {
+    return { error: `Çok fazla işlem. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
+  }
 
   const visitor = await visitorId(true);
   if (!visitor) return { error: "İfade kaydedilemedi." };

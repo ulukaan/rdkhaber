@@ -33,7 +33,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         const totpVerified = credentials?.totpVerified === "1";
         if (!email || !password) return null;
 
-        const limited = rateLimit(`login:${email.toLowerCase()}`, {
+        const limited = await rateLimit(`login:${email.toLowerCase()}`, {
           limit: 5,
           windowMs: 15 * 60_000,
         });

@@ -95,7 +95,7 @@ export async function castPollVoteAction(
 
   const h = await headers();
   const ip = clientIp(h);
-  const limited = rateLimit(`poll:${ip}`, { limit: 30, windowMs: 15 * 60_000 });
+  const limited = await rateLimit(`poll:${ip}`, { limit: 30, windowMs: 15 * 60_000 });
   if (!limited.ok) return { error: "Çok fazla deneme. Lütfen biraz bekleyin." };
 
   const poll = await prisma.poll.findUnique({

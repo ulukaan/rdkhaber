@@ -10,6 +10,7 @@ import { getSettings } from "@/lib/settings";
 import { sendPanelNotificationEmail } from "@/lib/notify-email";
 import { getSiteUrl } from "@/lib/site-url";
 import { notifyAdmins } from "@/lib/notifications";
+import { verifyTurnstileToken } from "@/lib/captcha";
 
 const complaintSchema = z.object({
   name: z.string().min(2).max(120),
@@ -19,12 +20,22 @@ const complaintSchema = z.object({
   message: z.string().min(20).max(5000),
 });
 
-export async function submitContentComplaintAction(values: z.infer<typeof complaintSchema>) {
+export async function submitContentComplaintAction(
+  values: z.infer<typeof complaintSchema> & { captchaToken?: string; website?: string },
+) {
+  if (values.website?.trim()) {
+    return { error: "Geçersiz form." };
+  }
+
   const h = await headers();
-  const limited = rateLimit(`complaint:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
+  const ip = clientIp(h);
+  const limited = await rateLimit(`complaint:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla başvuru. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
+
+  const captchaOk = await verifyTurnstileToken(values.captchaToken ?? "", ip);
+  if (!captchaOk) return { error: "Güvenlik doğrulaması başarısız." };
 
   const parsed = complaintSchema.safeParse(values);
   if (!parsed.success) {

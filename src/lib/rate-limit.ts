@@ -1,14 +1,15 @@
 /**
- * Basit bellek içi rate limit (tek süreç). Prod'da birden fazla instance varsa
- * Redis vb. gerekir; yine de brute-force ve spam'i ciddi azaltır.
+ * Rate limit — REDIS_URL varsa Redis, yoksa bellek içi (tek süreç).
  */
+import { getRedisClient } from "@/lib/redis-client";
+
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSec: number };
 
-export function rateLimit(
+function rateLimitMemory(
   key: string,
   { limit, windowMs }: { limit: number; windowMs: number },
 ): RateLimitResult {
@@ -26,6 +27,34 @@ export function rateLimit(
 
   current.count += 1;
   return { ok: true };
+}
+
+export async function rateLimit(
+  key: string,
+  { limit, windowMs }: { limit: number; windowMs: number },
+): Promise<RateLimitResult> {
+  const redis = await getRedisClient();
+  if (redis) {
+    try {
+      const redisKey = `rl:${key}`;
+      const count = await redis.incr(redisKey);
+      if (count === 1) {
+        await redis.pexpire(redisKey, windowMs);
+      }
+      if (count > limit) {
+        const ttl = await redis.pttl(redisKey);
+        return {
+          ok: false,
+          retryAfterSec: Math.max(1, Math.ceil((ttl > 0 ? ttl : windowMs) / 1000)),
+        };
+      }
+      return { ok: true };
+    } catch {
+      /* Redis hatasında belleğe düş */
+    }
+  }
+
+  return rateLimitMemory(key, { limit, windowMs });
 }
 
 function isPrivateOrLocalIp(ip: string) {

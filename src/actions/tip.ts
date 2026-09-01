@@ -22,7 +22,7 @@ export async function submitTipAction(values: {
   captchaToken?: string;
 }) {
   const h = await headers();
-  const limited = rateLimit(`tip:${clientIp(h)}`, { limit: 8, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(`tip:${clientIp(h)}`, { limit: 8, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla ihbar. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
@@ -93,12 +93,22 @@ export async function submitContactAction(values: {
   email: string;
   phone?: string;
   message: string;
+  captchaToken?: string;
+  website?: string;
 }) {
+  if (values.website?.trim()) {
+    return { error: "Geçersiz form." };
+  }
+
   const h = await headers();
-  const limited = rateLimit(`contact:${clientIp(h)}`, { limit: 8, windowMs: 60 * 60_000 });
+  const ip = clientIp(h);
+  const limited = await rateLimit(`contact:${ip}`, { limit: 8, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla mesaj. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
+
+  const captchaOk = await verifyTurnstileToken(values.captchaToken ?? "", ip);
+  if (!captchaOk) return { error: "Güvenlik doğrulaması başarısız." };
 
   const parsed = contactSchema.safeParse(values);
   if (!parsed.success) {

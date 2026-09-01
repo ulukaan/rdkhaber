@@ -66,7 +66,7 @@ export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
         <div>
           <h2 className="text-sm font-bold text-ink">İki adımlı doğrulama (TOTP)</h2>
           <p className="mt-1 text-xs text-ink-soft">
-            Google Authenticator veya benzeri uygulama ile yönetici girişini koruyun.
+            Google Authenticator veya benzeri uygulama ile personel girişini koruyun.
           </p>
         </div>
         <Badge variant={enabled ? "brand" : "outline"}>{enabled ? "Aktif" : "Kapalı"}</Badge>
@@ -103,7 +103,7 @@ export function TwoFactorForm({ initialEnabled }: { initialEnabled: boolean }) {
         </div>
       ) : null}
 
-      {enabled ? (
+      {enabled && process.env.NODE_ENV !== "production" ? (
         <div className="space-y-3 border-t border-border pt-4">
           <p className="text-xs text-ink-soft">Devre dışı bırakmak için mevcut kodu girin.</p>
           <FieldGroup label="Doğrulama kodu" htmlFor="disable-code">
