@@ -1,5 +1,3 @@
-import { normalizeYskPlace } from "@/lib/ysk-api";
-
 /** Parti rengine göre otomatik avatar (ui-avatars). YSK API fotoğraf sağlamaz. */
 export function buildCandidateAvatarUrl(name: string, partyColor = "#d0021b") {
   const bg = partyColor.replace("#", "");
@@ -22,7 +20,9 @@ export function resolveCandidatePhotoUrl(input: {
 
 /** Aday adından karşılaştırma anahtarı (eşleştirme için). */
 export function normalizeCandidateKey(name: string) {
-  return normalizeYskPlace(name)
+  return (name ?? "")
+    .trim()
+    .toLocaleUpperCase("tr-TR")
     .replace(/İ/g, "I")
     .replace(/Ş/g, "S")
     .replace(/Ğ/g, "G")
