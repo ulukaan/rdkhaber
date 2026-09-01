@@ -294,7 +294,7 @@ export function ArticleForm({
           </FormCard>
         </div>
 
-        <aside className="lg:col-span-1 lg:self-start">
+        <aside className="order-first lg:order-none lg:col-span-1 lg:self-start">
           <div className="flex flex-col gap-5 lg:sticky lg:top-16 lg:z-10 lg:max-h-[calc(100dvh-4rem-5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
           <FormCard title="Yayın" description="Nerede ve ne zaman çıksın." Icon={LayoutGrid}>
             <div className="flex flex-col gap-4">

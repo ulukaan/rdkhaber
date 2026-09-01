@@ -71,7 +71,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class:
-          "prose-editor min-h-[320px] w-full px-4 py-3 text-sm leading-7 text-ink outline-none",
+          "prose-editor min-h-[220px] w-full px-3 py-3 text-sm leading-7 text-ink outline-none sm:min-h-[320px] sm:px-4",
       },
     },
     onUpdate: ({ editor }) => setHtml(editor.getHTML()),
@@ -85,7 +85,7 @@ export function RichTextEditor({
     <div className="overflow-hidden rounded-lg border border-border bg-white">
       <input type="hidden" name={name} value={html} />
 
-      <div className="flex items-center gap-0.5 overflow-x-auto border-b border-border bg-surface px-1 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:gap-0.5 sm:overflow-visible sm:px-2 [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border bg-surface px-2 py-2 sm:gap-0.5 sm:px-2 sm:py-1.5">
         <Btn editor={editor} label="Başlık 2" active={editor?.isActive("heading", { level: 2 })}
           onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>
           <Heading2 className="h-4 w-4" />
@@ -186,7 +186,7 @@ export function RichTextEditor({
           <Minus className="h-4 w-4" />
         </Btn>
 
-        <div className="ml-auto flex items-center gap-0.5">
+        <div className="flex w-full basis-full items-center justify-end gap-0.5 sm:ml-auto sm:w-auto sm:basis-auto">
           <Btn editor={editor} label="Geri al" onClick={() => editor?.chain().focus().undo().run()}>
             <Undo2 className="h-4 w-4" />
           </Btn>
@@ -198,7 +198,7 @@ export function RichTextEditor({
 
       <EditorContent editor={editor} />
 
-      <div className="flex items-center gap-4 border-t border-border bg-surface px-4 py-1.5 text-[11px] text-ink-soft">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-surface px-3 py-2 text-[11px] text-ink-soft sm:px-4 sm:py-1.5">
         <span>Karakter: {charCount}</span>
         <span>Kelime: {wordCount}</span>
       </div>
@@ -238,7 +238,7 @@ function Btn({
       disabled={!editor}
       onClick={onClick}
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded transition-colors disabled:opacity-40 sm:h-8 sm:w-8",
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded transition-colors disabled:opacity-40 sm:h-8 sm:w-8",
         active ? "bg-brand text-white" : "text-ink hover:bg-white",
       )}
     >

@@ -92,7 +92,18 @@ export function FormActions({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("flex flex-wrap items-center gap-3 pt-1", className)}>{children}</div>;
+  return (
+    <div
+      className={cn(
+        "panel-form-actions flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3",
+        "[&_button]:min-h-11 [&_button]:w-full sm:[&_button]:w-auto",
+        "[&_a]:inline-flex [&_a]:min-h-11 [&_a]:w-full [&_a]:items-center [&_a]:justify-center sm:[&_a]:w-auto",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 export type PanelSubNavLink = {
