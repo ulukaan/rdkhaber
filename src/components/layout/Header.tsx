@@ -15,7 +15,6 @@ import { HeaderTopBarServer } from "@/components/layout/HeaderTopBarServer";
 import { MobileMenuWithSession } from "@/components/layout/MobileMenuWithSession";
 import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { mobileStripFromCategories } from "@/lib/mobile-category-strip";
 
 function HeaderExtrasSkeleton() {
   return <div className="h-9 animate-pulse bg-ink/5" aria-hidden />;
@@ -39,7 +38,6 @@ export async function Header() {
 
   const serviceLinks = flattenNavLinks(serviceNav);
   const corporateLinks = flattenNavLinks(corporateNav);
-  const mobileStrip = mobileStripFromCategories(categories);
 
   return (
     <HeaderShell
@@ -86,7 +84,7 @@ export async function Header() {
               </div>
             </Container>
           </div>
-          <MobileCategoryStrip items={mobileStrip} />
+          <MobileCategoryStrip items={headerNav} />
         </>
       }
       extras={
