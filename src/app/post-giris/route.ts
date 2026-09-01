@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { panelPathForRole } from "@/lib/role";
-import { isStaffRole } from "@/lib/staff-security";
+import { isStaffRole, staffSecuritySetupPath } from "@/lib/staff-security";
 import { absoluteUrl } from "@/lib/site-url";
 
 export async function GET(req: Request) {
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       select: { totpEnabled: true },
     });
     if (!user?.totpEnabled) {
-      return NextResponse.redirect(absoluteUrl("/hesabim/guvenlik", req));
+      return NextResponse.redirect(absoluteUrl(staffSecuritySetupPath(session.user.role), req));
     }
   }
 
