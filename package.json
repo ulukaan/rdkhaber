@@ -19,6 +19,7 @@
     "seed:ads": "tsx prisma/seed-ads.ts",
     "import:live": "tsx scripts/import-duzceradikal.ts",
     "seed:bot-words": "tsx scripts/seed-haber-bot-words.ts",
+    "seed:demo-election": "node scripts/seed-demo-election.mjs",
     "db:seed": "tsx prisma/seed.ts",
     "backup:db": "bash scripts/backup-db.sh"
   },
