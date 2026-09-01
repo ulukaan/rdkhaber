@@ -109,6 +109,7 @@ export function PollForm({
               </option>
             ))}
           </Select>
+          <p className="mt-1 text-xs text-ink-soft">Boş bırakırsanız ana sayfada gösterilir</p>
         </FieldGroup>
 
         <div className="space-y-2">
@@ -139,13 +140,14 @@ export function PollForm({
           ))}
         </div>
 
-        <FieldGroup label="Bitiş tarihi" htmlFor="endsAt" hint="Boş bırakılırsa süresiz">
+        <FieldGroup label="Bitiş tarihi" htmlFor="endsAt">
           <Input
             id="endsAt"
             name="endsAt"
             type="datetime-local"
             defaultValue={toDatetimeLocal(defaults?.endsAt)}
           />
+          <p className="mt-1 text-xs text-ink-soft">Boş bırakılırsa süresiz</p>
         </FieldGroup>
 
         <label className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -170,7 +172,14 @@ export function PollForm({
 
         {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
 
-        <FormActions loading={loading} cancelHref="/admin/anketler" />
+        <FormActions>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Kaydediliyor..." : "Kaydet"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}>
+            Vazgeç
+          </Button>
+        </FormActions>
       </form>
     </FormCard>
   );

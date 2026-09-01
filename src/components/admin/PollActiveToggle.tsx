@@ -19,7 +19,7 @@ export function PollActiveToggle({
     <button
       type="button"
       disabled={pending}
-      onClick={() => start(() => togglePollActiveAction(pollId, !active))}
+      onClick={() => start(() => void togglePollActiveAction(pollId, !active))}
       className={cn(
         "rounded-full px-2.5 py-1 text-xs font-bold transition-colors",
         open
