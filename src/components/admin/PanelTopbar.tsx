@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, ExternalLink, LogOut, Menu } from "lucide-react";
+import { ChevronRight, ExternalLink, LogOut, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Role } from "@prisma/client";
 import type { Session } from "next-auth";
 import { panelBrandLabel, panelPathForRole, roleLabel } from "@/lib/role";
@@ -16,12 +16,16 @@ export function PanelTopbar({
   siteName,
   logoUrl,
   onMenu,
+  onSidebarToggle,
+  sidebarCollapsed = false,
 }: {
   user: NonNullable<Session["user"]>;
   role: Role;
   siteName: string;
   logoUrl?: string;
   onMenu: () => void;
+  onSidebarToggle?: () => void;
+  sidebarCollapsed?: boolean;
 }) {
   const pathname = usePathname();
   const crumb = getPanelBreadcrumb(pathname, role);
@@ -42,6 +46,22 @@ export function PanelTopbar({
           >
             <Menu className="h-5 w-5" />
           </button>
+
+          {onSidebarToggle ? (
+            <button
+              type="button"
+              onClick={onSidebarToggle}
+              className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-ink transition-colors hover:border-brand hover:text-brand lg:flex"
+              aria-label={sidebarCollapsed ? "Menüyü genişlet" : "Menüyü daralt"}
+              title={sidebarCollapsed ? "Menüyü genişlet" : "Menüyü daralt"}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </button>
+          ) : null}
 
           <PanelBrand
             href={home}
