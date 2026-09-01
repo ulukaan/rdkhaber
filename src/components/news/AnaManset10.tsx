@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { HeadlineSlider } from "@/components/news/HeadlineSlider";
-import { headlineFromArticle } from "@/components/news/HeadlineFace";
+import { HEADLINE_OVERLAY, HEADLINE_TITLE_SHADOW, headlineFromArticle } from "@/components/news/HeadlineFace";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
 
@@ -51,17 +51,18 @@ export function AnaManset10({
                     className="absolute inset-0 h-full w-full"
                     sizes="(max-width: 1024px) 50vw, 25vw"
                   />
-                  <span className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/25 to-transparent transition-opacity group-hover:from-ink/95" />
+                  <span className={cn("absolute inset-0 transition-opacity group-hover:opacity-95", HEADLINE_OVERLAY.bottomStrong)} />
                   <span className="absolute inset-x-0 bottom-0 p-2.5 md:p-3">
                     <span
                       className={cn(
                         "mb-1 inline-block max-w-full truncate px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white",
+                        HEADLINE_TITLE_SHADOW,
                       )}
                       style={{ backgroundColor: accent || article.category.color || "var(--brand)" }}
                     >
                       {face.kicker}
                     </span>
-                    <span className="line-clamp-2 text-[12px] font-extrabold leading-snug text-white md:text-[13px]">
+                    <span className={cn("line-clamp-2 text-[12px] font-extrabold leading-snug text-white md:text-[13px]", HEADLINE_TITLE_SHADOW)}>
                       {face.title}
                     </span>
                   </span>
