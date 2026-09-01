@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ElectionForm, type ElectionFormDefaults } from "@/components/admin/ElectionForm";
+import { ElectionYskPanel } from "@/components/admin/ElectionYskPanel";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -42,6 +43,11 @@ export default async function EditElectionPage({ params }: { params: Promise<{ i
     usedVotes: election.usedVotes,
     validVotes: election.validVotes,
     categorySlug: election.categorySlug ?? "",
+    yskSecimId: election.yskSecimId ?? "",
+    yskSecimTuru: election.yskSecimTuru ?? "",
+    yskIlId: election.yskIlId ?? "",
+    yskFocusIlce: election.yskFocusIlce ?? "",
+    yskSyncEnabled: election.yskSyncEnabled,
     candidates: election.candidates.map((candidate) => ({
       id: candidate.id,
       raceType: candidate.raceType,
@@ -70,6 +76,12 @@ export default async function EditElectionPage({ params }: { params: Promise<{ i
   return (
     <>
       <PageHeader title={election.title} description={`/${election.slug} · Seçim merkezi düzenleme`} />
+      <ElectionYskPanel
+        electionId={election.id}
+        yskSyncEnabled={election.yskSyncEnabled}
+        yskLastSyncAt={election.yskLastSyncAt?.toISOString() ?? null}
+        yskLastSyncError={election.yskLastSyncError}
+      />
       <ElectionForm defaults={defaults} />
     </>
   );

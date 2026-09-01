@@ -338,6 +338,11 @@ export const electionSchema = z.object({
   usedVotes: z.coerce.number().int().min(0).default(0),
   validVotes: z.coerce.number().int().min(0).default(0),
   categorySlug: z.string().max(120).optional().or(z.literal("")),
+  yskSecimId: z.coerce.number().int().positive().optional().nullable(),
+  yskSecimTuru: z.coerce.number().int().positive().optional().nullable(),
+  yskIlId: z.coerce.number().int().positive().optional().nullable(),
+  yskFocusIlce: z.string().max(120).optional().or(z.literal("")),
+  yskSyncEnabled: z.boolean().default(false),
   candidates: z.array(electionCandidateSchema).min(1, "En az bir aday gerekli"),
   districts: z.array(electionDistrictSchema).optional().default([]),
 });

@@ -642,6 +642,13 @@ model Election {
   validVotes      Int              @default(0)
   categorySlug    String?
   lastResultsAt   DateTime?
+  yskSecimId      Int?
+  yskSecimTuru    Int?
+  yskIlId         Int?
+  yskFocusIlce    String?
+  yskSyncEnabled  Boolean          @default(false)
+  yskLastSyncAt   DateTime?
+  yskLastSyncError String?         @db.Text
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 

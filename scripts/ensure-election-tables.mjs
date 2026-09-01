@@ -3,6 +3,16 @@ import { hasDatabaseUrl, skipMessage } from "./ensure-db-utils.mjs";
 
 const prisma = new PrismaClient();
 
+async function columnExists(table, column) {
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    table,
+    column,
+  );
+  return Number(rows[0]?.c ?? 0) > 0;
+}
+
 async function main() {
   if (!hasDatabaseUrl()) {
     skipMessage("ensure-election-tables");
@@ -27,6 +37,13 @@ async function main() {
       \`validVotes\` INTEGER NOT NULL DEFAULT 0,
       \`categorySlug\` VARCHAR(191) NULL,
       \`lastResultsAt\` DATETIME(3) NULL,
+      \`yskSecimId\` INTEGER NULL,
+      \`yskSecimTuru\` INTEGER NULL,
+      \`yskIlId\` INTEGER NULL,
+      \`yskFocusIlce\` VARCHAR(191) NULL,
+      \`yskSyncEnabled\` BOOLEAN NOT NULL DEFAULT false,
+      \`yskLastSyncAt\` DATETIME(3) NULL,
+      \`yskLastSyncError\` TEXT NULL,
       \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
       \`updatedAt\` DATETIME(3) NOT NULL,
       UNIQUE INDEX \`Election_slug_key\`(\`slug\`),
@@ -84,6 +101,20 @@ async function main() {
       PRIMARY KEY (\`id\`)
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
+
+  for (const [col, ddl] of [
+    ["yskSecimId", "ALTER TABLE `Election` ADD COLUMN `yskSecimId` INTEGER NULL"],
+    ["yskSecimTuru", "ALTER TABLE `Election` ADD COLUMN `yskSecimTuru` INTEGER NULL"],
+    ["yskIlId", "ALTER TABLE `Election` ADD COLUMN `yskIlId` INTEGER NULL"],
+    ["yskFocusIlce", "ALTER TABLE `Election` ADD COLUMN `yskFocusIlce` VARCHAR(191) NULL"],
+    ["yskSyncEnabled", "ALTER TABLE `Election` ADD COLUMN `yskSyncEnabled` BOOLEAN NOT NULL DEFAULT false"],
+    ["yskLastSyncAt", "ALTER TABLE `Election` ADD COLUMN `yskLastSyncAt` DATETIME(3) NULL"],
+    ["yskLastSyncError", "ALTER TABLE `Election` ADD COLUMN `yskLastSyncError` TEXT NULL"],
+  ]) {
+    if (!(await columnExists("Election", col))) {
+      await prisma.$executeRawUnsafe(ddl);
+    }
+  }
 }
 
 main()
