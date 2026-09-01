@@ -35,6 +35,13 @@ export function PanelChrome({
   }, []);
 
   useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--panel-sidebar-w",
+      collapsed ? "72px" : "260px",
+    );
+  }, [collapsed]);
+
+  useEffect(() => {
     if (!mobileOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";

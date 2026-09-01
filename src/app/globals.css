@@ -485,4 +485,22 @@ html.article-reading header.sticky {
     flex-direction: column-reverse;
     align-items: stretch;
   }
+
+  .panel-form-footer .mx-auto > * {
+    width: 100%;
+  }
+
+  .panel-row-actions {
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .panel-row-actions button,
+  .panel-row-actions a {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

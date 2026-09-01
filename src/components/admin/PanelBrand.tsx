@@ -36,7 +36,7 @@ export function PanelBrand({
         <span
           className={cn(
             "relative block h-9 shrink-0",
-            compact ? "w-[7.5rem] sm:w-36" : "w-[150px]",
+            compact ? "w-20 max-[380px]:w-16 sm:w-36" : "w-[150px]",
           )}
         >
           <Image

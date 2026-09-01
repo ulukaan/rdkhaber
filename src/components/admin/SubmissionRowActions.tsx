@@ -25,7 +25,7 @@ export function SubmissionRowActions({
     });
 
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className="panel-row-actions flex items-center justify-end gap-3">
       {status === "PENDING" && (
         <>
           <button

@@ -9,7 +9,7 @@ export function TipRowActions({ id, status }: { id: string; status: string }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex items-center justify-end gap-3">
+    <div className="panel-row-actions flex items-center justify-end gap-3">
       {status === "PENDING" && (
         <button
           type="button"

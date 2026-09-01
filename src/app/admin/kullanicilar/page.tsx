@@ -3,6 +3,14 @@ import { Plus, Pencil } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -25,47 +33,88 @@ export default async function UsersPage() {
           </Button>
         }
       />
-      <Table>
-        <thead>
-          <tr>
-            <Th>Ad Soyad</Th>
-            <Th>E-posta</Th>
-            <Th>Rol</Th>
-            <Th>Durum</Th>
-            <Th className="text-right">İşlemler</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length === 0 && <EmptyRow colSpan={5}>Kullanıcı yok.</EmptyRow>}
-          {users.map((u) => (
-            <tr key={u.id}>
-              <Td className="font-semibold text-ink">{u.name}</Td>
-              <Td className="text-ink-soft">{u.email}</Td>
-              <Td>
-                <Badge variant={u.role === "ADMIN" ? "brand" : "outline"}>
-                  {roleLabel(u.role)}
-                </Badge>
-              </Td>
-              <Td>
-                <Badge variant={u.active ? "brand" : "dark"}>
-                  {u.active ? "Aktif" : "Pasif"}
-                </Badge>
-              </Td>
-              <Td>
-                <div className="flex items-center justify-end gap-3">
-                  <Link
-                    href={`/admin/kullanicilar/${u.id}`}
-                    className="text-ink-soft hover:text-brand"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Link>
-                  <DeleteButton id={u.id} action={deleteUserAction} />
-                </div>
-              </Td>
+
+      <PanelMobileOnly>
+        {users.length === 0 ? (
+          <PanelMobileEmpty>Kullanıcı yok.</PanelMobileEmpty>
+        ) : (
+          <PanelMobileList>
+            {users.map((u) => (
+              <PanelMobileCard key={u.id}>
+                <PanelMobileCardBody
+                  footer={
+                    <div className="panel-row-actions flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/kullanicilar/${u.id}`}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-ink-soft active:text-brand"
+                        aria-label="Düzenle"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <DeleteButton id={u.id} action={deleteUserAction} />
+                    </div>
+                  }
+                >
+                  <p className="font-semibold text-ink">{u.name}</p>
+                  <p className="mt-1 break-all text-xs text-ink-soft">{u.email}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge variant={u.role === "ADMIN" ? "brand" : "outline"}>
+                      {roleLabel(u.role)}
+                    </Badge>
+                    <Badge variant={u.active ? "brand" : "dark"}>
+                      {u.active ? "Aktif" : "Pasif"}
+                    </Badge>
+                  </div>
+                </PanelMobileCardBody>
+              </PanelMobileCard>
+            ))}
+          </PanelMobileList>
+        )}
+      </PanelMobileOnly>
+
+      <PanelDesktopOnly>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Ad Soyad</Th>
+              <Th>E-posta</Th>
+              <Th>Rol</Th>
+              <Th>Durum</Th>
+              <Th className="text-right">İşlemler</Th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {users.length === 0 && <EmptyRow colSpan={5}>Kullanıcı yok.</EmptyRow>}
+            {users.map((u) => (
+              <tr key={u.id}>
+                <Td className="font-semibold text-ink">{u.name}</Td>
+                <Td className="text-ink-soft">{u.email}</Td>
+                <Td>
+                  <Badge variant={u.role === "ADMIN" ? "brand" : "outline"}>
+                    {roleLabel(u.role)}
+                  </Badge>
+                </Td>
+                <Td>
+                  <Badge variant={u.active ? "brand" : "dark"}>
+                    {u.active ? "Aktif" : "Pasif"}
+                  </Badge>
+                </Td>
+                <Td>
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/admin/kullanicilar/${u.id}`}
+                      className="text-ink-soft hover:text-brand"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                    <DeleteButton id={u.id} action={deleteUserAction} />
+                  </div>
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </PanelDesktopOnly>
     </>
   );
 }

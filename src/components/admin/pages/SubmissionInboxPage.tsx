@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileEmpty,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { Badge } from "@/components/ui/Badge";
 import { SubmissionRowActions } from "@/components/admin/SubmissionRowActions";
 import { AttachmentPreview } from "@/components/admin/AttachmentPreview";
@@ -23,45 +31,79 @@ export async function SubmissionInboxPage({ basePath }: { basePath: string }) {
         title="Okuyucu Haberleri"
         description="Okuyuculardan gelen haber önerileri. Onaylananlar taslak olarak haberler listesine eklenir."
       />
-      <Table>
-        <thead>
-          <tr>
-            <Th>Başlık / İçerik</Th>
-            <Th>Gönderen</Th>
-            <Th>Durum</Th>
-            <Th>Tarih</Th>
-            <Th className="text-right">İşlemler</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {submissions.length === 0 && (
-            <EmptyRow colSpan={5}>Henüz okuyucu haberi yok.</EmptyRow>
-          )}
-          {submissions.map((s) => (
-            <tr key={s.id} className="hover:bg-surface/60">
-              <Td className="max-w-lg">
-                <p className="font-semibold text-ink">{s.title}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.content}</p>
-                <AttachmentPreview raw={s.attachmentUrl} />
-              </Td>
-              <Td className="text-ink-soft">
-                {s.submitterName || s.submitterEmail || "Anonim"}
-              </Td>
-              <Td>
-                <Badge variant={STATUS_LABEL[s.status].variant}>
-                  {STATUS_LABEL[s.status].text}
-                </Badge>
-              </Td>
-              <Td className="whitespace-nowrap text-xs text-ink-soft">
-                {formatDate(s.createdAt)}
-              </Td>
-              <Td>
-                <SubmissionRowActions id={s.id} status={s.status} basePath={basePath} />
-              </Td>
+
+      <PanelMobileOnly>
+        {submissions.length === 0 ? (
+          <PanelMobileEmpty>Henüz okuyucu haberi yok.</PanelMobileEmpty>
+        ) : (
+          <PanelMobileList>
+            {submissions.map((s) => (
+              <PanelMobileCard key={s.id}>
+                <PanelMobileCardBody
+                  footer={
+                    <SubmissionRowActions id={s.id} status={s.status} basePath={basePath} />
+                  }
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <Badge variant={STATUS_LABEL[s.status].variant}>
+                      {STATUS_LABEL[s.status].text}
+                    </Badge>
+                    <span className="text-[11px] text-ink-soft">{formatDate(s.createdAt)}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-ink">{s.title}</p>
+                  <p className="mt-1 line-clamp-3 text-xs text-ink-soft">{s.content}</p>
+                  <p className="mt-2 text-xs text-ink-soft">
+                    {s.submitterName || s.submitterEmail || "Anonim"}
+                  </p>
+                  <AttachmentPreview raw={s.attachmentUrl} />
+                </PanelMobileCardBody>
+              </PanelMobileCard>
+            ))}
+          </PanelMobileList>
+        )}
+      </PanelMobileOnly>
+
+      <PanelDesktopOnly>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Başlık / İçerik</Th>
+              <Th>Gönderen</Th>
+              <Th>Durum</Th>
+              <Th>Tarih</Th>
+              <Th className="text-right">İşlemler</Th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {submissions.length === 0 && (
+              <EmptyRow colSpan={5}>Henüz okuyucu haberi yok.</EmptyRow>
+            )}
+            {submissions.map((s) => (
+              <tr key={s.id} className="hover:bg-surface/60">
+                <Td className="max-w-lg">
+                  <p className="font-semibold text-ink">{s.title}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{s.content}</p>
+                  <AttachmentPreview raw={s.attachmentUrl} />
+                </Td>
+                <Td className="text-ink-soft">
+                  {s.submitterName || s.submitterEmail || "Anonim"}
+                </Td>
+                <Td>
+                  <Badge variant={STATUS_LABEL[s.status].variant}>
+                    {STATUS_LABEL[s.status].text}
+                  </Badge>
+                </Td>
+                <Td className="whitespace-nowrap text-xs text-ink-soft">
+                  {formatDate(s.createdAt)}
+                </Td>
+                <Td>
+                  <SubmissionRowActions id={s.id} status={s.status} basePath={basePath} />
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </PanelDesktopOnly>
     </>
   );
 }
