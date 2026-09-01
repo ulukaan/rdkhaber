@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
 import { detectUploadMime, extensionForMime, isImageMime } from "@/lib/upload-safe";
 import { optimizeImageBuffer } from "@/lib/image-optimize";
-import { writeUploadedFile } from "@/lib/upload-path";
+import { saveStaffMedia } from "@/lib/media-upload";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -51,37 +49,43 @@ export async function POST(req: Request) {
     );
   }
 
-  let buffer = Buffer.from(await file.arrayBuffer());
-  let mime = detectUploadMime(buffer);
-  let ext = mime ? extensionForMime(mime) : null;
-  if (mime && isImageMime(mime)) {
-    try {
-      const optimized = await optimizeImageBuffer(buffer);
-      buffer = Buffer.from(optimized.buffer);
-      mime = optimized.mime;
-      ext = optimized.ext;
-    } catch {
-      // sharp yoksa orijinal dosyayı kaydet
-    }
-  }
-  if (!mime || !isImageMime(mime) || !ext) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const mime = detectUploadMime(buffer);
+  if (!mime || !isImageMime(mime)) {
     return NextResponse.json({ error: "Geçersiz dosya türü" }, { status: 400 });
   }
 
-  const filename = `${randomUUID()}.${ext}`;
-  const relative = isMember ? `avatars/${filename}` : filename;
-  const url = await writeUploadedFile(relative, buffer);
   if (isStaff) {
-    await prisma.media.create({
-      data: {
-        url,
-        filename: file.name.slice(0, 180),
-        mimeType: mime,
-        size: file.size,
+    try {
+      const saved = await saveStaffMedia({
+        buffer,
+        originalName: file.name,
         uploadedById: session.user.id,
-      },
-    });
+      });
+      return NextResponse.json({
+        url: saved.url,
+        duplicate: saved.duplicate,
+        size: saved.size,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Yükleme başarısız";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
+  let avatarBuffer = buffer;
+  let avatarExt = extensionForMime(mime);
+  try {
+    const optimized = await optimizeImageBuffer(buffer);
+    avatarBuffer = Buffer.from(optimized.buffer);
+    avatarExt = optimized.ext;
+  } catch {
+    // sharp yoksa orijinal
+  }
+
+  const { randomUUID } = await import("crypto");
+  const { writeUploadedFile } = await import("@/lib/upload-path");
+  const filename = `${randomUUID()}.${avatarExt}`;
+  const url = await writeUploadedFile(`avatars/${filename}`, avatarBuffer);
   return NextResponse.json({ url });
 }

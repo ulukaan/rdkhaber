@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import { ArticleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
@@ -30,7 +29,7 @@ async function saveCover(url: string | null, uploadedById: string): Promise<stri
   if (!url) return null;
   try {
     const { safeFetch } = await import("@/lib/safe-fetch");
-    const { detectUploadMime, extensionForMime, isImageMime } = await import("@/lib/upload-safe");
+    const { detectUploadMime, isImageMime } = await import("@/lib/upload-safe");
     const res = await safeFetch(url, {
       headers: { Accept: "image/*,*/*" },
       signal: AbortSignal.timeout(15000),
@@ -40,24 +39,15 @@ async function saveCover(url: string | null, uploadedById: string): Promise<stri
     if (buffer.length < 32 || buffer.length > 8 * 1024 * 1024) return null;
     const mime = detectUploadMime(buffer);
     if (!mime || !isImageMime(mime)) return null;
-    const ext = extensionForMime(mime);
-    if (!ext) return null;
 
-    const { writeUploadedFile } = await import("@/lib/upload-path");
-    const filename = `${randomUUID()}.${ext}`;
-    const localUrl = await writeUploadedFile(`bot/${filename}`, buffer);
-
-    await prisma.media.create({
-      data: {
-        url: localUrl,
-        filename,
-        mimeType: mime,
-        size: buffer.length,
-        uploadedById,
-      },
+    const { saveStaffMedia } = await import("@/lib/media-upload");
+    const saved = await saveStaffMedia({
+      buffer,
+      originalName: `bot-${Date.now()}.jpg`,
+      uploadedById,
+      subfolder: "bot",
     });
-
-    return localUrl;
+    return saved.url;
   } catch {
     return null;
   }

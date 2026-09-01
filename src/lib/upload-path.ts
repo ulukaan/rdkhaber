@@ -1,3 +1,4 @@
+import { unlink } from "fs/promises";
 import { homedir } from "os";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
@@ -86,4 +87,26 @@ export async function readUploadedFile(urlPath: string) {
     }
   }
   return null;
+}
+
+export async function deleteUploadedFile(urlPath: string) {
+  const rel = relativeFromUploadUrl(urlPath);
+  if (!rel) return false;
+  const roots = [await getUploadRoot(), path.join(process.cwd(), "public", "uploads")];
+  const seen = new Set<string>();
+  let deleted = false;
+  for (const root of roots) {
+    const abs = path.resolve(/* turbopackIgnore: true */ root, rel);
+    const rootAbs = path.resolve(/* turbopackIgnore: true */ root);
+    if (!abs.startsWith(rootAbs + path.sep) && abs !== rootAbs) continue;
+    if (seen.has(abs)) continue;
+    seen.add(abs);
+    try {
+      await unlink(/* turbopackIgnore: true */ abs);
+      deleted = true;
+    } catch {
+      // dosya yoksa geç
+    }
+  }
+  return deleted;
 }

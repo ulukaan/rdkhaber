@@ -141,12 +141,15 @@ export function MediaPicker({
                     className="group block w-full overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-brand"
                   >
                     <span className="block aspect-[4/3] overflow-hidden">
-                      {/* Yerel yüklemeler; boyut bilinmediği için düz img. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={m.url}
                         alt={m.filename}
                         loading="lazy"
+                        decoding="async"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
                         className="h-full w-full object-cover"
                       />
                     </span>

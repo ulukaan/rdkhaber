@@ -292,10 +292,13 @@ model Media {
   filename     String
   mimeType     String
   size         Int
+  contentHash  String?
   createdAt    DateTime @default(now())
 
   uploadedById String?
   uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+
+  @@index([contentHash])
 }
 
 // Foto Galeri — birden çok görselden oluşan haber galerileri
