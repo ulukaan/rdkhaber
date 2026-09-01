@@ -125,6 +125,7 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
     "showTrendingWeek",
     "showMostCommented",
     "showMostBookmarked",
+    "showPoll",
     "showDayHeadlines",
     "showGundemBand",
     "showInterviews",

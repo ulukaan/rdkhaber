@@ -25,6 +25,8 @@ import { AdUnit } from "@/components/ads/AdUnit";
 import { ArticleMetaBar } from "@/components/news/ArticleMetaBar";
 import { ShareBar } from "@/components/news/ShareBar";
 import { QuickReactionBar } from "@/components/news/QuickReactionBar";
+import { PollWidget } from "@/components/news/PollWidget";
+import { getArticlePoll, getPollStateForServer } from "@/actions/poll-vote";
 import { TipCallout } from "@/components/news/TipCallout";
 import { ArticleContinueFeed } from "@/components/news/ArticleContinueFeed";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
@@ -92,7 +94,7 @@ export default async function ArticlePage({
     .filter((c) => c.slug !== article.category.slug);
   const relatedSlugs = [article.category.slug, ...extraCategories.map((c) => c.slug)];
 
-  const [related, mostRead, trending, mostCommented, settings, latest, breaking, rates, prayers] =
+  const [related, mostRead, trending, mostCommented, settings, latest, breaking, rates, prayers, articlePoll] =
     await Promise.all([
     getRelatedArticles(relatedSlugs, article.id, 6),
     getMostReadArticles(8),
@@ -103,7 +105,10 @@ export default async function ArticlePage({
     getBreakingArticles(5),
     getRates(),
     getPrayerTimes(),
+    getArticlePoll(article.id),
   ]);
+
+  const articlePollState = articlePoll?.id ? await getPollStateForServer(articlePoll.id) : null;
 
   const excludeIds = [article.id];
   const feedRows = await getRandomSpotlightArticles(excludeIds, 1);
@@ -266,6 +271,11 @@ export default async function ArticlePage({
             <AdUnit code="138" />
 
             <QuickReactionBar articleId={article.id} />
+            {articlePollState?.id ? (
+              <div className="mt-8">
+                <PollWidget pollId={articlePollState.id} initial={articlePollState} />
+              </div>
+            ) : null}
             <ShareBar url={articleUrl} title={article.title} articleId={article.id} />
 
             {article.tags.length > 0 ? (

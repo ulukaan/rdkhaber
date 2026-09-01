@@ -41,6 +41,8 @@ import { getLiveScores } from "@/lib/livescore";
 import { categoryHref } from "@/lib/category-path";
 import { getLatestInstagramPost } from "@/lib/instagram";
 import { InstagramLatestCard } from "@/components/home/InstagramLatestCard";
+import { PollWidget } from "@/components/news/PollWidget";
+import { getActiveHomepagePoll, getPollStateForServer } from "@/actions/poll-vote";
 
 export const revalidate = 60;
 
@@ -54,6 +56,7 @@ export default async function HomePage() {
   const needLiveScore = settings.showLiveScore !== "0";
   const needCards = settings.showCategoryCards !== "0";
   const needSpotlight = settings.showCategorySpotlight !== "0";
+  const needPoll = settings.showPoll !== "0";
   const instagramProfile = settings.instagramUrl?.trim();
 
   const [
@@ -77,6 +80,7 @@ export default async function HomePage() {
     liveScores,
     featuredRailAd,
     instagramPost,
+    homepagePoll,
   ] = await Promise.all([
     getFeaturedArticles(12),
     getLatestArticles(24),
@@ -104,7 +108,11 @@ export default async function HomePage() {
     instagramProfile
       ? getLatestInstagramPost(instagramProfile)
       : Promise.resolve(null),
+    needPoll ? getActiveHomepagePoll() : Promise.resolve(null),
   ]);
+
+  const homepagePollState =
+    homepagePoll?.id ? await getPollStateForServer(homepagePoll.id) : null;
 
   const interviews =
     interviewsRaw.length > 0
@@ -349,6 +357,9 @@ export default async function HomePage() {
         <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
           <AdUnit code="069" className="py-0" />
           {instagramPost ? <InstagramLatestCard post={instagramPost} /> : null}
+          {settings.showPoll !== "0" && homepagePollState?.id ? (
+            <PollWidget pollId={homepagePollState.id} initial={homepagePollState} compact />
+          ) : null}
           <AdUnit code="300" className="py-0" />
           {settings.showMostRead !== "0" ? (
             <div className="border border-border bg-white p-4">
