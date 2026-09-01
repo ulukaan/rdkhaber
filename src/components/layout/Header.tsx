@@ -74,6 +74,8 @@ export async function Header() {
                 />
                 <Suspense fallback={null}>
                   <MobileMenuWithSession
+                    siteName={settings.siteName}
+                    logoUrl={settings.logoUrl}
                     categories={categories}
                     whatsappNumber={settings.whatsappNumber}
                     socials={socials}
