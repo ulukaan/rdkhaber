@@ -490,6 +490,10 @@ html.article-reading header.sticky {
     width: 100%;
   }
 
+  .panel-form-actions {
+    align-items: stretch;
+  }
+
   .panel-row-actions {
     justify-content: flex-start;
     gap: 0.5rem;

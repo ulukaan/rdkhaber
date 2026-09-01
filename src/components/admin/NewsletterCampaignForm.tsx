@@ -13,6 +13,8 @@ import {
 import { FieldGroup, Input } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
+import { cn } from "@/lib/utils";
 
 export function NewsletterCampaignForm({
   defaults,
@@ -84,7 +86,7 @@ export function NewsletterCampaignForm({
   };
 
   return (
-    <form onSubmit={clientFormSubmit(onSubmit)} className="flex max-w-3xl flex-col gap-4">
+    <form onSubmit={clientFormSubmit(onSubmit)} className={cn("flex max-w-3xl flex-col gap-4", PANEL_FORM_BOTTOM_PAD)}>
       <FieldGroup label="Konu" htmlFor="nl-subject">
         <Input
           id="nl-subject"
@@ -123,15 +125,15 @@ export function NewsletterCampaignForm({
               ))}
             </select>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={fillArticle} disabled={filling || !articleId}>
+          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={fillArticle} disabled={filling || !articleId}>
             {filling ? "Hazırlanıyor..." : "Haberi yerleştir"}
           </Button>
         </div>
       ) : null}
       <div>
-        <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <label className="text-sm font-semibold text-ink">Bülten metni</label>
-          <Button type="button" variant="outline" size="sm" onClick={fillNews} disabled={filling}>
+          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={fillNews} disabled={filling}>
             {filling ? "Hazırlanıyor..." : "Son haberlerden doldur"}
           </Button>
         </div>
@@ -143,14 +145,14 @@ export function NewsletterCampaignForm({
         />
       </div>
       {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Kaydediliyor..." : defaults?.id ? "Kaydet" : "Bülteni kaydet"}
-        </Button>
-        <Button href="/admin/bulten" variant="outline">
+      <PanelFormFooter>
+        <Button href="/admin/bulten" variant="outline" className="w-full sm:w-auto">
           Listeye dön
         </Button>
-      </div>
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+          {loading ? "Kaydediliyor..." : defaults?.id ? "Kaydet" : "Bülteni kaydet"}
+        </Button>
+      </PanelFormFooter>
     </form>
   );
 }

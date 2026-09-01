@@ -9,7 +9,8 @@ import { FieldGroup, Input, Select, Textarea } from "@/components/ui/FormField";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { Button } from "@/components/ui/Button";
 import { FormCard } from "@/components/admin/FormCard";
-import { FormActions } from "@/components/admin/PanelUI";
+import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
+import { cn } from "@/lib/utils";
 
 type ArticleOption = { slug: string; title: string };
 
@@ -107,7 +108,7 @@ export function PollForm({
       Icon={BarChart3}
       className="max-w-3xl"
     >
-      <form onSubmit={clientFormSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={clientFormSubmit(onSubmit)} className={cn("flex flex-col gap-4", PANEL_FORM_BOTTOM_PAD)}>
         <FieldGroup label="Soru" htmlFor="question">
           <Input id="question" name="question" defaultValue={defaults?.question} required />
         </FieldGroup>
@@ -135,9 +136,9 @@ export function PollForm({
         </FieldGroup>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-semibold text-ink">Seçenekler</span>
-            <Button type="button" size="sm" variant="outline" onClick={addOption} disabled={options.length >= 8}>
+            <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" onClick={addOption} disabled={options.length >= 8}>
               <Plus className="h-4 w-4" /> Seçenek ekle
             </Button>
           </div>
@@ -155,7 +156,7 @@ export function PollForm({
                   onClick={() => removeOption(index)}
                   disabled={options.length <= 2}
                   aria-label={`Seçenek ${index + 1} sil`}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-white hover:text-brand disabled:opacity-40"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-white hover:text-brand disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -191,7 +192,7 @@ export function PollForm({
           <p className="mt-1 text-xs text-ink-soft">Boş bırakılırsa süresiz</p>
         </FieldGroup>
 
-        <label className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <label className="flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink">
           <input
             type="checkbox"
             name="active"
@@ -201,7 +202,7 @@ export function PollForm({
           Yayında
         </label>
 
-        <label className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <label className="flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink">
           <input
             type="checkbox"
             name="showResults"
@@ -213,14 +214,14 @@ export function PollForm({
 
         {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
 
-        <FormActions>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Kaydediliyor..." : "Kaydet"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <PanelFormFooter>
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>
             Vazgeç
           </Button>
-        </FormActions>
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+            {loading ? "Kaydediliyor..." : "Kaydet"}
+          </Button>
+        </PanelFormFooter>
       </form>
     </FormCard>
   );

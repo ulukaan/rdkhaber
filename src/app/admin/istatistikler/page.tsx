@@ -33,7 +33,7 @@ export default async function StatsPage() {
         description="Site trafiği, içerik ve okuyucu katkılarının özeti."
       />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 md:gap-4">
         <StatCard label="Toplam görüntülenme" value={totalViews} Icon={Eye} />
         <StatCard label="Yayında haber" value={publishedCount} Icon={Newspaper} />
         <StatCard label="Onaylı yorum" value={commentCount} Icon={MessageSquare} />

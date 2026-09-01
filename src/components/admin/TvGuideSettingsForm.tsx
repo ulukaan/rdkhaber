@@ -6,7 +6,8 @@ import { ExternalLink, GripVertical, Tv } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FieldGroup, Input, Textarea } from "@/components/ui/FormField";
 import { FormCard } from "@/components/admin/FormCard";
-import { FormActions, PanelCard } from "@/components/admin/PanelUI";
+import { PanelCard } from "@/components/admin/PanelUI";
+import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
 import { saveTvGuideAction } from "@/actions/appearance";
 import {
   TV_CHANNELS,
@@ -83,7 +84,7 @@ export function TvGuideSettingsForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className={cn("space-y-6", PANEL_FORM_BOTTOM_PAD)}>
       <FormCard
         title="Sayfa metinleri"
         description="/yayin-akisi başlığı ve kısa açıklama."
@@ -119,7 +120,7 @@ export function TvGuideSettingsForm({
       </FormCard>
 
       <FormCard title="Tasarım" description="Program listesinin görünümü.">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           {(
             [
               { id: "1", label: "1 · Zaman çizelgesi", hint: "Saat sütunu + satır listesi" },
@@ -134,7 +135,7 @@ export function TvGuideSettingsForm({
                 setDesign(opt.id);
               }}
               className={cn(
-                "min-w-[180px] flex-1 rounded-xl border px-3 py-3 text-left transition-colors",
+                "w-full rounded-xl border px-3 py-3 text-left transition-colors sm:min-w-[180px] sm:flex-1",
                 design === opt.id
                   ? "border-brand bg-brand text-white"
                   : "border-border bg-white text-ink hover:border-brand/40",
@@ -155,7 +156,7 @@ export function TvGuideSettingsForm({
       </FormCard>
 
       <PanelCard padding={false}>
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
+        <header className="flex flex-col gap-2 border-b border-border px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5">
           <div>
             <h3 className="text-sm font-bold text-ink">Kanallar</h3>
             <p className="mt-0.5 text-xs text-ink-soft">
@@ -175,7 +176,7 @@ export function TvGuideSettingsForm({
               <div
                 key={channel.slug}
                 className={cn(
-                  "flex flex-wrap items-center gap-3 px-5 py-3",
+                  "flex flex-col gap-3 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:px-5",
                   !on && "bg-surface/70 opacity-70",
                 )}
               >
@@ -184,7 +185,7 @@ export function TvGuideSettingsForm({
                   role="switch"
                   aria-checked={on}
                   onClick={() => toggleChannel(channel)}
-                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  className="flex min-h-[44px] min-w-0 flex-1 items-center gap-3 text-left"
                 >
                   <span
                     className={cn(
@@ -216,27 +217,29 @@ export function TvGuideSettingsForm({
                 </button>
 
                 {on ? (
-                  <span className="flex items-center gap-1">
+                  <span className="panel-row-actions flex w-full items-center justify-end gap-1 sm:w-auto">
                     {order >= 0 ? (
                       <span className="mr-1 text-[10px] font-bold text-brand">{order + 1}</span>
                     ) : null}
                     <button
                       type="button"
                       onClick={() => move(channel.slug, -1)}
-                      className="rounded-md border border-border px-2 py-1 text-xs font-bold text-ink-soft hover:border-ink/30"
+                      className="flex h-11 min-w-11 items-center justify-center rounded-md border border-border text-xs font-bold text-ink-soft hover:border-ink/30"
                       title="Yukarı"
+                      aria-label="Yukarı taşı"
                     >
                       ↑
                     </button>
                     <button
                       type="button"
                       onClick={() => move(channel.slug, 1)}
-                      className="rounded-md border border-border px-2 py-1 text-xs font-bold text-ink-soft hover:border-ink/30"
+                      className="flex h-11 min-w-11 items-center justify-center rounded-md border border-border text-xs font-bold text-ink-soft hover:border-ink/30"
                       title="Aşağı"
+                      aria-label="Aşağı taşı"
                     >
                       ↓
                     </button>
-                    <GripVertical className="h-4 w-4 text-ink-soft/50" aria-hidden />
+                    <GripVertical className="hidden h-4 w-4 text-ink-soft/50 sm:block" aria-hidden />
                   </span>
                 ) : null}
               </div>
@@ -254,7 +257,7 @@ export function TvGuideSettingsForm({
             setSaved(false);
             setShowOnHome((v) => !v);
           }}
-          className="flex w-full items-start gap-3 px-5 py-4 text-left"
+          className="flex min-h-[44px] w-full items-start gap-3 px-4 py-4 text-left sm:px-5"
         >
           <span
             className={cn(
@@ -279,22 +282,29 @@ export function TvGuideSettingsForm({
         </button>
       </PanelCard>
 
-      <FormActions className="border-t border-border pt-4">
-        <Button type="submit" disabled={loading || enabled.length === 0}>
-          {loading ? "Kaydediliyor..." : "Kaydet"}
-        </Button>
-        <Button href="/yayin-akisi" variant="outline">
+      <PanelFormFooter>
+        <div className="mr-auto hidden w-full text-sm text-ink-soft sm:block sm:w-auto">
+          {enabled.length} kanal
+          {saved ? " · Kaydedildi" : ""}
+        </div>
+        <Button href="/yayin-akisi" variant="outline" className="w-full sm:w-auto">
           Sayfayı aç
           <ExternalLink className="h-3.5 w-3.5" />
         </Button>
-        <p className="text-sm text-ink-soft">
-          {enabled.length} kanal
-          {saved ? " · Kaydedildi" : ""}
-        </p>
-        <Link href="/admin/gorunum/ogeler" className="text-sm font-semibold text-ink-soft hover:text-brand">
-          Öğeler paneline git →
-        </Link>
-      </FormActions>
+        <Button type="submit" disabled={loading || enabled.length === 0} className="w-full sm:w-auto">
+          {loading ? "Kaydediliyor..." : "Kaydet"}
+        </Button>
+      </PanelFormFooter>
+      <p className="text-center text-sm text-ink-soft sm:hidden">
+        {enabled.length} kanal seçili
+        {saved ? " · Kaydedildi" : ""}
+      </p>
+      <Link
+        href="/admin/gorunum/ogeler"
+        className="block text-center text-sm font-semibold text-ink-soft hover:text-brand sm:text-left"
+      >
+        Öğeler paneline git →
+      </Link>
     </form>
   );
 }

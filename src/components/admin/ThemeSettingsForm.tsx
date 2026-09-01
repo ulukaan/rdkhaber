@@ -9,7 +9,8 @@ import { FieldGroup, Input } from "@/components/ui/FormField";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { Button } from "@/components/ui/Button";
 import { FormCard } from "@/components/admin/FormCard";
-import { FormActions } from "@/components/admin/PanelUI";
+import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
+import { cn } from "@/lib/utils";
 import type { SettingKey } from "@/lib/settings";
 
 export function ThemeSettingsForm({
@@ -49,7 +50,7 @@ export function ThemeSettingsForm({
       Icon={Palette}
       className="max-w-xl"
     >
-      <form onSubmit={clientFormSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={clientFormSubmit(onSubmit)} className={cn("flex flex-col gap-4", PANEL_FORM_BOTTOM_PAD)}>
         <FieldGroup label="Site adı" htmlFor="siteName">
           <Input id="siteName" name="siteName" defaultValue={settings.siteName} required />
         </FieldGroup>
@@ -73,11 +74,11 @@ export function ThemeSettingsForm({
         </FieldGroup>
         {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
         {saved ? <p className="text-sm font-medium text-emerald-700">Kaydedildi.</p> : null}
-        <FormActions>
-          <Button type="submit" disabled={loading}>
+        <PanelFormFooter>
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Kaydediliyor..." : "Kaydet"}
           </Button>
-        </FormActions>
+        </PanelFormFooter>
       </form>
     </FormCard>
   );

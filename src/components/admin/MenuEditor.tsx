@@ -201,12 +201,12 @@ export function MenuEditor({
                 className="overflow-hidden rounded-xl border border-border bg-surface/40"
               >
                 <div className="flex flex-col gap-3 bg-white p-4 sm:flex-row sm:items-start">
-                  <div className="flex shrink-0 flex-col gap-1 pt-1">
+                  <div className="panel-row-actions flex shrink-0 items-center gap-1 sm:pt-6">
                     <button
                       type="button"
                       onClick={() => moveParent(index, -1)}
                       disabled={index === 0}
-                      className="rounded-md p-1 text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-30"
+                      className="flex h-11 w-11 items-center justify-center rounded-md text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-30 sm:h-auto sm:w-auto sm:p-1"
                       aria-label="Yukarı"
                     >
                       <ChevronUp className="h-4 w-4" />
@@ -215,7 +215,7 @@ export function MenuEditor({
                       type="button"
                       onClick={() => moveParent(index, 1)}
                       disabled={index === rows.length - 1}
-                      className="rounded-md p-1 text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-30"
+                      className="flex h-11 w-11 items-center justify-center rounded-md text-ink-soft hover:bg-surface hover:text-ink disabled:opacity-30 sm:h-auto sm:w-auto sm:p-1"
                       aria-label="Aşağı"
                     >
                       <ChevronDown className="h-4 w-4" />
@@ -245,12 +245,12 @@ export function MenuEditor({
                     </label>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-1 sm:pt-6">
+                  <div className="panel-row-actions flex shrink-0 flex-wrap items-center gap-1 sm:pt-6">
                     <button
                       type="button"
                       onClick={() => updateParent(index, { visible: !row.visible })}
                       className={cn(
-                        "rounded-md p-2 transition-colors",
+                        "flex h-11 w-11 items-center justify-center rounded-md transition-colors sm:h-auto sm:w-auto sm:p-2",
                         row.visible
                           ? "text-emerald-700 hover:bg-emerald-50"
                           : "text-ink-soft hover:bg-surface",
@@ -263,7 +263,7 @@ export function MenuEditor({
                     <button
                       type="button"
                       onClick={() => addChild(index)}
-                      className="rounded-md p-2 text-ink-soft hover:bg-surface hover:text-brand"
+                      className="flex h-11 w-11 items-center justify-center rounded-md text-ink-soft hover:bg-surface hover:text-brand sm:h-auto sm:w-auto sm:p-2"
                       title="Alt sayfa ekle"
                       aria-label="Alt sayfa ekle"
                     >
@@ -272,7 +272,7 @@ export function MenuEditor({
                     <button
                       type="button"
                       onClick={() => removeParent(index)}
-                      className="rounded-md p-2 text-ink-soft hover:bg-brand/10 hover:text-brand"
+                      className="flex h-11 w-11 items-center justify-center rounded-md text-ink-soft hover:bg-brand/10 hover:text-brand sm:h-auto sm:w-auto sm:p-2"
                       aria-label="Sil"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -290,14 +290,14 @@ export function MenuEditor({
                         key={child.key}
                         className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3 sm:flex-row sm:items-start"
                       >
-                        <div className="flex items-center gap-2 text-ink-soft sm:pt-6">
+                        <div className="panel-row-actions flex items-center gap-2 text-ink-soft sm:pt-6">
                           <CornerDownRight className="h-4 w-4 shrink-0" />
-                          <div className="flex flex-col gap-1">
+                          <div className="flex gap-1">
                             <button
                               type="button"
                               onClick={() => moveChild(index, childIndex, -1)}
                               disabled={childIndex === 0}
-                              className="rounded-md p-1 hover:bg-surface hover:text-ink disabled:opacity-30"
+                              className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-surface hover:text-ink disabled:opacity-30 sm:h-auto sm:w-auto sm:p-1"
                               aria-label="Yukarı"
                             >
                               <ChevronUp className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ export function MenuEditor({
                               type="button"
                               onClick={() => moveChild(index, childIndex, 1)}
                               disabled={childIndex === children.length - 1}
-                              className="rounded-md p-1 hover:bg-surface hover:text-ink disabled:opacity-30"
+                              className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-surface hover:text-ink disabled:opacity-30 sm:h-auto sm:w-auto sm:p-1"
                               aria-label="Aşağı"
                             >
                               <ChevronDown className="h-3.5 w-3.5" />
@@ -329,14 +329,14 @@ export function MenuEditor({
                             placeholder="/sayfa/ornek"
                           />
                         </div>
-                        <div className="flex shrink-0 items-center gap-1 sm:pt-1">
+                        <div className="panel-row-actions flex shrink-0 flex-wrap items-center gap-1 sm:pt-1">
                           <button
                             type="button"
                             onClick={() =>
                               updateChild(index, childIndex, { visible: !child.visible })
                             }
                             className={cn(
-                              "rounded-md p-2 transition-colors",
+                              "flex h-11 w-11 items-center justify-center rounded-md transition-colors sm:h-auto sm:w-auto sm:p-2",
                               child.visible
                                 ? "text-emerald-700 hover:bg-emerald-50"
                                 : "text-ink-soft hover:bg-surface",
@@ -352,7 +352,7 @@ export function MenuEditor({
                           <button
                             type="button"
                             onClick={() => removeChild(index, childIndex)}
-                            className="rounded-md p-2 text-ink-soft hover:bg-brand/10 hover:text-brand"
+                            className="flex h-11 w-11 items-center justify-center rounded-md text-ink-soft hover:bg-brand/10 hover:text-brand sm:h-auto sm:w-auto sm:p-2"
                             aria-label="Sil"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -378,18 +378,18 @@ export function MenuEditor({
           })
         )}
 
-        <FormActions className="pt-2">
-          <Button type="button" variant="outline" size="sm" onClick={addParent}>
+        <FormActions className="border-t border-border pt-4">
+          <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto" onClick={addParent}>
             <Plus className="h-4 w-4" /> Menü ekle
           </Button>
-          <Button type="button" size="sm" onClick={save} disabled={pending}>
+          <Button type="button" size="sm" className="w-full sm:w-auto" onClick={save} disabled={pending}>
             {pending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={reset} disabled={pending}>
+          <Button type="button" variant="ghost" size="sm" className="w-full sm:w-auto" onClick={reset} disabled={pending}>
             Varsayılana dön
           </Button>
           {saved ? (
-            <span className="text-sm font-medium text-emerald-700">Kaydedildi.</span>
+            <span className="text-center text-sm font-medium text-emerald-700 sm:text-left">Kaydedildi.</span>
           ) : null}
         </FormActions>
         {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}

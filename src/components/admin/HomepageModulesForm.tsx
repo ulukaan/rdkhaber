@@ -31,7 +31,8 @@ import { Button } from "@/components/ui/Button";
 import { saveHomepageModulesAction } from "@/actions/appearance";
 import { parseCategoryBlocks, serializeCategoryBlocks, parseSlugList, serializeSlugList, parseParityDesign, parseImsakiyeDesign, type CategoryBlockLayout, type ImsakiyeDesign, type ParityDesign, type SettingKey } from "@/lib/settings";
 import { cn } from "@/lib/utils";
-import { SectionHeader, FormActions } from "@/components/admin/PanelUI";
+import { SectionHeader } from "@/components/admin/PanelUI";
+import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
 
 type CategoryOption = { name: string; slug: string };
 
@@ -329,7 +330,7 @@ export function HomepageModulesForm({
   }
 
   return (
-    <form onSubmit={clientFormSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={clientFormSubmit(onSubmit)} className={cn("space-y-8", PANEL_FORM_BOTTOM_PAD)}>
       {GROUPS.map((group) => (
         <section key={group.title}>
           <header className="mb-3">
@@ -370,9 +371,9 @@ export function HomepageModulesForm({
                       <item.Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center justify-between gap-3">
+                      <span className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                         <span className="text-sm font-bold text-ink">{item.label}</span>
-                        <span className="flex items-center gap-2">
+                        <span className="flex items-center justify-between gap-2 sm:justify-end">
                           <span
                             className={cn(
                               "text-[10px] font-bold uppercase tracking-wide",
@@ -550,15 +551,19 @@ export function HomepageModulesForm({
         </section>
       ))}
 
-      <FormActions className="border-t border-border pt-4">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Kaydediliyor..." : "Kaydet"}
-        </Button>
-        <p className="text-sm text-ink-soft">
+      <PanelFormFooter>
+        <p className="mr-auto hidden text-sm text-ink-soft sm:block">
           {onCount}/{ALL_KEYS.length} blok açık
           {saved ? " · Kaydedildi" : ""}
         </p>
-      </FormActions>
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+          {loading ? "Kaydediliyor..." : "Kaydet"}
+        </Button>
+      </PanelFormFooter>
+      <p className="text-center text-sm text-ink-soft sm:hidden">
+        {onCount}/{ALL_KEYS.length} blok açık
+        {saved ? " · Kaydedildi" : ""}
+      </p>
     </form>
   );
 }
