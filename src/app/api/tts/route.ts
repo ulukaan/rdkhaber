@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { synthesizeArticleSpeech } from "@/lib/tts";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { assertSameOriginRequest } from "@/lib/request-origin";
@@ -11,8 +12,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: origin.error }, { status: 403 });
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`tts:${ip}`, { limit: 10, windowMs: 5 * 60_000 });
+  const limited = await rateLimit(`tts:${session.user.id}:${ip}`, {
+    limit: 10,
+    windowMs: 5 * 60_000,
+  });
   if (!limited.ok) {
     return NextResponse.json(
       { error: `Çok fazla istek. ${limited.retryAfterSec} sn sonra deneyin.` },

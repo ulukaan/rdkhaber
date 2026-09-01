@@ -43,7 +43,7 @@ export async function subscribeNewsletterAction(raw: Record<string, unknown>) {
   const { headers } = await import("next/headers");
   const { clientIp, rateLimit } = await import("@/lib/rate-limit");
   const h = await headers();
-  const limited = rateLimit(`newsletter:${clientIp(h)}`, { limit: 10, windowMs: 60 * 60_000 });
+  const limited = await rateLimit(`newsletter:${clientIp(h)}`, { limit: 10, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla deneme. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
@@ -125,7 +125,7 @@ export async function unsubscribeNewsletterByEmailAction(email: string) {
   const { headers } = await import("next/headers");
   const { clientIp, rateLimit } = await import("@/lib/rate-limit");
   const h = await headers();
-  const limited = rateLimit(`newsletter-unsub:${clientIp(h)}`, {
+  const limited = await rateLimit(`newsletter-unsub:${clientIp(h)}`, {
     limit: 5,
     windowMs: 60 * 60_000,
   });

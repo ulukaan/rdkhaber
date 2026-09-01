@@ -17,7 +17,7 @@ export async function submitCommentAction(values: {
   authorEmail?: string;
 }) {
   const h = await headers();
-  const limited = rateLimit(`comment:${clientIp(h)}`, { limit: 10, windowMs: 15 * 60_000 });
+  const limited = await rateLimit(`comment:${clientIp(h)}`, { limit: 10, windowMs: 15 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla yorum. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }

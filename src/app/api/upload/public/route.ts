@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Yükleme oturumu geçersiz veya süresi doldu." }, { status: 403 });
   }
 
-  const limited = rateLimit(
+  const limited = await rateLimit(
     session?.user ? `upload:public:user:${session.user.id}` : `upload:public:ip:${ip}`,
     {
       limit: session?.user ? 12 : 3,

@@ -78,13 +78,27 @@ export function AccountNav({ role, name }: { role: Role; name?: string | null })
           );
         })}
         {staff ? (
-          <Link
-            href={panelPathForRole(role)}
-            className="inline-flex shrink-0 items-center gap-2 border border-ink bg-ink px-3 py-2 text-xs font-bold text-white hover:bg-ink/90 lg:mt-2 lg:w-full"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" aria-hidden />
-            {role === "ADMIN" ? "Yönetim paneli" : "Editör paneli"}
-          </Link>
+          <>
+            <Link
+              href="/hesabim/guvenlik"
+              className={cn(
+                "inline-flex shrink-0 items-center gap-2 border px-3 py-2 text-xs font-bold transition-colors lg:w-full",
+                pathname === "/hesabim/guvenlik"
+                  ? "border-brand bg-brand text-white"
+                  : "border-border bg-white text-ink hover:border-brand hover:text-brand",
+              )}
+            >
+              <Shield className="h-3.5 w-3.5" aria-hidden />
+              Güvenlik (2FA)
+            </Link>
+            <Link
+              href={panelPathForRole(role)}
+              className="inline-flex shrink-0 items-center gap-2 border border-ink bg-ink px-3 py-2 text-xs font-bold text-white hover:bg-ink/90 lg:mt-2 lg:w-full"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" aria-hidden />
+              {role === "ADMIN" ? "Yönetim paneli" : "Editör paneli"}
+            </Link>
+          </>
         ) : null}
       </nav>
     </aside>

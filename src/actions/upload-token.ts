@@ -15,7 +15,7 @@ export async function issuePublicUploadTokenAction(honeypot?: string) {
   const ip = clientIp(h);
   const session = await auth();
   const key = session?.user ? `upload-token:user:${session.user.id}` : `upload-token:ip:${ip}`;
-  const limited = rateLimit(key, {
+  const limited = await rateLimit(key, {
     limit: session?.user ? 20 : 8,
     windowMs: 60 * 60_000,
   });

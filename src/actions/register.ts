@@ -6,17 +6,28 @@ import { hashPassword } from "@/lib/password";
 import { registerSchema } from "@/lib/validation";
 import { signIn } from "@/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/captcha";
 
 export async function registerAction(values: {
   name: string;
   email: string;
   password: string;
+  captchaToken?: string;
+  website?: string;
 }) {
+  if (values.website?.trim()) {
+    return { error: "Geçersiz form." };
+  }
+
   const h = await headers();
-  const limited = rateLimit(`register:${clientIp(h)}`, { limit: 5, windowMs: 60 * 60_000 });
+  const ip = clientIp(h);
+  const limited = await rateLimit(`register:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
   if (!limited.ok) {
     return { error: `Çok fazla kayıt denemesi. ${limited.retryAfterSec} sn sonra tekrar deneyin.` };
   }
+
+  const captchaOk = await verifyTurnstileToken(values.captchaToken ?? "", ip);
+  if (!captchaOk) return { error: "Güvenlik doğrulaması başarısız." };
 
   const parsed = registerSchema.safeParse(values);
   if (!parsed.success) {

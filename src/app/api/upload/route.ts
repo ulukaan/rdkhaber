@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req.headers);
-  const limited = rateLimit(`upload:${session.user.role}:${session.user.id}:${ip}`, {
+  const limited = await rateLimit(`upload:${session.user.role}:${session.user.id}:${ip}`, {
     limit: isMember ? 12 : 40,
     windowMs: isMember ? 60 * 60_000 : 60_000,
   });

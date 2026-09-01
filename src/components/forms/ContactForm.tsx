@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contactSchema } from "@/lib/validation";
 import { submitContactAction } from "@/actions/tip";
+import { TurnstileWidget } from "@/components/captcha/TurnstileWidget";
+import { captchaConfigured } from "@/lib/captcha-client";
 import { FieldGroup, Input, Textarea } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import type { z } from "zod";
@@ -15,6 +17,8 @@ export function ContactForm() {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const {
     register,
     handleSubmit,
@@ -23,9 +27,14 @@ export function ContactForm() {
   } = useForm<ContactValues>({ resolver: zodResolver(contactSchema) });
 
   const onSubmit = async (values: ContactValues) => {
+    if (captchaConfigured() && !captchaToken) {
+      setError("Güvenlik doğrulamasını tamamlayın.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    const result = await submitContactAction(values);
+    const result = await submitContactAction({ ...values, captchaToken, website: honeypot });
     setLoading(false);
     if (result?.error) {
       setError(result.error);
@@ -45,6 +54,15 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        className="pointer-events-none absolute left-[-9999px] h-0 w-0 opacity-0"
+        aria-hidden
+      />
       <FieldGroup label="Ad soyad" htmlFor="name" error={errors.name?.message}>
         <Input id="name" autoComplete="name" {...register("name")} />
       </FieldGroup>
@@ -62,6 +80,9 @@ export function ContactForm() {
           {...register("message")}
         />
       </FieldGroup>
+
+      <TurnstileWidget onToken={setCaptchaToken} />
+
       {error ? <p className="text-sm font-medium text-brand">{error}</p> : null}
       <Button type="submit" disabled={loading} className="mt-1 w-full">
         {loading ? "Gönderiliyor..." : "Mesajı Gönder"}
