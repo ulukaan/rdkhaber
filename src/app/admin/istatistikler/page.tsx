@@ -2,6 +2,13 @@ import { Eye, MessageSquare, Newspaper, Send, Users } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { StatCard } from "@/components/admin/StatCard";
 import { Table, Th, Td } from "@/components/admin/Table";
+import {
+  PanelDesktopOnly,
+  PanelMobileCard,
+  PanelMobileCardBody,
+  PanelMobileList,
+  PanelMobileOnly,
+} from "@/components/admin/PanelMobileList";
 import { loadStatsPageData } from "@/lib/stats-page-data";
 import { formatDate } from "@/lib/utils";
 
@@ -40,6 +47,22 @@ export default async function StatsPage() {
         <div className="border-b border-border px-4 py-3.5 sm:px-5">
           <h3 className="text-sm font-bold text-ink">En çok okunan haberler</h3>
         </div>
+        <PanelMobileOnly>
+          <PanelMobileList>
+            {topArticles.map((a) => (
+              <PanelMobileCard key={a.slug}>
+                <PanelMobileCardBody>
+                  <p className="line-clamp-2 text-sm font-bold text-ink">{a.title}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft">
+                    <span>{a.viewCount.toLocaleString("tr-TR")} görüntülenme</span>
+                    <span>{a.publishedAt ? formatDate(a.publishedAt) : "—"}</span>
+                  </div>
+                </PanelMobileCardBody>
+              </PanelMobileCard>
+            ))}
+          </PanelMobileList>
+        </PanelMobileOnly>
+        <PanelDesktopOnly>
         <Table>
           <thead>
             <tr>
@@ -60,6 +83,7 @@ export default async function StatsPage() {
             ))}
           </tbody>
         </Table>
+        </PanelDesktopOnly>
       </div>
     </>
   );
