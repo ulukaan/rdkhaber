@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { requireRole } from "@/lib/auth-guard";
 import { PanelShell } from "@/components/admin/PanelShell";
 import { enforceStaff2FA } from "@/lib/staff-security";
@@ -10,7 +11,8 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await requireRole(["ADMIN"]);
-  await enforceStaff2FA(session.user.id, session.user.role);
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  await enforceStaff2FA(session.user.id, session.user.role, pathname);
 
   return (
     <PanelShell role="ADMIN" user={session.user}>
