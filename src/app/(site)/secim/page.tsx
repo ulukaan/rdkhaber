@@ -1,6 +1,8 @@
 import { Container } from "@/components/ui/Container";
 import { ElectionHubClient, type ElectionHubPayload } from "@/components/election/ElectionHubClient";
 import {
+  computeBoxPct,
+  computeVotePct,
   getElectionNewsArticles,
   getPrimaryElection,
 } from "@/lib/election";
@@ -70,7 +72,10 @@ export default async function SecimPage() {
       photoUrl: candidate.photoUrl,
       slogan: candidate.slogan,
       votes: candidate.votes,
-      votePct: candidate.votePct,
+      votePct:
+        election.validVotes > 0
+          ? computeVotePct(candidate.votes, election.validVotes)
+          : candidate.votePct,
       prevVotes: candidate.prevVotes,
       prevVotePct: candidate.prevVotePct,
     })),

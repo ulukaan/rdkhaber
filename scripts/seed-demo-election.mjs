@@ -8,6 +8,10 @@ import { hasDatabaseUrl, skipMessage } from "./ensure-db-utils.mjs";
 
 const SLUG = "demo-duzce-yerel-secim";
 
+function avatar(name, color) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${color.replace("#", "")}&color=fff&size=256&bold=true&format=png`;
+}
+
 const DISTRICTS = [
   { name: "Merkez", slug: "merkez", order: 0, totalBoxes: 412, openBoxes: 389, turnoutPct: 79.2 },
   { name: "Akçakoca", slug: "akcakoca", order: 1, totalBoxes: 198, openBoxes: 187, turnoutPct: 76.5 },
@@ -24,6 +28,7 @@ const MAYOR_CANDIDATES = [
     name: "Ayşe Demir",
     partyName: "CHP",
     partyColor: "#e30a17",
+    photoUrl: avatar("Ayşe Demir", "#e30a17"),
     votes: 142_318,
     votePct: 48.97,
     prevVotes: 128_400,
@@ -35,6 +40,7 @@ const MAYOR_CANDIDATES = [
     name: "Mehmet Kaya",
     partyName: "AK Parti",
     partyColor: "#ff9d00",
+    photoUrl: avatar("Mehmet Kaya", "#ff9d00"),
     votes: 108_905,
     votePct: 37.48,
     prevVotes: 115_220,
@@ -46,6 +52,7 @@ const MAYOR_CANDIDATES = [
     name: "Selin Arslan",
     partyName: "İYİ Parti",
     partyColor: "#0099ff",
+    photoUrl: avatar("Selin Arslan", "#0099ff"),
     votes: 24_612,
     votePct: 8.47,
     prevVotes: 18_900,
@@ -57,6 +64,7 @@ const MAYOR_CANDIDATES = [
     name: "Hasan Yıldız",
     partyName: "Yeniden Refah",
     partyColor: "#006400",
+    photoUrl: avatar("Hasan Yıldız", "#006400"),
     votes: 14_877,
     votePct: 5.12,
     prevVotes: null,
@@ -80,9 +88,27 @@ async function main() {
 
   const prisma = new PrismaClient();
   try {
-    const existing = await prisma.election.findUnique({ where: { slug: SLUG }, select: { id: true } });
+    const existing = await prisma.election.findUnique({
+      where: { slug: SLUG },
+      include: { candidates: true },
+    });
     if (existing) {
-      console.log(`seed-demo-election: "${SLUG}" zaten var, atlandı.`);
+      let updated = 0;
+      for (const candidate of existing.candidates) {
+        if (candidate.photoUrl) continue;
+        const source = [...MAYOR_CANDIDATES, ...COUNCIL_CANDIDATES].find((c) => c.name === candidate.name);
+        const photoUrl = source?.photoUrl ?? avatar(candidate.name, candidate.partyColor);
+        await prisma.electionCandidate.update({
+          where: { id: candidate.id },
+          data: { photoUrl },
+        });
+        updated += 1;
+      }
+      if (updated > 0) {
+        console.log(`seed-demo-election: "${SLUG}" — ${updated} aday fotoğrafı güncellendi.`);
+      } else {
+        console.log(`seed-demo-election: "${SLUG}" zaten var, atlandı.`);
+      }
       return;
     }
 
@@ -116,9 +142,10 @@ async function main() {
               id: randomUUID(),
               raceType: "MAYOR",
               name: c.name,
-              partyName: c.partyName,
-              partyColor: c.partyColor,
-              slogan: c.slogan,
+            partyName: c.partyName,
+            partyColor: c.partyColor,
+            photoUrl: c.photoUrl,
+            slogan: c.slogan,
               votes: c.votes,
               votePct: c.votePct,
               prevVotes: c.prevVotes,
