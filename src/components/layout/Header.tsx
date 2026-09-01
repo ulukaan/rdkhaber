@@ -15,6 +15,8 @@ import { HeaderTopBarServer } from "@/components/layout/HeaderTopBarServer";
 import { MobileMenuWithSession } from "@/components/layout/MobileMenuWithSession";
 import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { NotificationBellServer } from "@/components/layout/NotificationBellServer";
+import { GuestLibrarySync } from "@/components/account/GuestLibrarySync";
 
 function HeaderExtrasSkeleton() {
   return <div className="h-9 animate-pulse bg-ink/5" aria-hidden />;
@@ -62,6 +64,11 @@ export async function Header() {
                 <ThemeToggle />
                 <div className="hidden md:block">
                   <Suspense fallback={null}>
+                    <NotificationBellServer />
+                  </Suspense>
+                </div>
+                <div className="hidden md:block">
+                  <Suspense fallback={null}>
                     <AccountMenu />
                   </Suspense>
                 </div>
@@ -87,6 +94,7 @@ export async function Header() {
             </Container>
           </div>
           <MobileCategoryStrip items={headerNav} />
+          <GuestLibrarySync />
         </>
       }
       extras={

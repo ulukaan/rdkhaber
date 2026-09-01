@@ -177,6 +177,12 @@ const GROUPS: Array<{
         hint: "Aktif ana sayfa anketini göster",
         Icon: BarChart3,
       },
+      {
+        key: "showForYou",
+        label: "Senin için",
+        hint: "Giriş yapmış üyelere kişisel öneri bloğu",
+        Icon: Sparkles,
+      },
     ],
   },
   {

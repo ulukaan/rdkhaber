@@ -37,6 +37,7 @@ export const DEFAULT_SETTINGS = {
   showMostCommented: "1",
   showMostBookmarked: "1",
   showPoll: "1",
+  showForYou: "1",
   showDayHeadlines: "1",
   showGundemBand: "1",
   showInterviews: "1",
