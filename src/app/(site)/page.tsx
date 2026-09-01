@@ -48,6 +48,9 @@ import { getActiveHomepagePoll, getPollStateForServer } from "@/actions/poll-vot
 import { auth } from "@/auth";
 import { getPersonalizedArticles } from "@/lib/personalized";
 import { ForYouSection } from "@/components/news/ForYouSection";
+import { safeLoad } from "@/lib/safe-load";
+
+const EMPTY_ARTICLES: Awaited<ReturnType<typeof getLatestArticles>> = [];
 
 export const revalidate = 60;
 
@@ -92,47 +95,69 @@ export default async function HomePage() {
     homepagePoll,
     forYouArticles,
   ] = await Promise.all([
-    getFeaturedArticles(12),
-    getLatestArticles(24),
-    settings.showMostRead !== "0" ? getMostReadArticles(6) : Promise.resolve([]),
-    settings.showTrendingWeek !== "0" ? getTrendingArticles(6) : Promise.resolve([]),
-    settings.showMostCommented !== "0" ? getMostCommentedArticles(6) : Promise.resolve([]),
-    settings.showMostBookmarked !== "0" ? getMostBookmarkedArticles(6) : Promise.resolve([]),
-    settings.showVideos !== "0" ? getVideoArticles(6) : Promise.resolve([]),
-    getCategoriesWithChildren(),
-    getArticlesByCategory("gundem", 5),
+    safeLoad("featured", () => getFeaturedArticles(12), EMPTY_ARTICLES),
+    safeLoad("latest", () => getLatestArticles(24), EMPTY_ARTICLES),
+    settings.showMostRead !== "0"
+      ? safeLoad("mostRead", () => getMostReadArticles(6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    settings.showTrendingWeek !== "0"
+      ? safeLoad("trendingWeek", () => getTrendingArticles(6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    settings.showMostCommented !== "0"
+      ? safeLoad("mostCommented", () => getMostCommentedArticles(6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    settings.showMostBookmarked !== "0"
+      ? safeLoad("mostBookmarked", () => getMostBookmarkedArticles(6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    settings.showVideos !== "0"
+      ? safeLoad("videos", () => getVideoArticles(6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    safeLoad("categories", () => getCategoriesWithChildren(), []),
+    safeLoad("gundem", () => getArticlesByCategory("gundem", 5), EMPTY_ARTICLES),
     settings.showInterviews !== "0"
-      ? getArticlesByCategory("roportaj", 4)
+      ? safeLoad("interviews", () => getArticlesByCategory("roportaj", 4), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    settings.showPhotoGallery !== "0"
+      ? safeLoad("galleries", () => getGalleries(3), [])
       : Promise.resolve([]),
-    settings.showPhotoGallery !== "0" ? getGalleries(3) : Promise.resolve([]),
-    settings.showEditorNews !== "0" ? getEditorArticles(5) : Promise.resolve([]),
+    settings.showEditorNews !== "0"
+      ? safeLoad("editors", () => getEditorArticles(5), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
     settings.showTopHeadlines !== "0" || settings.showFeatured !== "0"
-      ? getBreakingArticles(5)
+      ? safeLoad("breaking", () => getBreakingArticles(5), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
+    needRates ? safeLoad("rates", () => getRates(), null) : Promise.resolve(null),
+    needPrayer ? safeLoad("prayers", () => getPrayerTimes(), null) : Promise.resolve(null),
+    needHoroscope ? safeLoad("horoscopes", () => getDailyHoroscopes(), []) : Promise.resolve([]),
+    needBroadcast
+      ? safeLoad("broadcast", () => getBroadcastItems({ limit: 6 }), [])
       : Promise.resolve([]),
-    needRates ? getRates() : Promise.resolve(null),
-    needPrayer ? getPrayerTimes() : Promise.resolve(null),
-    needHoroscope ? getDailyHoroscopes() : Promise.resolve([]),
-    needBroadcast ? getBroadcastItems({ limit: 6 }) : Promise.resolve([]),
-    needElection ? getElectionStripData() : Promise.resolve(null),
-    needLiveScore ? getLiveScores() : Promise.resolve(null),
-    getActiveAd("069"),
+    needElection ? safeLoad("election", () => getElectionStripData(), null) : Promise.resolve(null),
+    needLiveScore ? safeLoad("liveScores", () => getLiveScores(), null) : Promise.resolve(null),
+    safeLoad("featuredRailAd", () => getActiveAd("069"), null),
     instagramProfile
-      ? getLatestInstagramPost(instagramProfile)
+      ? safeLoad("instagram", () => getLatestInstagramPost(instagramProfile), null)
       : Promise.resolve(null),
-    needPoll ? getActiveHomepagePoll() : Promise.resolve(null),
+    needPoll ? safeLoad("homepagePoll", () => getActiveHomepagePoll(), null) : Promise.resolve(null),
     needForYou && session?.user
-      ? getPersonalizedArticles(session.user.id, 6)
-      : Promise.resolve([]),
+      ? safeLoad("forYou", () => getPersonalizedArticles(session.user.id, 6), EMPTY_ARTICLES)
+      : Promise.resolve(EMPTY_ARTICLES),
   ]);
 
-  const homepagePollState =
-    homepagePoll?.id ? await getPollStateForServer(homepagePoll.id) : null;
+  const homepagePollState = homepagePoll?.id
+    ? await safeLoad("homepagePollState", () => getPollStateForServer(homepagePoll.id), null)
+    : null;
 
   const interviews =
     interviewsRaw.length > 0
       ? interviewsRaw
-      : await getArticlesByCategory("kultur-sanat", 4).then((rows) =>
-          rows.length > 0 ? rows : latest.slice(0, 4),
+      : await safeLoad(
+          "interviewsFallback",
+          async () => {
+            const rows = await getArticlesByCategory("kultur-sanat", 4);
+            return rows.length > 0 ? rows : latest.slice(0, 4);
+          },
+          latest.slice(0, 4),
         );
 
   const galleryItems =
@@ -230,9 +255,14 @@ export default async function HomePage() {
   const categorySections = await Promise.all(
     neededCategories.map(async (c) => ({
       category: c,
-      articles: await getArticlesByCategory(c.slug, 5, 0, {
-        childSlugs: childSlugsFor(c.slug, c.children),
-      }),
+      articles: await safeLoad(
+        `category:${c.slug}`,
+        () =>
+          getArticlesByCategory(c.slug, 5, 0, {
+            childSlugs: childSlugsFor(c.slug, c.children),
+          }),
+        EMPTY_ARTICLES,
+      ),
     })),
   );
 
