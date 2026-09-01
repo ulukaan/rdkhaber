@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth-guard";
 import { commentSchema } from "@/lib/validation";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { filterCommentContent } from "@/lib/comment-filter";
+import { notifyCommentApproved } from "@/lib/engagement-notify";
 
 export async function submitCommentAction(values: {
   articleId: string;
@@ -50,6 +51,7 @@ export async function submitCommentAction(values: {
 export async function approveCommentAction(id: string) {
   await requireRole(["ADMIN", "EDITOR"]);
   await prisma.comment.update({ where: { id }, data: { approved: true } });
+  await notifyCommentApproved(id).catch(() => {});
   revalidatePath("/admin/yorumlar");
   revalidatePath("/editor/yorumlar");
 }

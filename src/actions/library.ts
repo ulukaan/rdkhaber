@@ -106,3 +106,25 @@ export async function toggleFollowAction(authorId: string) {
   refreshLibrary();
   return { following: true };
 }
+
+export async function mergeGuestBookmarksAction(articleIds: string[]) {
+  const session = await requireAuth();
+  const unique = [...new Set(articleIds.filter(Boolean))].slice(0, 30);
+  if (unique.length === 0) return { merged: 0 };
+
+  const articles = await prisma.article.findMany({
+    where: { id: { in: unique }, status: "PUBLISHED" },
+    select: { id: true },
+  });
+
+  for (const article of articles) {
+    await prisma.articleBookmark.upsert({
+      where: { userId_articleId: { userId: session.user.id, articleId: article.id } },
+      create: { userId: session.user.id, articleId: article.id },
+      update: {},
+    });
+  }
+
+  refreshLibrary();
+  return { merged: articles.length };
+}

@@ -43,11 +43,15 @@ import { getLatestInstagramPost } from "@/lib/instagram";
 import { InstagramLatestCard } from "@/components/home/InstagramLatestCard";
 import { PollWidget } from "@/components/news/PollWidget";
 import { getActiveHomepagePoll, getPollStateForServer } from "@/actions/poll-vote";
+import { auth } from "@/auth";
+import { getPersonalizedArticles } from "@/lib/personalized";
+import { ForYouSection } from "@/components/news/ForYouSection";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const settings = await getSettings();
+  const session = await auth();
 
   const needRates = settings.showParity !== "0" || settings.showRates !== "0";
   const needPrayer = settings.showImsakiye !== "0";
@@ -57,6 +61,7 @@ export default async function HomePage() {
   const needCards = settings.showCategoryCards !== "0";
   const needSpotlight = settings.showCategorySpotlight !== "0";
   const needPoll = settings.showPoll !== "0";
+  const needForYou = settings.showForYou !== "0" && Boolean(session?.user);
   const instagramProfile = settings.instagramUrl?.trim();
 
   const [
@@ -81,6 +86,7 @@ export default async function HomePage() {
     featuredRailAd,
     instagramPost,
     homepagePoll,
+    forYouArticles,
   ] = await Promise.all([
     getFeaturedArticles(12),
     getLatestArticles(24),
@@ -109,6 +115,9 @@ export default async function HomePage() {
       ? getLatestInstagramPost(instagramProfile)
       : Promise.resolve(null),
     needPoll ? getActiveHomepagePoll() : Promise.resolve(null),
+    needForYou && session?.user
+      ? getPersonalizedArticles(session.user.id, 6)
+      : Promise.resolve([]),
   ]);
 
   const homepagePollState =
@@ -270,6 +279,10 @@ export default async function HomePage() {
       ) : null}
       {settings.showLiveScore !== "0" && liveScores && liveScores.matches.length > 0 ? (
         <LiveScoreStrip data={liveScores} />
+      ) : null}
+
+      {settings.showForYou !== "0" && forYouArticles.length > 0 ? (
+        <ForYouSection articles={forYouArticles} />
       ) : null}
 
       {/* 3) Haber — önce günün manşeti + ilk kategori grubu */}
