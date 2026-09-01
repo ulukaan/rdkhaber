@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { Button } from "@/components/ui/Button";
 import { ElectionForm, type ElectionFormDefaults } from "@/components/admin/ElectionForm";
 import { ElectionYskPanel } from "@/components/admin/ElectionYskPanel";
+import { ElectionAdminOverview } from "@/components/admin/ElectionAdminOverview";
+import { getActiveSnapshotMeta, getElectionEngineSummary } from "@/lib/election-engine";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,6 +30,11 @@ export default async function EditElectionPage({ params }: { params: Promise<{ i
     },
   });
   if (!election) notFound();
+
+  const [snapshotMeta, engineSummary] = await Promise.all([
+    getActiveSnapshotMeta(election.id),
+    getElectionEngineSummary(election.id),
+  ]);
 
   const defaults: ElectionFormDefaults = {
     id: election.id,
@@ -75,7 +84,34 @@ export default async function EditElectionPage({ params }: { params: Promise<{ i
 
   return (
     <>
-      <PageHeader title={election.title} description={`/${election.slug} · Seçim merkezi düzenleme`} />
+      <PageHeader
+        title={election.title}
+        description={`/${election.slug} · Seçim merkezi düzenleme`}
+        action={
+          <Button href="/secim" variant="outline" size="sm" className="w-full sm:w-auto">
+            <ExternalLink className="h-4 w-4" />
+            Canlı sayfa
+          </Button>
+        }
+      />
+      <ElectionAdminOverview
+        electionId={election.id}
+        slug={election.slug}
+        engine={engineSummary}
+        snapshot={
+          snapshotMeta
+            ? {
+                kind: snapshotMeta.kind,
+                label: snapshotMeta.label,
+                publishedAt: snapshotMeta.publishedAt.toISOString(),
+                verified: snapshotMeta.verified,
+                sourceName: snapshotMeta.sourceName,
+                sourceUrl: snapshotMeta.sourceUrl,
+                importedAt: snapshotMeta.importedAt.toISOString(),
+              }
+            : null
+        }
+      />
       <ElectionYskPanel
         electionId={election.id}
         yskSyncEnabled={election.yskSyncEnabled}

@@ -8,10 +8,12 @@ const COLLAPSE_Y = 96;
 const EXPAND_Y = 12;
 
 export function HeaderShell({
+  prepend,
   top,
   main,
   extras,
 }: {
+  prepend?: React.ReactNode;
   top: React.ReactNode;
   main: React.ReactNode;
   extras: React.ReactNode;
@@ -46,6 +48,7 @@ export function HeaderShell({
     <header
       className={cn("sticky top-0 z-50 bg-background shadow-sm", compact && "header-compact")}
     >
+      {prepend}
       {top ? (
         <div className="header-collapse">
           <div className="header-collapse-inner">{top}</div>

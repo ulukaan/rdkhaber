@@ -226,7 +226,7 @@ const GROUPS: Array<{
       {
         key: "showElection",
         label: "Seçim şeridi",
-        hint: "Birincil seçim ekranından özet — /secim sayfasına gider",
+        hint: "Üst seçim bandı — seçim kaydında “Anasayfada göster” açık olmalı",
         Icon: Vote,
       },
     ],

@@ -1,5 +1,5 @@
-import { DEFAULT_PARTY_COLORS, DUZCE_DISTRICTS, computeVotePct } from "@/lib/election";
-import { resolveCandidatePhotoUrl } from "@/lib/election-candidate-photo";
+import { DUZCE_DISTRICTS, computeVotePct } from "@/lib/election";
+import { resolveCandidatePhotoUrl, resolvePartyColor } from "@/lib/election-candidate-photo";
 import {
   fetchYskDistrictBoxStats,
   fetchYskDistrictCandidates,
@@ -53,13 +53,7 @@ export type YskSyncPayload = {
 };
 
 function partyColor(partyName: string) {
-  const direct = DEFAULT_PARTY_COLORS[partyName];
-  if (direct) return direct;
-  const upper = partyName.toLocaleUpperCase("tr-TR");
-  for (const [key, color] of Object.entries(DEFAULT_PARTY_COLORS)) {
-    if (upper.includes(key.toLocaleUpperCase("tr-TR"))) return color;
-  }
-  return "#d0021b";
+  return resolvePartyColor(partyName);
 }
 
 function displayPartyName(raw: string) {
@@ -211,6 +205,7 @@ export async function buildYskSyncPayload(config: YskElectionConfig): Promise<Ys
 export function mergeYskCandidates<T extends { name: string; partyName: string; partyColor: string; photoUrl?: string | null; slogan?: string | null; bio?: string | null; votes: number; votePct: number }>(
   existing: T[],
   incoming: YskSyncCandidate[],
+  ntvCityId?: number | null,
 ) {
   const used = new Set<number>();
   const merged = incoming.map((candidate) => {
@@ -240,6 +235,8 @@ export function mergeYskCandidates<T extends { name: string; partyName: string; 
         name: candidate.name,
         partyName: candidate.partyName,
         partyColor: candidate.partyColor,
+        ntvCityId,
+        raceType: "MAYOR",
       }),
     };
   });

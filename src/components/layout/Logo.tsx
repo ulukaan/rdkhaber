@@ -26,6 +26,7 @@ export function Logo({
 
   if (logoUrl) {
     const darkSrc = brandDarkLogo(logoUrl);
+    const showDarkOverlay = darkSrc && variant !== "light";
     return (
       <Link
         href="/"
@@ -38,13 +39,17 @@ export function Logo({
           fill
           className={cn(
             "object-contain object-left",
-            darkSrc ? "site-logo-light" : "site-logo-invertible",
+            variant === "light"
+              ? "site-logo-on-dark"
+              : darkSrc
+                ? "site-logo-light"
+                : "site-logo-invertible",
           )}
           sizes="144px"
           priority
           unoptimized
         />
-        {darkSrc ? (
+        {showDarkOverlay ? (
           <Image
             src={darkSrc}
             alt=""

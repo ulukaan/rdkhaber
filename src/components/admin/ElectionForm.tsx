@@ -127,7 +127,8 @@ export function ElectionForm({ defaults }: { defaults?: ElectionFormDefaults }) 
   const onSubmit = async (formData: FormData) => {
     setLoading(true);
     setError(null);
-    const raw = {
+    try {
+      const raw = {
       title: String(formData.get("title") ?? title),
       slug: String(formData.get("slug") ?? slug),
       subtitle: String(formData.get("subtitle") ?? ""),
@@ -173,24 +174,29 @@ export function ElectionForm({ defaults }: { defaults?: ElectionFormDefaults }) 
       })),
     };
 
-    const result = isEdit
-      ? await updateElectionAction(defaults!.id!, raw)
-      : await createElectionAction(raw);
-    setLoading(false);
-    if (result?.error) {
-      setError(result.error);
-      return;
+      const result = isEdit
+        ? await updateElectionAction(defaults!.id!, raw)
+        : await createElectionAction(raw);
+
+      if (result && "error" in result) {
+        setError(result.error ?? "Kayıt başarısız.");
+        return;
+      }
+      if ("id" in result && result.id) {
+        router.push(`/admin/secim/${result.id}`);
+      } else {
+        router.push("/admin/secim");
+      }
+      router.refresh();
+    } catch {
+      setError("Kayıt sırasında beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setLoading(false);
     }
-    if ("id" in result && result.id) {
-      router.push(`/admin/secim/${result.id}`);
-    } else {
-      router.push("/admin/secim");
-    }
-    router.refresh();
   };
 
   return (
-    <FormCard title={isEdit ? "Seçimi düzenle" : "Yeni seçim"} description="NTV tarzı seçim merkezi — adaylar, sandık verileri ve ilçe sonuçları." Icon={Vote}>
+    <FormCard title={isEdit ? "Seçimi düzenle" : "Yeni seçim"} description="Seçim merkezi — adaylar, sandık verileri, ilçe sonuçları ve veri motoru senkronu." Icon={Vote}>
       <form onSubmit={clientFormSubmit(onSubmit)} className={cn("flex flex-col gap-4", PANEL_FORM_BOTTOM_PAD)}>
         <div className="flex gap-1 overflow-x-auto border-b border-border pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((item) => (

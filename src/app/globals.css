@@ -124,6 +124,10 @@ html[data-theme="dark"] .article-html [style*="color:black"] {
   color: var(--ink) !important;
 }
 
+.site-logo-on-dark {
+  filter: brightness(0) invert(1);
+}
+
 .site-logo-dark {
   opacity: 0;
 }

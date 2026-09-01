@@ -9,6 +9,13 @@ import { electionSchema } from "@/lib/validation";
 import { slugify } from "@/lib/slug";
 import { buildYskSyncPayload, mergeYskCandidates } from "@/lib/ysk-sync";
 import { resolveYskConfig } from "@/lib/ysk-api";
+import {
+  syncElectionCandidateParties,
+} from "@/lib/election-party";
+import {
+  bootstrapElectionEngine,
+  verifyActiveSnapshotAction,
+} from "@/lib/election-engine";
 
 function parseElectionDate(raw: string | undefined) {
   const value = raw?.trim();
@@ -48,6 +55,20 @@ function recalcCandidatePcts<T extends { votes: number; votePct?: number }>(
   }));
 }
 
+function actionError(error: unknown, fallback: string) {
+  return { error: error instanceof Error ? error.message : fallback };
+}
+
+async function finalizeElectionEngine(
+  electionId: string,
+  options: NonNullable<Parameters<typeof bootstrapElectionEngine>[2]>,
+) {
+  await syncElectionCandidateParties(prisma, electionId);
+  await bootstrapElectionEngine(prisma, electionId, options);
+}
+
+const ELECTION_TX_OPTIONS = { timeout: 60_000 };
+
 export async function createElectionAction(raw: unknown) {
   await requireRole(["ADMIN"]);
   const parsed = electionSchema.safeParse(raw);
@@ -74,8 +95,9 @@ export async function createElectionAction(raw: unknown) {
           results: [],
         }));
 
-  const election = await prisma.$transaction(async (tx) => {
-    const created = await tx.election.create({
+  try {
+    const election = await prisma.$transaction(async (tx) => {
+      const created = await tx.election.create({
       data: {
         slug,
         title: data.title.trim(),
@@ -135,10 +157,20 @@ export async function createElectionAction(raw: unknown) {
     }
 
     return created;
-  });
+    }, ELECTION_TX_OPTIONS);
 
-  revalidateElectionPaths(election.slug);
-  return { success: true, id: election.id, slug: election.slug };
+    await finalizeElectionEngine(election.id, {
+      electionDate: election.electionDate,
+      status: election.status,
+      provincePlateId: election.yskIlId ?? 81,
+      snapshot: { label: "Seçim oluşturuldu", activate: true },
+    });
+
+    revalidateElectionPaths(election.slug);
+    return { success: true, id: election.id, slug: election.slug };
+  } catch (error) {
+    return actionError(error, "Seçim kaydedilemedi.");
+  }
 }
 
 export async function updateElectionAction(id: string, raw: unknown) {
@@ -164,7 +196,8 @@ export async function updateElectionAction(id: string, raw: unknown) {
 
   const candidates = recalcCandidatePcts(data.candidates, data.validVotes);
 
-  await prisma.$transaction(async (tx) => {
+  try {
+    await prisma.$transaction(async (tx) => {
     await tx.election.update({
       where: { id },
       data: {
@@ -317,10 +350,13 @@ export async function updateElectionAction(id: string, raw: unknown) {
     await tx.electionDistrict.deleteMany({
       where: { electionId: id, id: { notIn: keptDistrictIds } },
     });
-  });
+    }, ELECTION_TX_OPTIONS);
 
-  revalidateElectionPaths(slug);
-  return { success: true };
+    revalidateElectionPaths(slug);
+    return { success: true };
+  } catch (error) {
+    return actionError(error, "Seçim güncellenemedi.");
+  }
 }
 
 export async function deleteElectionAction(id: string) {
@@ -371,7 +407,7 @@ export async function syncElectionFromYskAction(id: string) {
 
     const mayorCandidates = election.candidates.filter((item) => item.raceType === "MAYOR");
     const councilCandidates = election.candidates.filter((item) => item.raceType === "COUNCIL");
-    const mergedMayor = mergeYskCandidates(mayorCandidates, payload.candidates);
+    const mergedMayor = mergeYskCandidates(mayorCandidates, payload.candidates, election.yskIlId ?? 81);
 
     await prisma.$transaction(async (tx) => {
       await tx.election.update({
@@ -461,6 +497,19 @@ export async function syncElectionFromYskAction(id: string) {
           });
         }
       }
+    }, ELECTION_TX_OPTIONS);
+
+    await finalizeElectionEngine(id, {
+      electionDate: election.electionDate,
+      status: election.status,
+      provincePlateId: election.yskIlId ?? 81,
+      snapshot: {
+        kind: "PROVISIONAL",
+        label: "YSK senkronizasyonu",
+        sourceUrl: "https://www.ysk.gov.tr",
+        verified: false,
+        activate: true,
+      },
     });
 
     revalidateElectionPaths(election.slug);
@@ -478,4 +527,43 @@ export async function syncElectionFromYskAction(id: string) {
     });
     return { error: message };
   }
+}
+
+export async function refreshElectionEngineAction(electionId: string) {
+  await requireRole(["ADMIN"]);
+  const election = await prisma.election.findUnique({
+    where: { id: electionId },
+    select: { id: true, slug: true, status: true, electionDate: true, yskIlId: true },
+  });
+  if (!election) return { error: "Seçim bulunamadı." };
+
+  try {
+    await finalizeElectionEngine(election.id, {
+      electionDate: election.electionDate,
+      status: election.status,
+      provincePlateId: election.yskIlId ?? 81,
+      snapshot: { label: "Admin motor yenileme", activate: true },
+    });
+
+    revalidateElectionPaths(election.slug);
+    return { success: true };
+  } catch (error) {
+    return actionError(error, "Veri motoru yenilenemedi.");
+  }
+}
+
+export async function verifyElectionSnapshotAction(electionId: string) {
+  const session = await requireRole(["ADMIN"]);
+  const userId = session.user.id;
+  if (!userId) return { error: "Oturum geçersiz." };
+
+  const result = await verifyActiveSnapshotAction(electionId, userId);
+  if (result.error) return result;
+
+  const election = await prisma.election.findUnique({
+    where: { id: electionId },
+    select: { slug: true },
+  });
+  if (election) revalidateElectionPaths(election.slug);
+  return { success: true };
 }

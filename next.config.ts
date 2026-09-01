@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "secim2024-storage.ntv.com.tr",
+        pathname: "/secimsonuc2024/live/assets/img/candidate/**",
+      },
+      {
+        protocol: "https",
         hostname: "ui-avatars.com",
         pathname: "/api/**",
       },

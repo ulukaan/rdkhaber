@@ -14,16 +14,28 @@ import {
 import { Table, Th, Td, EmptyRow } from "@/components/admin/Table";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { deleteElectionAction } from "@/actions/election";
+import type { SnapshotKind } from "@prisma/client";
 import { ELECTION_STATUS_LABELS } from "@/lib/election";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Seçim Merkezi" };
+
+const SNAPSHOT_KIND_LABELS: Record<SnapshotKind, string> = {
+  PROVISIONAL: "Ön sonuç",
+  UPDATED: "Güncellenen",
+  FINAL: "Kesin",
+};
 
 export default async function AdminElectionsPage() {
   const elections = await prisma.election.findMany({
     orderBy: [{ isPrimary: "desc" }, { updatedAt: "desc" }],
     include: {
       _count: { select: { candidates: true, districts: true } },
+      resultSnapshots: {
+        where: { isActive: true },
+        take: 1,
+        include: { import: true },
+      },
     },
   });
 
@@ -31,7 +43,7 @@ export default async function AdminElectionsPage() {
     <>
       <PageHeader
         title="Seçim Merkezi"
-        description="Aday vitrini, sandık verileri ve ilçe sonuçları — NTV tarzı seçim ekranı."
+        description="Aday vitrini, sandık verileri, sonuç özeti ve ilçe sonuçları."
         action={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button href="/secim" variant="outline" size="sm" className="w-full sm:w-auto">
@@ -67,6 +79,14 @@ export default async function AdminElectionsPage() {
                       <p className="mt-1 text-xs text-ink-soft">
                         {election._count.candidates} aday · {election._count.districts} ilçe
                       </p>
+                      {election.resultSnapshots[0] ? (
+                        <p className="mt-1 text-xs text-ink-soft">
+                          Özet: {SNAPSHOT_KIND_LABELS[election.resultSnapshots[0].kind]}
+                          {election.resultSnapshots[0].import?.verified ? " · doğrulandı" : ""}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-amber-700">Özet henüz oluşturulmadı</p>
+                      )}
                     </div>
                   </div>
                 </PanelMobileCardBody>
@@ -82,14 +102,16 @@ export default async function AdminElectionsPage() {
             <tr>
               <Th>Başlık</Th>
               <Th>Durum</Th>
+              <Th>Sonuç özeti</Th>
               <Th>Aday</Th>
+              <Th>YSK</Th>
               <Th>Güncelleme</Th>
               <Th>İşlem</Th>
             </tr>
           </thead>
           <tbody>
             {elections.length === 0 ? (
-              <EmptyRow colSpan={5}>Henüz seçim tanımı yok.</EmptyRow>
+              <EmptyRow colSpan={7}>Henüz seçim tanımı yok.</EmptyRow>
             ) : (
               elections.map((election) => (
                 <tr key={election.id}>
@@ -104,7 +126,20 @@ export default async function AdminElectionsPage() {
                     ) : null}
                   </Td>
                   <Td>{ELECTION_STATUS_LABELS[election.status]}</Td>
+                  <Td className="text-xs">
+                    {election.resultSnapshots[0] ? (
+                      <span className={election.resultSnapshots[0].import?.verified ? "font-semibold text-brand" : "text-ink-soft"}>
+                        {SNAPSHOT_KIND_LABELS[election.resultSnapshots[0].kind]}
+                        {election.resultSnapshots[0].import?.verified ? " ✓" : ""}
+                      </span>
+                    ) : (
+                      <span className="text-amber-700">Yok</span>
+                    )}
+                  </Td>
                   <Td>{election._count.candidates}</Td>
+                  <Td className="text-xs text-ink-soft">
+                    {election.yskLastSyncAt ? formatDate(election.yskLastSyncAt) : "—"}
+                  </Td>
                   <Td className="text-xs text-ink-soft">{formatDate(election.updatedAt)}</Td>
                   <Td>
                     <DeleteButton

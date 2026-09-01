@@ -17,6 +17,7 @@ import { MobileCategoryStrip } from "@/components/layout/MobileCategoryStrip";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { NotificationBellServer } from "@/components/layout/NotificationBellServer";
 import { GuestLibrarySync } from "@/components/account/GuestLibrarySync";
+import { ElectionHomeTopBarServer } from "@/components/election/ElectionHomeTopBarServer";
 
 function HeaderExtrasSkeleton() {
   return <div className="h-9 animate-pulse bg-ink/5" aria-hidden />;
@@ -43,6 +44,11 @@ export async function Header() {
 
   return (
     <HeaderShell
+      prepend={
+        <Suspense fallback={<div className="h-[100px] animate-pulse bg-brand/10" aria-hidden />}>
+          <ElectionHomeTopBarServer />
+        </Suspense>
+      }
       top={
         <Suspense fallback={<div className="h-9 bg-ink/5" aria-hidden />}>
           <HeaderTopBarServer />

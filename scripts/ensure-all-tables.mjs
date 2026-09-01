@@ -10,6 +10,8 @@ const scripts = [
   "ensure-platform-tables.mjs",
   "ensure-news-essentials.mjs",
   "ensure-election-tables.mjs",
+  "ensure-election-engine-tables.mjs",
+  "migrate-election-engine.mjs",
   "seed-demo-election.mjs",
   "ensure-media-columns.mjs",
 ];
