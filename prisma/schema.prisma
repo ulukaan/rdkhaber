@@ -172,6 +172,7 @@ model Article {
   bookmarks     ArticleBookmark[]
   reads         ArticleRead[]
   reactions     ArticleReaction[]
+  polls         Poll[]
   revisions     ArticleRevision[]
   liveUpdates   LiveBlogUpdate[]
   corrections   ArticleCorrection[]
@@ -575,4 +576,51 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([userId, createdAt])
+}
+
+/** Site anketi — ana sayfa veya habere bağlı. */
+model Poll {
+  id          String    @id @default(cuid())
+  question    String
+  description String?   @db.Text
+  articleId   String?
+  article     Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  active      Boolean   @default(true)
+  showResults Boolean   @default(true)
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  options PollOption[]
+  votes   PollVote[]
+
+  @@index([active, endsAt])
+  @@index([articleId])
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  label  String
+  order  Int    @default(0)
+
+  votes PollVote[]
+
+  @@index([pollId, order])
+}
+
+/** Anonim ziyaretçi oyu — çerez ile tekil. */
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  visitorId String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, visitorId])
+  @@index([pollId, optionId])
 }

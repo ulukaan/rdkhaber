@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS = {
   showTrendingWeek: "1",
   showMostCommented: "1",
   showMostBookmarked: "1",
+  showPoll: "1",
   showDayHeadlines: "1",
   showGundemBand: "1",
   showInterviews: "1",

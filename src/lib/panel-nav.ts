@@ -2,6 +2,7 @@ import type { Role } from "@prisma/client";
 import {
   Archive,
   BadgeDollarSign,
+  BarChart2,
   BookUser,
   Code2,
   FileText,
@@ -104,6 +105,9 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
         { href: `${base}/haber-basvurulari`, label: "Haber Gönderimleri", Icon: Send },
         { href: `${base}/ihbarlar`, label: "İhbar Hattı", Icon: Megaphone },
         { href: `${base}/yorumlar`, label: "Yorumlar", Icon: MessageSquare },
+        ...(role === "ADMIN"
+          ? [{ href: "/admin/anketler", label: "Anketler", Icon: BarChart2 }]
+          : []),
       ],
     },
   ];

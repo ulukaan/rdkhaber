@@ -171,6 +171,12 @@ const GROUPS: Array<{
         hint: "Üyelerin kaydettiği haberler",
         Icon: Bookmark,
       },
+      {
+        key: "showPoll",
+        label: "Anket",
+        hint: "Aktif ana sayfa anketini göster",
+        Icon: BarChart3,
+      },
     ],
   },
   {
