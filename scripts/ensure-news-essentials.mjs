@@ -162,6 +162,17 @@ async function main() {
     ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
+  if (!(await columnExists("Poll", "coverImageUrl"))) {
+    await prisma.$executeRawUnsafe(
+      "ALTER TABLE `Poll` ADD COLUMN `coverImageUrl` VARCHAR(191) NULL",
+    );
+  }
+  if (!(await columnExists("PollOption", "imageUrl"))) {
+    await prisma.$executeRawUnsafe(
+      "ALTER TABLE `PollOption` ADD COLUMN `imageUrl` VARCHAR(191) NULL",
+    );
+  }
+
   console.log("News essentials tables ready");
 }
 

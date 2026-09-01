@@ -1,6 +1,7 @@
 export type PollOptionState = {
   id: string;
   label: string;
+  imageUrl: string | null;
   count: number;
   percent: number;
 };
@@ -9,11 +10,13 @@ export type PollState = {
   id: string;
   question: string;
   description: string | null;
+  coverImageUrl: string | null;
   totalVotes: number;
   options: PollOptionState[];
   mine: string | null;
   closed: boolean;
   showResults: boolean;
+  hasImages: boolean;
 };
 
 export function emptyPollState(): PollState {
@@ -21,11 +24,13 @@ export function emptyPollState(): PollState {
     id: "",
     question: "",
     description: null,
+    coverImageUrl: null,
     totalVotes: 0,
     options: [],
     mine: null,
     closed: false,
     showResults: true,
+    hasImages: false,
   };
 }
 
@@ -36,7 +41,7 @@ export function isPollOpen(endsAt: Date | null | undefined, active: boolean) {
 }
 
 export function buildPollPercents(
-  options: Array<{ id: string; label: string; count: number }>,
+  options: Array<{ id: string; label: string; imageUrl: string | null; count: number }>,
   total: number,
 ): PollOptionState[] {
   if (total <= 0) {

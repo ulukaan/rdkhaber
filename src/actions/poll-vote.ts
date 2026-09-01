@@ -47,9 +47,11 @@ async function loadPollState(pollId: string, visitor: string | null): Promise<Po
   const optionRows = poll.options.map((option) => ({
     id: option.id,
     label: option.label,
+    imageUrl: option.imageUrl,
     count: countMap.get(option.id) ?? 0,
   }));
   const totalVotes = optionRows.reduce((sum, option) => sum + option.count, 0);
+  const hasImages = Boolean(poll.coverImageUrl) || optionRows.some((option) => option.imageUrl);
 
   let mine: string | null = null;
   if (visitor) {
@@ -64,11 +66,13 @@ async function loadPollState(pollId: string, visitor: string | null): Promise<Po
     id: poll.id,
     question: poll.question,
     description: poll.description,
+    coverImageUrl: poll.coverImageUrl,
     totalVotes,
     options: buildPollPercents(optionRows, totalVotes),
     mine,
     closed,
     showResults: poll.showResults,
+    hasImages,
   };
 }
 

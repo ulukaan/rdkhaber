@@ -272,12 +272,18 @@ export const composeMailSchema = z.object({
 export const pollSchema = z.object({
   question: z.string().min(5, "Soru en az 5 karakter olmalı").max(200),
   description: z.string().max(500).optional().or(z.literal("")),
+  coverImageUrl: optionalSafeMediaUrl,
   articleSlug: z.string().max(200).optional().or(z.literal("")),
   active: z.boolean().default(true),
   showResults: z.boolean().default(true),
   endsAt: z.string().optional().or(z.literal("")),
   options: z
-    .array(z.string().min(1, "Seçenek boş olamaz").max(120))
+    .array(
+      z.object({
+        label: z.string().min(1, "Seçenek boş olamaz").max(120),
+        imageUrl: optionalSafeMediaUrl,
+      }),
+    )
     .min(2, "En az 2 seçenek gerekli")
     .max(8, "En fazla 8 seçenek"),
 });

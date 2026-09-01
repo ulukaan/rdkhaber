@@ -31,11 +31,15 @@ export default async function EditPollPage({ params }: { params: Promise<{ id: s
           id: poll.id,
           question: poll.question,
           description: poll.description ?? "",
+          coverImageUrl: poll.coverImageUrl ?? "",
           articleSlug: poll.article?.slug ?? "",
           active: poll.active,
           showResults: poll.showResults,
           endsAt: poll.endsAt?.toISOString(),
-          options: poll.options.map((option) => option.label),
+          options: poll.options.map((option) => ({
+            label: option.label,
+            imageUrl: option.imageUrl ?? "",
+          })),
         }}
       />
     </>

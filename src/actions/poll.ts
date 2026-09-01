@@ -14,6 +14,11 @@ function parseEndsAt(raw: string | undefined) {
   return date;
 }
 
+function normalizeImageUrl(raw: string | undefined) {
+  const value = raw?.trim();
+  return value ? value : null;
+}
+
 async function resolveArticleId(slug: string | undefined) {
   const trimmed = slug?.trim();
   if (!trimmed) return null;
@@ -35,6 +40,15 @@ function revalidatePollPaths(articleId: string | null) {
   }
 }
 
+function normalizeOptions(raw: Array<{ label: string; imageUrl?: string }>) {
+  return raw
+    .map((item) => ({
+      label: item.label.trim(),
+      imageUrl: normalizeImageUrl(item.imageUrl),
+    }))
+    .filter((item) => item.label.length > 0);
+}
+
 export async function createPollAction(raw: unknown) {
   await requireRole(["ADMIN"]);
   const parsed = pollSchema.safeParse(raw);
@@ -49,19 +63,24 @@ export async function createPollAction(raw: unknown) {
     return { error: "Bağlanacak haber bulunamadı." };
   }
 
-  const options = parsed.data.options.map((label) => label.trim()).filter(Boolean);
+  const options = normalizeOptions(parsed.data.options);
   if (options.length < 2) return { error: "En az 2 seçenek gerekli." };
 
   const poll = await prisma.poll.create({
     data: {
       question: parsed.data.question.trim(),
       description: parsed.data.description?.trim() || null,
+      coverImageUrl: normalizeImageUrl(parsed.data.coverImageUrl),
       articleId,
       active: parsed.data.active,
       showResults: parsed.data.showResults,
       endsAt: parseEndsAt(parsed.data.endsAt),
       options: {
-        create: options.map((label, order) => ({ label, order })),
+        create: options.map((option, order) => ({
+          label: option.label,
+          imageUrl: option.imageUrl,
+          order,
+        })),
       },
     },
     select: { id: true, articleId: true },
@@ -91,7 +110,7 @@ export async function updatePollAction(id: string, raw: unknown) {
     return { error: "Bağlanacak haber bulunamadı." };
   }
 
-  const options = parsed.data.options.map((label) => label.trim()).filter(Boolean);
+  const options = normalizeOptions(parsed.data.options);
   if (options.length < 2) return { error: "En az 2 seçenek gerekli." };
 
   await prisma.$transaction(async (tx) => {
@@ -105,6 +124,7 @@ export async function updatePollAction(id: string, raw: unknown) {
       data: {
         question: parsed.data.question.trim(),
         description: parsed.data.description?.trim() || null,
+        coverImageUrl: normalizeImageUrl(parsed.data.coverImageUrl),
         articleId,
         active: parsed.data.active,
         showResults: parsed.data.showResults,
@@ -113,16 +133,25 @@ export async function updatePollAction(id: string, raw: unknown) {
     });
 
     for (let index = 0; index < options.length; index += 1) {
-      const label = options[index];
-      const existing = existingOptions[index];
-      if (existing) {
+      const option = options[index];
+      const existingOption = existingOptions[index];
+      if (existingOption) {
         await tx.pollOption.update({
-          where: { id: existing.id },
-          data: { label, order: index },
+          where: { id: existingOption.id },
+          data: {
+            label: option.label,
+            imageUrl: option.imageUrl,
+            order: index,
+          },
         });
       } else {
         await tx.pollOption.create({
-          data: { pollId: id, label, order: index },
+          data: {
+            pollId: id,
+            label: option.label,
+            imageUrl: option.imageUrl,
+            order: index,
+          },
         });
       }
     }
@@ -130,7 +159,7 @@ export async function updatePollAction(id: string, raw: unknown) {
     const extra = existingOptions.slice(options.length);
     if (extra.length > 0) {
       await tx.pollOption.deleteMany({
-        where: { id: { in: extra.map((option) => option.id) } },
+        where: { id: { in: extra.map((item) => item.id) } },
       });
     }
   });
