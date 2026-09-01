@@ -106,16 +106,16 @@ export function NewsCard({
 
   if (variant === "horizontal") {
     return (
-      <Link href={href} className={cn("group flex gap-4", className)}>
+      <Link href={href} className={cn("group flex min-w-0 gap-3 sm:gap-4", className)}>
         <CoverImage
           src={article.coverImageUrl}
           alt={article.title}
           color={article.category.color}
-          className="aspect-[4/3] w-32 shrink-0 rounded"
+          className="aspect-[4/3] w-24 shrink-0 rounded sm:w-32"
           sizes="128px"
         />
-        <div className="flex flex-col justify-center">
-          <Badge variant="outline" className="mb-1 w-fit">
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <Badge variant="outline" className="mb-1 w-fit max-w-full truncate">
             {article.category.name}
           </Badge>
           <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink group-hover:text-brand">

@@ -49,14 +49,14 @@ export default async function AccountDashboardPage() {
         title={`Merhaba, ${session.user.name?.split(" ")[0] ?? "üyemiz"}`}
         description="Kaydettiğiniz haberler, okuma geçmişiniz ve takip ettiğiniz yazarlar burada."
         action={
-          <Button href="/hesabim/haber-gonder">
+          <Button href="/hesabim/haber-gonder" className="w-full sm:w-auto">
             <Send className="h-4 w-4" />
             Haber gönder
           </Button>
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         <StatCard label="Kaydettiklerim" value={counts.bookmarks} Icon={Bookmark} href="/hesabim/kaydettiklerim" />
         <StatCard label="Okuduklarım" value={counts.reads} Icon={BookOpen} href="/hesabim/okuduklarim" />
         <StatCard label="Takip" value={counts.following} Icon={UserPlus} href="/hesabim/takip" />
@@ -72,9 +72,9 @@ export default async function AccountDashboardPage() {
         <StatCard label="Profil" value="Düzenle" Icon={UserRound} href="/hesabim/profil" />
       </div>
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-extrabold text-ink">Son kaydettikleriniz</h3>
+      <section className="mt-8 min-w-0">
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+          <h3 className="min-w-0 text-sm font-extrabold text-ink">Son kaydettikleriniz</h3>
           <Link href="/hesabim/kaydettiklerim" className="text-xs font-semibold text-ink-soft hover:text-brand">
             Tümü →
           </Link>
@@ -93,9 +93,9 @@ export default async function AccountDashboardPage() {
         )}
       </section>
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-extrabold text-ink">Son okuduklarınız</h3>
+      <section className="mt-8 min-w-0">
+        <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+          <h3 className="min-w-0 text-sm font-extrabold text-ink">Son okuduklarınız</h3>
           <Link href="/hesabim/okuduklarim" className="text-xs font-semibold text-ink-soft hover:text-brand">
             Tümü →
           </Link>
@@ -114,9 +114,9 @@ export default async function AccountDashboardPage() {
       </section>
 
       {following.length > 0 ? (
-        <section className="mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-ink">Takip ettiğiniz yazarlar</h3>
+        <section className="mt-8 min-w-0">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+            <h3 className="min-w-0 text-sm font-extrabold text-ink">Takip ettiğiniz yazarlar</h3>
             <Link href="/hesabim/takip" className="text-xs font-semibold text-ink-soft hover:text-brand">
               Tümü →
             </Link>
@@ -147,8 +147,8 @@ export default async function AccountDashboardPage() {
         </section>
       ) : null}
 
-      <div className="mt-8 overflow-hidden border border-border bg-white">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+      <div className="mt-8 min-w-0 overflow-hidden border border-border bg-white">
+        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-4 py-3.5 sm:px-5">
           <h3 className="text-sm font-bold text-ink">Son gönderiler</h3>
           <Link href="/hesabim/haberlerim" className="text-xs font-semibold text-ink-soft hover:text-brand">
             Tümünü gör →

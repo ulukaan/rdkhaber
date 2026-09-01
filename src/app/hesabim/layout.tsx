@@ -18,14 +18,14 @@ export default async function AccountLayout({
   const settings = await getSettings();
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="flex min-h-svh w-full max-w-[100vw] flex-col overflow-x-hidden">
       <HeaderAdBanner />
       <Header />
-      <main className="flex-1 bg-surface">
+      <main className="flex-1 overflow-x-hidden bg-surface">
         <Container className="py-6 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
             <AccountNav role={session.user.role} name={session.user.name} />
-            <div className="min-w-0">{children}</div>
+            <div className="min-w-0 max-w-full">{children}</div>
           </div>
         </Container>
       </main>

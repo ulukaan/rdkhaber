@@ -9,12 +9,14 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-5 flex flex-col gap-3 border-b border-border pb-4 sm:mb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-ink sm:gap-2.5 sm:text-xl">
-          <span className="h-5 w-1 rounded-full bg-brand" aria-hidden />
-          {title}
+      <div className="min-w-0 max-w-full">
+        <h2 className="flex min-w-0 items-center gap-2 text-lg font-extrabold tracking-tight text-ink sm:gap-2.5 sm:text-xl">
+          <span className="h-5 w-1 shrink-0 rounded-full bg-brand" aria-hidden />
+          <span className="min-w-0 break-words">{title}</span>
         </h2>
-        {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
+        {description ? (
+          <p className="mt-1 break-words text-sm text-ink-soft">{description}</p>
+        ) : null}
       </div>
       {action ? (
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center [&_a]:justify-center [&_button]:w-full sm:[&_a]:w-auto sm:[&_button]:w-auto">

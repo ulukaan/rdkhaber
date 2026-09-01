@@ -472,7 +472,8 @@ html.article-reading header.sticky {
 }
 
 /* Yönetim paneli — mobil kaydırma ve dokunma alanları */
-.panel-table-scroll {
+.panel-table-scroll,
+.account-nav-scroll {
   -webkit-overflow-scrolling: touch;
 }
 
