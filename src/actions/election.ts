@@ -7,6 +7,8 @@ import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { computeVotePct, DUZCE_DISTRICTS } from "@/lib/election";
 import { electionSchema } from "@/lib/validation";
 import { slugify } from "@/lib/slug";
+import { buildYskSyncPayload, mergeYskCandidates } from "@/lib/ysk-sync";
+import { resolveYskConfig } from "@/lib/ysk-api";
 
 function parseElectionDate(raw: string | undefined) {
   const value = raw?.trim();
@@ -90,6 +92,11 @@ export async function createElectionAction(raw: unknown) {
         validVotes: data.validVotes,
         categorySlug: data.categorySlug?.trim() || null,
         lastResultsAt: data.status === "LIVE" ? new Date() : null,
+        yskSecimId: data.yskSecimId ?? null,
+        yskSecimTuru: data.yskSecimTuru ?? null,
+        yskIlId: data.yskIlId ?? null,
+        yskFocusIlce: data.yskFocusIlce?.trim() || null,
+        yskSyncEnabled: data.yskSyncEnabled,
         candidates: {
           create: candidates.map((candidate, order) => ({
             raceType: candidate.raceType,
@@ -176,6 +183,11 @@ export async function updateElectionAction(id: string, raw: unknown) {
         validVotes: data.validVotes,
         categorySlug: data.categorySlug?.trim() || null,
         lastResultsAt: data.status === "LIVE" || data.status === "FINISHED" ? new Date() : existing.lastResultsAt,
+        yskSecimId: data.yskSecimId ?? null,
+        yskSecimTuru: data.yskSecimTuru ?? null,
+        yskIlId: data.yskIlId ?? null,
+        yskFocusIlce: data.yskFocusIlce?.trim() || null,
+        yskSyncEnabled: data.yskSyncEnabled,
       },
     });
 
@@ -330,4 +342,140 @@ export async function setPrimaryElectionAction(id: string) {
   await ensureSinglePrimary(id, true);
   revalidateElectionPaths(election.slug);
   return { success: true };
+}
+
+export async function syncElectionFromYskAction(id: string) {
+  await requireRole(["ADMIN"]);
+
+  const election = await prisma.election.findUnique({
+    where: { id },
+    include: {
+      candidates: { orderBy: { order: "asc" } },
+      districts: { orderBy: { order: "asc" } },
+    },
+  });
+  if (!election) return { error: "Seçim bulunamadı." };
+
+  const config = resolveYskConfig({
+    secimId: election.yskSecimId ?? undefined,
+    secimTuru: election.yskSecimTuru ?? undefined,
+    ilId: election.yskIlId ?? undefined,
+    focusIlce: election.yskFocusIlce ?? undefined,
+  });
+
+  try {
+    const payload = await buildYskSyncPayload(config);
+    if (payload.candidates.length === 0) {
+      throw new Error("YSK yanıtında aday verisi bulunamadı.");
+    }
+
+    const mayorCandidates = election.candidates.filter((item) => item.raceType === "MAYOR");
+    const councilCandidates = election.candidates.filter((item) => item.raceType === "COUNCIL");
+    const mergedMayor = mergeYskCandidates(mayorCandidates, payload.candidates);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.election.update({
+        where: { id },
+        data: {
+          totalBoxes: payload.totalBoxes,
+          openBoxes: payload.openBoxes,
+          totalVoters: payload.totalVoters,
+          usedVotes: payload.usedVotes,
+          validVotes: payload.validVotes,
+          lastResultsAt: new Date(),
+          yskLastSyncAt: new Date(),
+          yskLastSyncError: null,
+        },
+      });
+
+      const keptMayorIds: string[] = [];
+      for (let index = 0; index < mergedMayor.length; index += 1) {
+        const candidate = mergedMayor[index]!;
+        const existing = mayorCandidates[index];
+        if (existing) {
+          keptMayorIds.push(existing.id);
+          await tx.electionCandidate.update({
+            where: { id: existing.id },
+            data: {
+              name: candidate.name,
+              partyName: candidate.partyName,
+              partyColor: candidate.partyColor,
+              votes: candidate.votes,
+              votePct: candidate.votePct,
+              order: index,
+            },
+          });
+        } else {
+          const created = await tx.electionCandidate.create({
+            data: {
+              electionId: id,
+              raceType: "MAYOR",
+              name: candidate.name,
+              partyName: candidate.partyName,
+              partyColor: candidate.partyColor,
+              votes: candidate.votes,
+              votePct: candidate.votePct,
+              order: index,
+            },
+          });
+          keptMayorIds.push(created.id);
+        }
+      }
+
+      await tx.electionCandidate.deleteMany({
+        where: {
+          electionId: id,
+          raceType: "MAYOR",
+          id: { notIn: keptMayorIds },
+        },
+      });
+
+      for (const council of councilCandidates) {
+        keptMayorIds.push(council.id);
+      }
+
+      for (const district of payload.districts) {
+        const existingDistrict = election.districts.find((item) => item.slug === district.slug);
+        if (existingDistrict) {
+          await tx.electionDistrict.update({
+            where: { id: existingDistrict.id },
+            data: {
+              name: district.name,
+              order: district.order,
+              totalBoxes: district.totalBoxes,
+              openBoxes: district.openBoxes,
+              turnoutPct: district.turnoutPct,
+            },
+          });
+        } else {
+          await tx.electionDistrict.create({
+            data: {
+              electionId: id,
+              name: district.name,
+              slug: district.slug,
+              order: district.order,
+              totalBoxes: district.totalBoxes,
+              openBoxes: district.openBoxes,
+              turnoutPct: district.turnoutPct,
+            },
+          });
+        }
+      }
+    });
+
+    revalidateElectionPaths(election.slug);
+    return {
+      success: true,
+      syncedAt: new Date().toISOString(),
+      candidateCount: mergedMayor.length,
+      districtCount: payload.districts.length,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "YSK senkronizasyonu başarısız.";
+    await prisma.election.update({
+      where: { id },
+      data: { yskLastSyncError: message },
+    });
+    return { error: message };
+  }
 }

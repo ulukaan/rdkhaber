@@ -58,6 +58,11 @@ export type ElectionFormDefaults = {
   usedVotes?: number;
   validVotes?: number;
   categorySlug?: string;
+  yskSecimId?: number | "";
+  yskSecimTuru?: number | "";
+  yskIlId?: number | "";
+  yskFocusIlce?: string;
+  yskSyncEnabled?: boolean;
   candidates?: Array<Omit<CandidateDraft, "key"> & { id?: string }>;
   districts?: Array<Omit<DistrictDraft, "key"> & { id?: string }>;
 };
@@ -137,6 +142,11 @@ export function ElectionForm({ defaults }: { defaults?: ElectionFormDefaults }) 
       usedVotes: Number(formData.get("usedVotes") ?? 0),
       validVotes: Number(formData.get("validVotes") ?? 0),
       categorySlug: String(formData.get("categorySlug") ?? ""),
+      yskSecimId: String(formData.get("yskSecimId") ?? "") ? Number(formData.get("yskSecimId")) : null,
+      yskSecimTuru: String(formData.get("yskSecimTuru") ?? "") ? Number(formData.get("yskSecimTuru")) : null,
+      yskIlId: String(formData.get("yskIlId") ?? "") ? Number(formData.get("yskIlId")) : null,
+      yskFocusIlce: String(formData.get("yskFocusIlce") ?? ""),
+      yskSyncEnabled: formData.get("yskSyncEnabled") === "on",
       candidates: candidates.map((candidate) => ({
         id: candidate.id,
         raceType: candidate.raceType,
@@ -255,6 +265,51 @@ export function ElectionForm({ defaults }: { defaults?: ElectionFormDefaults }) 
               <input type="checkbox" name="isPrimary" defaultChecked={defaults?.isPrimary ?? !isEdit} className="h-4 w-4 accent-brand" />
               Birincil (aktif) seçim
             </label>
+            <div className="sm:col-span-2 rounded-2xl border border-border bg-surface/40 p-3 sm:p-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-ink-soft">YSK API bağlantısı</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FieldGroup label="Seçim ID (secimId)" htmlFor="yskSecimId">
+                  <Input
+                    id="yskSecimId"
+                    name="yskSecimId"
+                    type="number"
+                    min={1}
+                    placeholder="20260"
+                    defaultValue={defaults?.yskSecimId ?? ""}
+                  />
+                </FieldGroup>
+                <FieldGroup label="Seçim türü (secimTuru)" htmlFor="yskSecimTuru">
+                  <Input
+                    id="yskSecimTuru"
+                    name="yskSecimTuru"
+                    type="number"
+                    min={1}
+                    placeholder="2"
+                    defaultValue={defaults?.yskSecimTuru ?? ""}
+                  />
+                </FieldGroup>
+                <FieldGroup label="İl kodu (ilId)" htmlFor="yskIlId">
+                  <Input id="yskIlId" name="yskIlId" type="number" min={1} placeholder="81" defaultValue={defaults?.yskIlId ?? ""} />
+                </FieldGroup>
+                <FieldGroup label="Odak ilçe" htmlFor="yskFocusIlce">
+                  <Input
+                    id="yskFocusIlce"
+                    name="yskFocusIlce"
+                    placeholder="DÜZCE MERKEZ"
+                    defaultValue={defaults?.yskFocusIlce ?? ""}
+                  />
+                </FieldGroup>
+              </div>
+              <label className="mt-3 flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink">
+                <input
+                  type="checkbox"
+                  name="yskSyncEnabled"
+                  defaultChecked={defaults?.yskSyncEnabled}
+                  className="h-4 w-4 accent-brand"
+                />
+                YSK senkronizasyonunu etkinleştir
+              </label>
+            </div>
             <div className="sm:col-span-2">
               <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-soft">Sandık özeti</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
