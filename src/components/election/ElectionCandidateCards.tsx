@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ElectionRaceType } from "@prisma/client";
 import { computeVoteGap, formatElectionCount, formatElectionPercent, RACE_TYPE_LABELS } from "@/lib/election";
+import { resolveCandidatePhotoUrl } from "@/lib/election-candidate-photo";
 import { cn } from "@/lib/utils";
 
 export type ElectionCandidateView = {
@@ -42,7 +43,9 @@ export function ElectionCandidateCards({
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((candidate, index) => (
+        {filtered.map((candidate, index) => {
+          const photoSrc = resolveCandidatePhotoUrl(candidate);
+          return (
           <article
             key={candidate.id}
             className={cn(
@@ -56,13 +59,7 @@ export function ElectionCandidateCards({
                 style={{ borderBottom: `4px solid ${candidate.partyColor}` }}
               >
                 <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border bg-white">
-                  {candidate.photoUrl ? (
-                    <Image src={candidate.photoUrl} alt="" fill className="object-cover" unoptimized />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center text-lg font-bold text-ink-soft">
-                      {candidate.name.charAt(0)}
-                    </span>
-                  )}
+                  <Image src={photoSrc} alt="" fill className="object-cover" unoptimized />
                 </div>
                 <span
                   className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
@@ -86,7 +83,8 @@ export function ElectionCandidateCards({
               </div>
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

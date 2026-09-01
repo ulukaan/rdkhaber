@@ -1,4 +1,5 @@
 import { DEFAULT_PARTY_COLORS, DUZCE_DISTRICTS, computeVotePct } from "@/lib/election";
+import { resolveCandidatePhotoUrl } from "@/lib/election-candidate-photo";
 import {
   fetchYskDistrictBoxStats,
   fetchYskDistrictCandidates,
@@ -233,9 +234,13 @@ export function mergeYskCandidates<T extends { name: string; partyName: string; 
     }
     return {
       ...candidate,
-      photoUrl: null,
       slogan: null,
       bio: null,
+      photoUrl: resolveCandidatePhotoUrl({
+        name: candidate.name,
+        partyName: candidate.partyName,
+        partyColor: candidate.partyColor,
+      }),
     };
   });
   return merged;
