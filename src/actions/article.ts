@@ -13,7 +13,7 @@ import { getEditableArticle, canEditArticle } from "@/lib/article-access";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getSettings } from "@/lib/settings";
 import { resolveArticlePublishState, parseScheduledAt } from "@/lib/article-workflow";
-import { onArticlePublished } from "@/lib/article-publish-hooks";
+import { onArticlePublished, onArticleBreakingEnabled } from "@/lib/article-publish-hooks";
 
 function uniqueCategoryIds(data: { categoryId?: string; categoryIds?: string[] }) {
   const fromList = (data.categoryIds ?? []).map((id) => id.trim()).filter(Boolean);
@@ -313,6 +313,13 @@ export async function updateArticleAction(id: string, raw: Record<string, unknow
       },
       { wasPublished },
     );
+  } else if (
+    publish.status === "PUBLISHED" &&
+    wasPublished &&
+    !current.isBreaking &&
+    updated.isBreaking
+  ) {
+    await onArticleBreakingEnabled({ title: updated.title, slug: updated.slug });
   }
 
   await writeAuditLog({

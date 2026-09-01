@@ -383,7 +383,7 @@ export function ArticleForm({
                   name="isBreaking"
                   defaultChecked={defaults?.isBreaking}
                   label="Son dakika bandı"
-                  hint="Üstteki kırmızı kayan yazı."
+                  hint="Üstteki kırmızı kayan yazıda görünür. Yayınlandıktan sonra 24 saat aktif kalır."
                 />
                 <ToggleRow
                   name="isFeatured"

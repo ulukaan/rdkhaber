@@ -67,6 +67,14 @@ export async function onArticlePublished(
   revalidatePublicSite();
 }
 
+/** Yayında olan habere son dakika işareti eklendiğinde bant ve bildirimleri güncelle. */
+export async function onArticleBreakingEnabled(article: { title: string; slug: string }) {
+  await Promise.all([
+    sendBreakingNewsPush({ title: article.title, slug: article.slug }),
+  ]);
+  revalidatePublicSite();
+}
+
 /** Zamanlanmış haberleri yayına alır. */
 export async function publishScheduledArticles() {
   const now = new Date();
