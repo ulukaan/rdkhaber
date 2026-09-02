@@ -127,7 +127,7 @@ export default async function RootLayout({
         ))}
         <link rel="alternate" type="application/rss+xml" title={`${settings.siteName} RSS`} href="/feed.xml" />
         {googleTagsEnabled ? <ConsentModeDefaultScript /> : null}
-        {adsenseClient && adsenseAuto ? (
+        {adsenseEnabled ? (
           <GoogleAdSense client={adsenseClient} enabled={adsenseEnabled} />
         ) : null}
       </head>

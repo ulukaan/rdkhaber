@@ -175,8 +175,9 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
                 spellCheck={false}
               />
               <FieldHint>
-                AdSense panelindeki kodu yapıştırın. Slot numarası otomatik okunur; okunmazsa
-                alttaki kutuya yazın.
+                Yazı içi (in-article) kodu yalnızca paragraf arası slot (#1003) için uygundur.
+                Manşet/banner slotları (#128, #151 vb.) için AdSense panelinde &quot;Görüntülü
+                reklam&quot; birimi oluşturun.
               </FieldHint>
               {detectedSlot ? (
                 <p className="mt-2 text-xs font-semibold text-emerald-700">
