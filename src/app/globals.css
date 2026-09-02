@@ -466,11 +466,57 @@ html.article-reading header.sticky {
   transform-origin: center bottom;
 }
 
+/* Manşet / kart görselleri — son dakika rozeti */
+.breaking-overlay-badge {
+  background: linear-gradient(135deg, var(--brand) 0%, #9a0012 100%);
+  box-shadow:
+    0 4px 16px rgba(208, 2, 27, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+  animation: breaking-badge-glow 2.4s ease-in-out infinite;
+}
+
+.breaking-live-dot {
+  animation: breaking-dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes breaking-badge-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(208, 2, 27, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 6px 22px rgba(208, 2, 27, 0.72),
+      0 0 14px rgba(255, 60, 80, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.28) inset;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes breaking-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .article-continue-item {
     animation: none;
   }
   .reaction-pop {
+    animation: none;
+  }
+  .breaking-overlay-badge,
+  .breaking-live-dot {
     animation: none;
   }
 }

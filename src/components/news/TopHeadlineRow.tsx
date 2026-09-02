@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { headlineFromArticle } from "@/components/news/HeadlineFace";
+import { BreakingImageStamp } from "@/components/news/BreakingBadge";
+import { isActiveBreaking } from "@/lib/breaking-news";
 import type { ArticleSummary } from "@/types/article";
 
 export function TopHeadlineRow({ articles }: { articles: ArticleSummary[] }) {
@@ -21,16 +23,21 @@ export function TopHeadlineRow({ articles }: { articles: ArticleSummary[] }) {
             >
               <Link
                 href={`/haber/${article.slug}`}
-                className="cat-spin-inner group flex h-full flex-col overflow-hidden border border-transparent bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                className="cat-spin-inner group relative flex h-full flex-col overflow-hidden border border-transparent bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
               >
-                <CoverImage
-                  src={article.coverImageUrl}
-                  alt={face.title}
-                  color={article.category.color}
-                  fallback="wash"
-                  className="aspect-square w-full"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                />
+                <div className="relative">
+                  <CoverImage
+                    src={article.coverImageUrl}
+                    alt={face.title}
+                    color={article.category.color}
+                    fallback="wash"
+                    className="aspect-square w-full"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  />
+                  {isActiveBreaking(article) ? (
+                    <BreakingImageStamp className="left-2 top-2 sm:left-3 sm:top-3" />
+                  ) : null}
+                </div>
                 <div
                   className="flex flex-1 flex-col px-2.5 py-2 transition-colors duration-200 group-hover:bg-[var(--cat)] md:px-3 md:py-2.5"
                   style={{ ["--cat" as string]: color }}

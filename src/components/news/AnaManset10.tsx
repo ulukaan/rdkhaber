@@ -4,6 +4,8 @@ import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { HeadlineSlider } from "@/components/news/HeadlineSlider";
 import { HEADLINE_OVERLAY, HEADLINE_TITLE_SHADOW, headlineFromArticle } from "@/components/news/HeadlineFace";
+import { BreakingImageStamp } from "@/components/news/BreakingBadge";
+import { isActiveBreaking } from "@/lib/breaking-news";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +53,9 @@ export function AnaManset10({
                     className="absolute inset-0 h-full w-full"
                     sizes="(max-width: 1024px) 50vw, 25vw"
                   />
+                  {isActiveBreaking(article) ? (
+                    <BreakingImageStamp className="left-2 top-2 sm:left-3 sm:top-3" />
+                  ) : null}
                   <span className={cn("absolute inset-0 transition-opacity group-hover:opacity-95", HEADLINE_OVERLAY.bottomStrong)} />
                   <span className="absolute inset-x-0 bottom-0 p-2.5 md:p-3">
                     <span

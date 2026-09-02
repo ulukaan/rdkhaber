@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { Badge } from "@/components/ui/Badge";
-import { BreakingBadge } from "@/components/news/BreakingBadge";
+import { BreakingImageStamp } from "@/components/news/BreakingBadge";
 import { isActiveBreaking } from "@/lib/breaking-news";
 import { formatRelativeTime } from "@/lib/utils";
 import type { ArticleSummary } from "@/types/article";
@@ -58,21 +58,25 @@ export function NewsCard({
 
   if (variant === "caption") {
     const color = article.category.color || "#d0021b";
+    const breaking = isActiveBreaking(article);
     return (
       <Link
         href={href}
         className={cn(
-          "group flex h-full flex-col overflow-hidden border border-border bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand",
+          "group relative flex h-full flex-col overflow-hidden border border-border bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand",
           className,
         )}
       >
-        <CoverImage
-          src={article.coverImageUrl}
-          alt={article.title}
-          color={article.category.color}
-          className="min-h-[100px] w-full flex-1"
-          sizes="(max-width: 1024px) 100vw, 33vw"
-        />
+        <div className="relative min-h-[100px] flex-1">
+          <CoverImage
+            src={article.coverImageUrl}
+            alt={article.title}
+            color={article.category.color}
+            className="h-full min-h-[100px] w-full"
+            sizes="(max-width: 1024px) 100vw, 33vw"
+          />
+          {breaking ? <BreakingImageStamp className="left-2 top-2 sm:left-3 sm:top-3" /> : null}
+        </div>
         <div
           className="shrink-0 px-3 py-2.5 transition-colors duration-200 group-hover:bg-[var(--cat)]"
           style={{ ["--cat" as string]: color }}
@@ -150,11 +154,7 @@ export function NewsCard({
           className="h-full min-h-[inherit]"
           sizes={isHero ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
         />
-        {isActiveBreaking(article) && (
-          <span className="absolute left-3 top-3 z-[2]">
-            <BreakingBadge />
-          </span>
-        )}
+        {isActiveBreaking(article) ? <BreakingImageStamp /> : null}
       </Link>
     );
   }

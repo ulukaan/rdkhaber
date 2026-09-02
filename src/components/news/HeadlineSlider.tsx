@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { HEADLINE_OVERLAY, HEADLINE_TITLE_SHADOW, headlineFromArticle } from "@/components/news/HeadlineFace";
+import { BreakingImageStamp } from "@/components/news/BreakingBadge";
+import { isActiveBreaking } from "@/lib/breaking-news";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +41,7 @@ export function HeadlineSlider({
           className="absolute inset-0 h-full w-full"
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
+        {isActiveBreaking(current) ? <BreakingImageStamp /> : null}
         <span className={cn("absolute inset-0", HEADLINE_OVERLAY.bottomStrong)} />
         <span className="absolute inset-x-0 bottom-10 p-4 md:bottom-12 md:p-6">
           <span
