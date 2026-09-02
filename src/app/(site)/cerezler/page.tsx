@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { StaticPageHeader } from "@/components/pages/StaticDocument";
 import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 import { getSettings } from "@/lib/settings";
+import { hasActiveAdsenseSlotAds } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "Çerez Aydınlatması",
@@ -13,7 +14,10 @@ export const metadata: Metadata = {
 export default async function CookiePolicyPage() {
   const settings = await getSettings();
   const analyticsOn = Boolean(settings.googleAnalyticsId.trim() || settings.googleTagManagerId.trim());
-  const adsOn = settings.googleAdsenseClient.trim() !== "" && settings.googleAdsenseAutoAds === "1";
+  const hasManualAdsense = await hasActiveAdsenseSlotAds();
+  const adsOn =
+    settings.googleAdsenseClient.trim() !== "" &&
+    (settings.googleAdsenseAutoAds === "1" || hasManualAdsense);
 
   return (
     <>

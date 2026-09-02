@@ -14,6 +14,7 @@ const scripts = [
   "migrate-election-engine.mjs",
   "seed-demo-election.mjs",
   "ensure-media-columns.mjs",
+  "ensure-adslot-adsense.mjs",
 ];
 
 async function runScript(name) {
