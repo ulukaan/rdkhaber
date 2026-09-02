@@ -31,6 +31,8 @@ export const articleSummarySelect = {
   category: { select: { name: true, slug: true, color: true } },
   author: { select: { id: true, name: true, slug: true, avatarUrl: true, role: true } },
   reporterName: true,
+  imageFiveHeadline: true,
+  imageMainHeadline: true,
 } as const;
 
 export function getLatestArticles(take = 12) {
@@ -108,6 +110,16 @@ export async function getRandomSpotlightArticles(excludeIds: string[], take = 3)
 export function getFeaturedArticles(take = 5) {
   return prisma.article.findMany({
     where: { status: "PUBLISHED", isFeatured: true },
+    orderBy: { publishedAt: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
+/** Sürmanşet / beşli manşet — `inFiveHeadline` işaretli haberler (en fazla 10). */
+export function getSurmansetArticles(take = 10) {
+  return prisma.article.findMany({
+    where: { status: "PUBLISHED", inFiveHeadline: true },
     orderBy: { publishedAt: "desc" },
     take,
     select: articleSummarySelect,
@@ -356,6 +368,27 @@ export function getEditorArticles(take = 5) {
     where: {
       status: "PUBLISHED",
       author: { role: { in: ["EDITOR", "ADMIN"] } },
+    },
+    orderBy: { publishedAt: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
+/** Ajans / dış köşe — alıntı yazarlar sekmesi */
+export function getQuotedAuthorArticles(take = 5) {
+  return prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      OR: [
+        { sourceName: { not: null } },
+        {
+          AND: [
+            { reporterName: { not: null } },
+            { NOT: { author: { role: { in: ["EDITOR", "ADMIN"] } } } },
+          ],
+        },
+      ],
     },
     orderBy: { publishedAt: "desc" },
     take,

@@ -16,5 +16,6 @@ export async function updateSettingsAction(raw: Record<string, unknown>) {
   await setSettings(parsed.data);
   revalidatePublicSite({ layout: true });
   revalidatePath("/admin/ayarlar");
+  revalidatePath("/admin/ayarlar", "page");
   return { success: true };
 }

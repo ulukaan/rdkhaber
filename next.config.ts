@@ -63,6 +63,21 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "www.gazeteler.tv",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "gazeteler.tv",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "yerel.gazeteler.tv",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "static.hurriyet.com.tr",
         pathname: "/**",
       },

@@ -394,8 +394,8 @@ export function ArticleForm({
                 <ToggleRow
                   name="inFiveHeadline"
                   defaultChecked={defaults?.inFiveHeadline}
-                  label="Üst beşli şerit"
-                  hint="Manşetin üstündeki beş haber."
+                  label="Sürmanşet"
+                  hint="Ana sayfadaki büyük sürmanşet şeridinde (1–10) listelenir."
                 />
                 <ToggleRow
                   name="inSpotlight"

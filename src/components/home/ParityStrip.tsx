@@ -22,7 +22,7 @@ function Change({ value }: { value: number | null }) {
 
 function Design1({ items }: { items: MarketItem[] }) {
   return (
-    <section className="mt-4 overflow-hidden border border-border" aria-label="Parite">
+    <section className="overflow-hidden border border-border" aria-label="Parite">
       <div className="flex flex-col lg:flex-row">
         <div className="flex shrink-0 items-center bg-brand px-4 py-3 text-white lg:w-36 lg:justify-center">
           <div>
@@ -63,7 +63,7 @@ function Design1({ items }: { items: MarketItem[] }) {
 
 function Design2({ items }: { items: MarketItem[] }) {
   return (
-    <section className="mt-4 border border-border bg-white" aria-label="Parite">
+    <section className="border border-border bg-white" aria-label="Parite">
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
         {items.map((item, i) => (
           <div
@@ -96,7 +96,7 @@ function Design3({ items }: { items: MarketItem[] }) {
   const loop = [...items, ...items];
 
   return (
-    <section className="mt-4 border border-border bg-white" aria-label="Parite">
+    <section className="border border-border bg-white" aria-label="Parite">
       <div className="flex items-stretch">
         <span className="flex shrink-0 items-center px-3 text-[11px] font-extrabold uppercase tracking-wide text-brand">
           Parite

@@ -15,6 +15,7 @@ const scripts = [
   "seed-demo-election.mjs",
   "ensure-media-columns.mjs",
   "ensure-adslot-adsense.mjs",
+  "ensure-companies.mjs",
   "ensure-service-nav.mjs",
 ];
 

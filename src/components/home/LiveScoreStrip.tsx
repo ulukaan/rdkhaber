@@ -124,7 +124,7 @@ export function LiveScoreStrip({ data }: { data: LiveScoreSnapshot }) {
 
   return (
     <section
-      className="mt-4 overflow-hidden border border-border bg-white"
+      className="overflow-hidden border border-border bg-white"
       aria-label="Canlı skorlar"
     >
       <div className="flex items-stretch">

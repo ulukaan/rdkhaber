@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
+import { RankedNewsHoverList } from "@/components/news/RankedNewsHoverList";
 import { formatRelativeTime } from "@/lib/utils";
 import type { ArticleSummary } from "@/types/article";
 
@@ -12,19 +13,18 @@ export function SidebarNewsList({
 }) {
   if (articles.length === 0) return null;
 
+  if (ranked) {
+    return <RankedNewsHoverList articles={articles} />;
+  }
+
   return (
     <ul className="divide-y divide-border">
-      {articles.map((article, i) => (
+      {articles.map((article) => (
         <li key={article.id}>
           <Link
             href={`/haber/${article.slug}`}
             className="group flex gap-3 py-3 first:pt-0 last:pb-0"
           >
-            {ranked ? (
-              <span className="w-6 shrink-0 pt-0.5 text-lg font-black leading-none text-border group-hover:text-brand">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-            ) : null}
             <CoverImage
               src={article.coverImageUrl}
               alt=""

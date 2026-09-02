@@ -336,6 +336,24 @@ model Page {
   updatedAt DateTime @updatedAt
 }
 
+// Firma Rehberi / Vitrindeki Firmalar — sponsor ve yerel işletme vitrini
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String   @default("")
+  websiteUrl  String   @default("")
+  category    String   @default("") // faaliyet alanı
+  phone       String?
+  description String?  @db.Text
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, order])
+}
+
 // Reklam alanları — katalog kodu (ör. 152, 1003) position alanında tutulur
 model AdSlot {
   id             String   @id @default(cuid())

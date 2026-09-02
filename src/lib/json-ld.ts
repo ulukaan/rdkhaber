@@ -42,3 +42,39 @@ export function buildNewsArticleJsonLd(input: ArticleJsonLdInput) {
     ...(image ? { image: [image] } : {}),
   };
 }
+
+export function buildWebSiteJsonLd(input: {
+  siteName: string;
+  description: string;
+  logoUrl?: string;
+}) {
+  const siteUrl = getSiteUrl();
+  const logo = input.logoUrl
+    ? input.logoUrl.startsWith("http")
+      ? input.logoUrl
+      : `${siteUrl}${input.logoUrl}`
+    : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: input.siteName,
+    url: siteUrl,
+    description: input.description,
+    inLanguage: "tr-TR",
+    publisher: {
+      "@type": "NewsMediaOrganization",
+      name: input.siteName,
+      url: siteUrl,
+      ...(logo ? { logo: { "@type": "ImageObject", url: logo } } : {}),
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/arama?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}

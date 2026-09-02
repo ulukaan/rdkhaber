@@ -39,10 +39,13 @@ export function TvGuideSettingsForm({
     const savedSlugs = parseSlugList(settings.tvChannelSlugs);
     const bySlug = new Map(TV_CHANNELS.map((c) => [c.slug, c]));
     if (savedSlugs.length === 0) {
-      return TV_CHANNELS.filter((c) => c.featured);
+      return TV_CHANNELS.filter((c) => c.featured && !c.disabled);
     }
-    return savedSlugs.map((s) => bySlug.get(s)).filter((c): c is TvChannel => Boolean(c));
+    return savedSlugs
+      .map((s) => bySlug.get(s))
+      .filter((c): c is TvChannel => Boolean(c) && !c.disabled);
   });
+  const availableChannels = TV_CHANNELS.filter((c) => !c.disabled);
 
   function toggleChannel(channel: TvChannel) {
     setSaved(false);
@@ -164,12 +167,12 @@ export function TvGuideSettingsForm({
             </p>
           </div>
           <p className="text-xs font-semibold text-ink-soft">
-            {enabled.length}/{TV_CHANNELS.length} seçili
+            {enabled.length}/{availableChannels.length} seçili
           </p>
         </header>
 
         <div className="divide-y divide-border">
-          {TV_CHANNELS.map((channel) => {
+          {availableChannels.map((channel) => {
             const on = enabled.some((c) => c.slug === channel.slug);
             const order = enabled.findIndex((c) => c.slug === channel.slug);
             return (

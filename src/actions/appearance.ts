@@ -117,9 +117,13 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
     "showRates",
     "showTicker",
     "showTopHeadlines",
+    "showSurmanset",
     "showFeatured",
     "showLatestFeed",
     "showCategorySpotlight",
+    "showDailyNewspapers",
+    "showFeaturedCompanies",
+    "showOfficialAds",
     "showVideos",
     "showMostRead",
     "showTrendingWeek",
@@ -146,6 +150,7 @@ export async function saveHomepageModulesAction(raw: Record<string, string>) {
   }
   values.categoryCardSlugs = raw.categoryCardSlugs ?? "";
   values.categorySpotlightSlugs = raw.categorySpotlightSlugs ?? "";
+  values.newspaperSlugs = raw.newspaperSlugs ?? "";
   values.parityDesign =
     raw.parityDesign === "1" || raw.parityDesign === "3" ? raw.parityDesign : "2";
   values.imsakiyeDesign = raw.imsakiyeDesign === "1" ? "1" : "2";

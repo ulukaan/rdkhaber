@@ -1,18 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { statusForRange, type BroadcastItem, type BroadcastStatus } from "@/lib/broadcast";
 import { cn } from "@/lib/utils";
 
+const PAGE_SIZE = 5;
+const ACCENT = "#f5c518";
+
 function liveStatus(item: BroadcastItem): BroadcastStatus {
-  return statusForRange(item.startMin, item.endMin);
+  return statusForRange(item.startMin, item.endMin, undefined, item.date);
+}
+
+function statusLabel(status: BroadcastStatus) {
+  if (status === "CANLI") return "CANLI";
+  if (status === "TEKRAR") return "TEKRAR";
+  return "YAKINDA";
 }
 
 export function BroadcastStrip({ items }: { items: BroadcastItem[] }) {
   const scroller = useRef<HTMLUListElement>(null);
-  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
   const [statuses, setStatuses] = useState<Record<string, BroadcastStatus>>(() =>
     Object.fromEntries(items.map((item) => [item.id, item.status])),
   );
@@ -26,107 +36,155 @@ export function BroadcastStrip({ items }: { items: BroadcastItem[] }) {
     return () => window.clearInterval(id);
   }, [items]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase("tr-TR");
-    if (!q) return items;
-    return items.filter(
-      (item) =>
-        item.channel.toLocaleLowerCase("tr-TR").includes(q) ||
-        item.title.toLocaleLowerCase("tr-TR").includes(q),
-    );
-  }, [items, query]);
+  const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+
+  const syncPage = useCallback(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) {
+      setPage(0);
+      return;
+    }
+    const next = Math.round((el.scrollLeft / maxScroll) * (pageCount - 1));
+    setPage(Math.min(pageCount - 1, Math.max(0, next)));
+  }, [pageCount]);
+
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    syncPage();
+    el.addEventListener("scroll", syncPage, { passive: true });
+    window.addEventListener("resize", syncPage);
+    return () => {
+      el.removeEventListener("scroll", syncPage);
+      window.removeEventListener("resize", syncPage);
+    };
+  }, [syncPage, items.length]);
 
   if (items.length === 0) return null;
 
   function scroll(dir: -1 | 1) {
-    scroller.current?.scrollBy({ left: dir * 240, behavior: "smooth" });
+    const el = scroller.current;
+    if (!el) return;
+    const card = el.querySelector("li");
+    const step = card ? card.getBoundingClientRect().width + 12 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step * PAGE_SIZE, behavior: "smooth" });
+  }
+
+  function goToPage(index: number) {
+    const el = scroller.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    const ratio = pageCount <= 1 ? 0 : index / (pageCount - 1);
+    el.scrollTo({ left: ratio * maxScroll, behavior: "smooth" });
   }
 
   return (
-    <section className="mt-4 border border-border bg-white" aria-label="Yayın akışı">
-      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-extrabold tracking-tight text-ink">Yayın Akışı</h2>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <label className="relative min-w-[160px] flex-1 sm:max-w-[220px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Kanal arayın.."
-              className="w-full border border-border bg-surface/50 py-1.5 pl-8 pr-3 text-sm text-ink outline-none placeholder:text-ink-soft focus:border-ink/30"
-            />
-          </label>
-          <Link
-            href="/yayin-akisi"
-            className="inline-flex items-center gap-1 text-xs font-bold text-ink-soft hover:text-brand"
-          >
-            Tüm Programlar
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+    <section className="mt-0 overflow-hidden bg-brand text-white" aria-label="Yayın akışı">
+      <div className="flex items-center gap-2 px-3 pt-2.5 sm:px-4">
+        <h2 className="shrink-0 text-sm font-bold tracking-tight">Yayın Akışı</h2>
+        <span className="h-px min-w-0 flex-1 bg-white/35" aria-hidden />
+        <Link
+          href="/yayin-akisi"
+          className="shrink-0 text-xs font-medium text-white/90 transition-colors hover:text-white"
+        >
+          Tümü
+        </Link>
       </div>
 
-      <div className="relative px-2 py-4 sm:px-4">
-        <button
-          type="button"
-          onClick={() => scroll(-1)}
-          className="absolute left-1 top-[42%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center border border-border bg-white text-ink shadow-sm sm:flex"
-          aria-label="Önceki kanallar"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => scroll(1)}
-          className="absolute right-1 top-[42%] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center border border-border bg-white text-ink shadow-sm sm:flex"
-          aria-label="Sonraki kanallar"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-
+      <div className="relative px-3 py-2.5 sm:px-4">
         <ul
           ref={scroller}
-          className="flex gap-[15px] overflow-x-auto px-1 py-1 [scrollbar-width:none] sm:px-8 [&::-webkit-scrollbar]:hidden"
+          className="flex gap-3 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {filtered.map((item) => {
+          {items.map((item) => {
             const status = statuses[item.id] ?? item.status;
-            const live = status === "CANLI";
+            const thumb = item.imageUrl || item.logoUrl;
+            const isLogoFallback = !item.imageUrl;
+
             return (
-              <li key={item.id} className="w-[103px] shrink-0">
-                <Link
-                  href={item.href}
-                  className="group flex h-[120px] flex-col items-center rounded-md bg-white px-1 pt-2 transition-shadow hover:shadow-md"
-                  aria-label={`${item.channel} yayın akışı`}
-                >
-                  <span className="relative flex h-[72px] w-full items-center justify-center">
-                    <img
-                      src={item.logoUrl}
+              <li key={item.id} className="w-[min(38vw,148px)] shrink-0 sm:w-[156px]">
+                <Link href={item.href} className="group block" aria-label={`${item.channel}: ${item.title}`}>
+                  <span className="relative mb-1.5 block aspect-[16/9] overflow-hidden bg-black/20">
+                    <Image
+                      src={thumb}
                       alt=""
-                      width={50}
-                      height={50}
-                      className="h-[50px] w-[50px] object-contain"
+                      fill
+                      className={cn(
+                        "transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transform-none",
+                        isLogoFallback ? "object-contain p-4" : "object-cover",
+                      )}
+                      sizes="156px"
+                      unoptimized
                     />
-                    {live ? (
-                      <span className="absolute right-1 top-0 bg-brand px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white">
-                        Canlı
-                      </span>
-                    ) : null}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-0 px-1 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white",
+                        status === "CANLI" ? "bg-[#d0021b]" : "bg-black/55",
+                      )}
+                    >
+                      {statusLabel(status)}
+                    </span>
                   </span>
-                  <span className="mt-1 line-clamp-1 w-full px-0.5 text-center text-[13px] font-semibold leading-tight text-ink group-hover:text-brand">
-                    {item.channel}
+                  <span
+                    className="block text-sm font-extrabold tabular-nums leading-none"
+                    style={{ color: ACCENT }}
+                  >
+                    {item.time}
                   </span>
-                  <span className="mt-0.5 line-clamp-1 w-full px-0.5 text-center text-[10px] font-medium tabular-nums text-ink-soft">
-                    {item.time} {item.title}
+                  <span className="mt-0.5 line-clamp-2 text-[12px] font-medium leading-snug text-white">
+                    {item.title}
                   </span>
+                  <span className="mt-0.5 block truncate text-[10px] text-white/70">{item.channel}</span>
                 </Link>
               </li>
             );
           })}
         </ul>
+      </div>
 
-        {filtered.length === 0 ? (
-          <p className="py-6 text-center text-sm text-ink-soft">Kanal bulunamadı.</p>
-        ) : null}
+      <div className="flex items-center justify-between gap-3 px-3 pb-2.5 sm:px-4">
+        <button
+          type="button"
+          onClick={() => scroll(-1)}
+          className="flex h-7 w-7 items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-30"
+          style={{ color: ACCENT }}
+          aria-label="Önceki programlar"
+          disabled={page <= 0}
+        >
+          <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
+        </button>
+
+        <div className="flex flex-wrap items-center justify-center gap-1.5" role="tablist" aria-label="Sayfalar">
+          {Array.from({ length: pageCount }, (_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === page}
+              aria-label={`Sayfa ${i + 1}`}
+              onClick={() => goToPage(i)}
+              className={cn(
+                "h-1.5 w-1.5 rounded-full transition-colors",
+                i === page ? "scale-110" : "bg-[#7a0a14]",
+              )}
+              style={i === page ? { backgroundColor: ACCENT } : undefined}
+            />
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => scroll(1)}
+          className="flex h-7 w-7 items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-30"
+          style={{ color: ACCENT }}
+          aria-label="Sonraki programlar"
+          disabled={page >= pageCount - 1}
+        >
+          <ChevronRight className="h-6 w-6" strokeWidth={2.5} />
+        </button>
       </div>
     </section>
   );

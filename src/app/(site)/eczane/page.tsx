@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { StaticPageHeader } from "@/components/pages/StaticDocument";
 import { PharmacyWidget } from "@/components/services/PharmacyWidget";
-import { DUZCE_DISTRICTS, fetchDutyPharmaciesFromCollectApi } from "@/lib/pharmacy";
+import { DUZCE_DISTRICTS, getDutyPharmacies } from "@/lib/pharmacy";
 
 export const metadata: Metadata = {
   title: "Nöbetçi Eczaneler",
@@ -17,7 +17,7 @@ export default async function PharmacyPage({
   const { ilce } = await searchParams;
   const initialDistrict = ilce?.trim().toLowerCase() || "merkez";
   const districtDef = DUZCE_DISTRICTS.find((d) => d.slug === initialDistrict);
-  const apiPharmacies = await fetchDutyPharmaciesFromCollectApi(
+  const apiPharmacies = await getDutyPharmacies(
     "Düzce",
     districtDef && districtDef.slug !== "merkez" ? districtDef.name : undefined,
   );

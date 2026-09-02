@@ -2,6 +2,7 @@
 
 import { clientFormSubmit } from "@/lib/client-form";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   Check,
@@ -21,6 +22,7 @@ import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/Panel
 import type { SettingKey } from "@/lib/settings";
 
 export function SettingsForm({ settings }: { settings: Record<SettingKey, string> }) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,6 +38,8 @@ export function SettingsForm({ settings }: { settings: Record<SettingKey, string
       ...Object.fromEntries(formData.entries()),
       editorRequiresApproval: formData.get("editorRequiresApproval") === "1" ? "1" : "0",
       socialAutoShare: formData.get("socialAutoShare") === "1" ? "1" : "0",
+      metaDescription: String(formData.get("metaDescription") ?? ""),
+      metaKeywords: String(formData.get("metaKeywords") ?? ""),
     };
     const result = await updateSettingsAction(raw);
     setLoading(false);
@@ -44,10 +48,20 @@ export function SettingsForm({ settings }: { settings: Record<SettingKey, string
       return;
     }
     setSaved(true);
+    router.refresh();
   };
 
   return (
-    <form onSubmit={clientFormSubmit(onSubmit)} className={`flex flex-col gap-5 ${PANEL_FORM_BOTTOM_PAD}`}>
+    <form
+      key={[
+        settings.metaDescription,
+        settings.metaKeywords,
+        settings.siteName,
+        settings.siteSlogan,
+      ].join("\0")}
+      onSubmit={clientFormSubmit(onSubmit)}
+      className={`flex flex-col gap-5 ${PANEL_FORM_BOTTOM_PAD}`}
+    >
       <FormCard
         title="Site Kimliği"
         description="Sitenin adı, logosu ve marka rengi. Logo hem sitede hem yönetim panelinde görünür."

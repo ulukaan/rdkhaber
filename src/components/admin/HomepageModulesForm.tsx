@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   BarChart3,
   Bookmark,
+  Building2,
   Clapperboard,
   Folders,
   GalleryHorizontal,
@@ -25,12 +26,14 @@ import {
   Trophy,
   TrendingUp,
   Flame,
+  FileText,
   Tv,
   Vote,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { saveHomepageModulesAction } from "@/actions/appearance";
 import { parseCategoryBlocks, serializeCategoryBlocks, parseSlugList, serializeSlugList, parseParityDesign, parseImsakiyeDesign, type CategoryBlockLayout, type ImsakiyeDesign, type ParityDesign, type SettingKey } from "@/lib/settings";
+import { ALL_NEWSPAPERS, DEFAULT_NEWSPAPERS } from "@/lib/newspapers";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/admin/PanelUI";
 import { PanelFormFooter, PANEL_FORM_BOTTOM_PAD } from "@/components/admin/PanelFormFooter";
@@ -78,13 +81,19 @@ const GROUPS: Array<{
       {
         key: "showTopHeadlines",
         label: "Üst manşet kartları",
-        hint: "4’lü poster sıra",
+        hint: "5’li poster sıra",
         Icon: LayoutGrid,
+      },
+      {
+        key: "showSurmanset",
+        label: "Sürmanşet",
+        hint: "Beşli manşet — büyük şerit, sağda 1–10",
+        Icon: Newspaper,
       },
       {
         key: "showFeatured",
         label: "Ana manşet slaytı",
-        hint: "Numaralı büyük manşet",
+        hint: "Numaralı büyük manşet + yan kartlar",
         Icon: Newspaper,
       },
       {
@@ -99,6 +108,25 @@ const GROUPS: Array<{
         hint: "Anasayfa sekme bloğu — hangi kategorilerin görüneceğini seçin",
         Icon: Folders,
         wide: true,
+      },
+      {
+        key: "showDailyNewspapers",
+        label: "Günlük gazeteler",
+        hint: "Bugünkü gazete kapakları — kategori sekmelerinin altında",
+        Icon: Newspaper,
+        wide: true,
+      },
+      {
+        key: "showFeaturedCompanies",
+        label: "Vitrindeki firmalar",
+        hint: "Firma rehberi vitrini — gazetelerin altında",
+        Icon: Building2,
+      },
+      {
+        key: "showOfficialAds",
+        label: "Resmi ilanlar",
+        hint: "ilan.gov.tr Düzce ilanları — yan sütun",
+        Icon: FileText,
       },
       {
         key: "showCategoryCards",
@@ -139,8 +167,8 @@ const GROUPS: Array<{
       },
       {
         key: "showEditorNews",
-        label: "Editör haberleri",
-        hint: "Yazar imzalı 5’li sıra",
+        label: "Yazarlar",
+        hint: "Köşe yazarı kartları · alıntı sekmesi",
         Icon: PenLine,
       },
     ],
@@ -281,6 +309,10 @@ export function HomepageModulesForm({
       categories.some((c) => c.slug === slug),
     ),
   );
+  const [newspaperSlugs, setNewspaperSlugs] = useState(() => {
+    const saved = parseSlugList(settings.newspaperSlugs);
+    return saved.length > 0 ? saved : DEFAULT_NEWSPAPERS.map((n) => n.slug);
+  });
 
   const [parityDesign, setParityDesign] = useState<ParityDesign>(() =>
     parseParityDesign(settings.parityDesign),
@@ -318,6 +350,15 @@ export function HomepageModulesForm({
     });
   }
 
+  function toggleNewspaperSlug(slug: string) {
+    setSaved(false);
+    setNewspaperSlugs((prev) => {
+      if (prev.includes(slug)) return prev.filter((s) => s !== slug);
+      if (prev.length >= 16) return prev;
+      return [...prev, slug];
+    });
+  }
+
   function setCardLayout(slug: string, layout: CategoryBlockLayout) {
     setSaved(false);
     setCardBlocks((prev) => prev.map((b) => (b.slug === slug ? { ...b, layout } : b)));
@@ -329,6 +370,7 @@ export function HomepageModulesForm({
     const raw = Object.fromEntries(ALL_KEYS.map((key) => [key, enabled[key] ? "1" : "0"]));
     raw.categoryCardSlugs = serializeCategoryBlocks(cardBlocks);
     raw.categorySpotlightSlugs = serializeSlugList(spotlightSlugs);
+    raw.newspaperSlugs = serializeSlugList(newspaperSlugs);
     raw.parityDesign = parityDesign;
     raw.imsakiyeDesign = imsakiyeDesign;
     await saveHomepageModulesAction(raw);
@@ -427,6 +469,41 @@ export function HomepageModulesForm({
                       <p className="mt-2 text-[11px] text-ink-soft">
                         Seçim sırası sekme sırasıdır. Hiç seçmezseniz tüm kategoriler listelenir.
                       </p>
+                    </div>
+                  ) : null}
+
+                  {item.key === "showDailyNewspapers" ? (
+                    <div className="border-t border-border px-4 py-3">
+                      <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                        Ulusal gazeteler · {newspaperSlugs.filter((s) => ALL_NEWSPAPERS.some((n) => n.slug === s && n.region !== "local")).length}/10
+                      </p>
+                      <p className="mb-2 text-[11px] text-ink-soft">
+                        Düzce yerel gazeteleri (Damla, Manşet, Parantez vb.) her zaman otomatik ve önde gelir.
+                        Tıklanınca kapak sitede büyütülür.
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ALL_NEWSPAPERS.filter((p) => p.region !== "local").map((paper) => {
+                          const selected = newspaperSlugs.includes(paper.slug);
+                          const order = selected ? newspaperSlugs.indexOf(paper.slug) + 1 : null;
+                          return (
+                            <button
+                              key={paper.slug}
+                              type="button"
+                              onClick={() => toggleNewspaperSlug(paper.slug)}
+                              disabled={!selected && newspaperSlugs.length >= 16}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold transition-colors disabled:opacity-40",
+                                selected
+                                  ? "border-brand/30 bg-brand/5 text-ink"
+                                  : "border-border bg-white text-ink-soft hover:border-ink/30",
+                              )}
+                            >
+                              {order ? <span className="text-[10px] text-brand">{order}</span> : null}
+                              {paper.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : null}
 

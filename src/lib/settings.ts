@@ -27,10 +27,15 @@ export const DEFAULT_SETTINGS = {
   showRates: "1",
   showTicker: "1",
   showTopHeadlines: "1",
+  showSurmanset: "1",
   showFeatured: "1",
   showLatestFeed: "1",
   showCategorySpotlight: "1",
+  showDailyNewspapers: "1",
+  showFeaturedCompanies: "1",
+  showOfficialAds: "1",
   categorySpotlightSlugs: "",
+  newspaperSlugs: "",
   showVideos: "1",
   showMostRead: "1",
   showTrendingWeek: "1",
@@ -140,21 +145,27 @@ function materializeSettings(map: Record<string, string>): Record<SettingKey, st
   return settings;
 }
 
-const loadSettings = unstable_cache(
-  async () => {
-    try {
-      const rows = await prisma.setting.findMany();
-      return materializeSettings(Object.fromEntries(rows.map((r) => [r.key, r.value])));
-    } catch {
-      return materializeSettings({});
-    }
-  },
-  ["site-settings"],
-  { revalidate: 120, tags: [CACHE_TAGS.settings] },
-);
+async function fetchSettingsFromDb(): Promise<Record<SettingKey, string>> {
+  try {
+    const rows = await prisma.setting.findMany();
+    return materializeSettings(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+  } catch {
+    return materializeSettings({});
+  }
+}
 
-/** İstek başına tek okuma; istekler arası 120 sn önbellek. */
-export const getSettings = cache(loadSettings);
+const loadSettingsCached = unstable_cache(fetchSettingsFromDb, ["site-settings"], {
+  revalidate: 120,
+  tags: [CACHE_TAGS.settings],
+});
+
+/** İstek başına tek okuma; istekler arası 120 sn önbellek (genel site). */
+export const getSettings = cache(loadSettingsCached);
+
+/** Panel formları için önbelleksiz — kayıttan hemen sonra doğru değer görünsün. */
+export async function getSettingsForAdmin() {
+  return fetchSettingsFromDb();
+}
 
 export async function setSetting(key: SettingKey, value: string) {
   return prisma.setting.upsert({

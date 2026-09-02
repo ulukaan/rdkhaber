@@ -10,16 +10,16 @@ export type WeatherSnapshot = {
 };
 
 function labelForCode(code: number): string {
-  if (code === 0) return "Açık";
-  if (code === 1 || code === 2) return "Az bulutlu";
-  if (code === 3) return "Bulutlu";
-  if (code === 45 || code === 48) return "Sisli";
-  if (code >= 51 && code <= 67) return "Yağmurlu";
-  if (code >= 71 && code <= 77) return "Karlı";
-  if (code >= 80 && code <= 82) return "Sağanak";
-  if (code >= 85 && code <= 86) return "Kar yağışlı";
-  if (code >= 95) return "Fırtınalı";
-  return "Değişken";
+  if (code === 0) return "AÇIK";
+  if (code === 1 || code === 2) return "AZ BULUTLU";
+  if (code === 3) return "BULUTLU";
+  if (code === 45 || code === 48) return "SİSLİ";
+  if (code >= 51 && code <= 67) return "YAĞMURLU";
+  if (code >= 71 && code <= 77) return "KARLI";
+  if (code >= 80 && code <= 82) return "SAĞANAK YAĞIŞLI";
+  if (code >= 85 && code <= 86) return "KAR YAĞIŞLI";
+  if (code >= 95) return "FIRTINALI";
+  return "DEĞİŞKEN";
 }
 
 export const getCityWeather = cache(async (cityInput?: CityDef | string | null): Promise<WeatherSnapshot | null> => {

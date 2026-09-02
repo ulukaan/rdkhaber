@@ -1,11 +1,11 @@
-import { getSettings } from "@/lib/settings";
+import { getSettingsForAdmin } from "@/lib/settings";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 
 export const metadata = { title: "Ayarlar" };
 
 export default async function SettingsPage() {
-  const settings = await getSettings();
+  const settings = await getSettingsForAdmin();
 
   return (
     <>

@@ -18,6 +18,8 @@ export type ArticleSummary = {
   headlineSub?: string | null;
   headlineAlign?: string | null;
   headlineImageAlign?: string | null;
+  imageFiveHeadline?: string | null;
+  imageMainHeadline?: string | null;
   author?: {
     id?: string;
     name: string;

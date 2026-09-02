@@ -357,6 +357,17 @@ export const pollSchema = z.object({
     .max(8, "En fazla 8 seçenek"),
 });
 
+export const companySchema = z.object({
+  name: z.string().min(2, "Firma adı gerekli").max(120),
+  logoUrl: optionalSafeMediaUrl,
+  websiteUrl: optionalSafeHttpUrl,
+  category: z.string().max(80).optional().or(z.literal("")),
+  phone: z.string().max(40).optional().or(z.literal("")),
+  description: z.string().max(1000).optional().or(z.literal("")),
+  order: z.coerce.number().int().min(0).max(9999).default(0),
+  active: z.boolean().default(true),
+});
+
 const electionCandidateSchema = z.object({
   id: z.string().optional(),
   raceType: z.enum(["MAYOR", "COUNCIL"]),

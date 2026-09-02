@@ -58,14 +58,18 @@ export function TvGuideClient({
 
   const liveCount = useMemo(() => {
     return schedules.reduce((n, s) => {
-      const hasLive = s.programs.some((p) => statusForRange(p.startMin, p.endMin) === "CANLI");
+      const hasLive = s.programs.some(
+        (p) => statusForRange(p.startMin, p.endMin, undefined, s.date) === "CANLI",
+      );
       return n + (hasLive ? 1 : 0);
     }, 0);
   }, [schedules]);
 
   useEffect(() => {
     if (!active) return;
-    const live = active.programs.find((p) => statusForRange(p.startMin, p.endMin) === "CANLI");
+    const live = active.programs.find(
+      (p) => statusForRange(p.startMin, p.endMin, undefined, active.date) === "CANLI",
+    );
     if (!live) return;
     const el = document.getElementById(`tv-${active.channel.slug}-${live.time}`);
     el?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -79,7 +83,9 @@ export function TvGuideClient({
     );
   }
 
-  const liveProgram = active.programs.find((p) => statusForRange(p.startMin, p.endMin) === "CANLI");
+  const liveProgram = active.programs.find(
+    (p) => statusForRange(p.startMin, p.endMin, undefined, active.date) === "CANLI",
+  );
   const hasLiveWatch = Boolean(getChannelLive(active.channel.slug));
 
   return (
@@ -117,7 +123,9 @@ export function TvGuideClient({
           <div className="flex gap-[15px] overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {schedules.map((s) => {
               const on = s.channel.slug === active.channel.slug;
-              const isLive = s.programs.some((p) => statusForRange(p.startMin, p.endMin) === "CANLI");
+              const isLive = s.programs.some(
+                (p) => statusForRange(p.startMin, p.endMin, undefined, s.date) === "CANLI",
+              );
               const watchable = Boolean(getChannelLive(s.channel.slug));
               const current = s.current;
               return (
@@ -250,7 +258,7 @@ export function TvGuideClient({
           )}
         >
           {active.programs.map((program) => {
-            const status = statusForRange(program.startMin, program.endMin);
+            const status = statusForRange(program.startMin, program.endMin, undefined, active.date);
             const live = status === "CANLI";
             const id = `tv-${active.channel.slug}-${program.time}`;
 

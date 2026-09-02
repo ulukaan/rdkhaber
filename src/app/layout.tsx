@@ -17,6 +17,7 @@ import {
   parseCustomMetaTags,
   sanitizeCustomBodyEndHtml,
 } from "@/lib/custom-code";
+import { buildWebSiteJsonLd } from "@/lib/json-ld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,6 +89,12 @@ export default async function RootLayout({
   const customMeta = parseCustomMetaTags(settings.customHeadHtml);
   const customLinks = parseCustomLinkTags(settings.customHeadHtml);
   const customBodyEndHtml = sanitizeCustomBodyEndHtml(settings.customBodyEndHtml);
+  const siteDescription = settings.metaDescription || settings.siteSlogan;
+  const webSiteJsonLd = buildWebSiteJsonLd({
+    siteName: settings.siteName,
+    description: siteDescription,
+    logoUrl: settings.logoUrl,
+  });
 
   return (
     <html
@@ -102,6 +109,10 @@ export default async function RootLayout({
       }
     >
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html:

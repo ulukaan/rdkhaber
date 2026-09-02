@@ -18,7 +18,7 @@ export const PLACEMENTS: PlacementDef[] = [
   { imageName: "imageMainHeadline", toggleName: "isFeatured", label: "Büyük manşet", hint: "Ana slayt" },
   { imageName: "imageTopHeadline", toggleName: "isBreaking", label: "Son dakika", hint: "Üst bant" },
   { imageName: "imageSpotlight", toggleName: "inSpotlight", label: "Öne çıkan", hint: "Öne çıkanlar alanı" },
-  { imageName: "imageFiveHeadline", toggleName: "inFiveHeadline", label: "Beşli şerit", hint: "Üstteki beş haber" },
+  { imageName: "imageFiveHeadline", toggleName: "inFiveHeadline", label: "Sürmanşet", hint: "Büyük sürmanşet şeridi" },
   { imageName: "imageSocial", label: "Paylaşım görseli", hint: "Boşsa Instagram kartı otomatik üretilir" },
   { imageName: "imageStory", label: "Hikâye görseli", hint: "Dikey 9:16" },
 ];

@@ -60,7 +60,7 @@ export function DayHeadlinesSection({ articles }: { articles: ArticleSummary[] }
   const grid = rest.slice(0, 4);
 
   return (
-    <section className="mt-10" aria-label="Günün Manşetleri">
+    <section aria-label="Günün Manşetleri">
       <LineHeading title="Günün Manşetleri" href="/" />
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         {lead ? (

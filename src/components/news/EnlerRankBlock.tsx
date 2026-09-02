@@ -1,4 +1,4 @@
-import { NewsCard } from "@/components/news/NewsCard";
+import { RankedNewsHoverList } from "@/components/news/RankedNewsHoverList";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
@@ -25,11 +25,7 @@ export function EnlerRankBlock({
           Bu listede henüz haber yok.
         </p>
       ) : (
-        <div>
-          {articles.map((article, index) => (
-            <NewsCard key={article.id} article={article} variant="compact" rank={index + 1} />
-          ))}
-        </div>
+        <RankedNewsHoverList articles={articles} />
       )}
     </section>
   );
