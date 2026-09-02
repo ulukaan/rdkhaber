@@ -43,7 +43,7 @@ export function TvGuideSettingsForm({
     }
     return savedSlugs
       .map((s) => bySlug.get(s))
-      .filter((c): c is TvChannel => Boolean(c) && !c.disabled);
+      .filter((c): c is TvChannel => c != null && !c.disabled);
   });
   const availableChannels = TV_CHANNELS.filter((c) => !c.disabled);
 

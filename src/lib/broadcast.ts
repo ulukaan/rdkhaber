@@ -372,7 +372,7 @@ export function resolveChannels(slugList: string): TvChannel[] {
   const bySlug = new Map(TV_CHANNELS.map((c) => [c.slug, c]));
   return slugs
     .map((slug) => bySlug.get(slug))
-    .filter((c): c is TvChannel => Boolean(c) && !c.disabled);
+    .filter((c): c is TvChannel => c != null && !c.disabled);
 }
 
 /** Anasayfa şeridi: her kanaldan şu an / sıradaki program. */
@@ -400,5 +400,5 @@ export const getTvSchedules = cache(async (): Promise<ChannelSchedule[]> => {
   const schedules = await mapPool(channels, HOME_CONCURRENCY, (ch) =>
     fetchChannelSchedule(ch, FETCH_TIMEOUT_MS),
   );
-  return schedules.filter((s): s is ChannelSchedule => Boolean(s) && s.programs.length > 0);
+  return schedules.filter((s): s is ChannelSchedule => s != null && s.programs.length > 0);
 });

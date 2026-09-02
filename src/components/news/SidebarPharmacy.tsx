@@ -53,7 +53,7 @@ export function SidebarPharmacy({
     start(async () => {
       const result = await loadDutyPharmaciesAction(slug);
       if (result && "error" in result) {
-        setError(result.error);
+        setError(result.error ?? null);
         setItems([]);
         setOpenId("");
         return;

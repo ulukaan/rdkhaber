@@ -29,7 +29,7 @@ export function SidebarLeagueTable({ initial }: { initial: LeagueTable }) {
     start(async () => {
       const result = await loadLeagueTableAction(id);
       if (result && "error" in result) {
-        setError(result.error);
+        setError(result.error ?? null);
         return;
       }
       if (result?.table) setTable(result.table);

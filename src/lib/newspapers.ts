@@ -146,20 +146,19 @@ export async function fetchDuzceLocalCovers(): Promise<NewspaperCover[]> {
         /<div id="mansetdiv">\s*<a[^>]+href="(https:\/\/yerel\.gazeteler\.tv\/mansetler\/resimler\/[^"]+\.jpg)"[^>]*>[\s\S]*?<\/a>\s*<br>\s*([^<]+?)\s*<\/div>/gi,
       ),
     ];
-    return blocks
-      .map((m) => {
-        const imageUrl = normalizeImageUrl(m[1]!, LOCAL_BASE);
-        const name = shortLocalName(m[2] ?? "");
-        if (!name || !imageUrl) return null;
-        return {
-          slug: localSlugFromName(name),
-          name: name.toLocaleUpperCase("tr-TR"),
-          imageUrl,
-          dateLabel: null,
-          region: "local" as const,
-        };
-      })
-      .filter((row): row is NewspaperCover => Boolean(row));
+    return blocks.flatMap((m) => {
+      const imageUrl = normalizeImageUrl(m[1]!, LOCAL_BASE);
+      const name = shortLocalName(m[2] ?? "");
+      if (!name || !imageUrl) return [];
+      const cover: NewspaperCover = {
+        slug: localSlugFromName(name),
+        name: name.toLocaleUpperCase("tr-TR"),
+        imageUrl,
+        dateLabel: null,
+        region: "local",
+      };
+      return [cover];
+    });
   } catch {
     return [];
   }
