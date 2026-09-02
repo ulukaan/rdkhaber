@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { StaticPageHeader } from "@/components/pages/StaticDocument";
-import { PharmacyExternalLinks, PharmacyWidget } from "@/components/services/PharmacyWidget";
+import { PharmacyWidget } from "@/components/services/PharmacyWidget";
 import { DUZCE_DISTRICTS, fetchDutyPharmaciesFromCollectApi } from "@/lib/pharmacy";
 
 export const metadata: Metadata = {
@@ -30,9 +30,6 @@ export default async function PharmacyPage({
         description="Düzce ve ilçelerde bugün nöbetçi eczaneleri görüntüleyin. Gitmeden önce telefonla teyit etmenizi öneririz."
       />
       <Container className="pb-10 pt-2">
-        <div className="mb-6">
-          <PharmacyExternalLinks />
-        </div>
         <PharmacyWidget initialDistrict={initialDistrict} apiPharmacies={apiPharmacies} />
       </Container>
     </>

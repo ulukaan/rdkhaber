@@ -7,7 +7,7 @@ import { CITY_COOKIE, DEFAULT_CITY_SLUG } from "@/lib/cities";
 
 export const metadata: Metadata = {
   title: "Trafik Haritası",
-  description: "Düzce ve çevresinde canlı trafik yoğunluğu — Yandex trafik haritası.",
+  description: "Düzce ve çevresinde canlı trafik yoğunluğu harita üzerinden.",
 };
 
 export default async function TrafficPage() {

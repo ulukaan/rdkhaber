@@ -36,7 +36,7 @@ export function TrafficMap({ initialCity = DEFAULT_CITY_SLUG }: { initialCity?: 
         <div className="flex flex-wrap gap-2">
           <Button href={buildGoogleTrafficMapUrl(city)} variant="outline" size="sm">
             <ExternalLink className="h-4 w-4" aria-hidden />
-            Google trafik
+            Haritada aç
           </Button>
           <Button href={buildGoogleTrafficUrl(city)} variant="outline" size="sm">
             <Navigation className="h-4 w-4" aria-hidden />
@@ -75,8 +75,8 @@ export function TrafficMap({ initialCity = DEFAULT_CITY_SLUG }: { initialCity?: 
       </div>
 
       <p className="text-xs leading-relaxed text-ink-soft">
-        Harita Yandex trafik katmanını gösterir. Yoğunluk anlık değişebilir; kritik güzergâhlar için
-        Google Haritalar trafik görünümünü de kontrol edin.
+        Yoğunluk anlık değişebilir. Kritik güzergâhlar için harita görünümünü ayrıca kontrol etmenizi
+        öneririz.
       </p>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Phone, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { buildPharmacyWidgetUrl, DUZCE_DISTRICTS, type DutyPharmacy } from "@/lib/pharmacy";
 import { cn } from "@/lib/utils";
 
@@ -80,21 +79,8 @@ export function PharmacyWidget({
 
       <p className="text-xs leading-relaxed text-ink-soft">
         Eczaneler ertesi gün <strong>08:30</strong>&apos;a kadar nöbetçidir. Gitmeden önce telefonla
-        teyit etmenizi öneririz. Veriler eczaneleri.org üzerinden güncellenir.
+        teyit etmenizi öneririz.
       </p>
-    </div>
-  );
-}
-
-export function PharmacyExternalLinks() {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button href="https://www.duzce.bel.tr/nobetci-eczaneler" variant="outline" size="sm">
-        Düzce Belediyesi listesi
-      </Button>
-      <Button href="https://www.eczaneler.gen.tr/nobetci-duzce" variant="outline" size="sm">
-        Eczaneler.gen.tr
-      </Button>
     </div>
   );
 }
