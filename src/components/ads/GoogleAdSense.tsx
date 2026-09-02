@@ -1,15 +1,15 @@
 import Script from "next/script";
 
-/** Google AdSense — yayıncı kimliği doluysa script yükler. */
+/** Google AdSense — yayıncı kimliği doluysa ve manuel/otomatik reklam açıksa script yükler. */
 export function GoogleAdSense({
   client,
-  autoAds,
+  enabled,
 }: {
   client: string;
-  autoAds: boolean;
+  enabled: boolean;
 }) {
   const id = client.trim();
-  if (!id || !autoAds) return null;
+  if (!id || !enabled) return null;
 
   return (
     <Script

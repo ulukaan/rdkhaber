@@ -41,7 +41,7 @@ export function GoogleAdsForm({
   return (
     <FormCard
       title="Google Reklamlar (AdSense)"
-      description="Yayıncı kimliği ve otomatik reklamlar. Manuel slotlar Reklam Grupları’ndan yönetilir."
+      description="Yayıncı kimliği ve otomatik reklamlar. Manuel AdSense birimleri Reklam Grupları’ndan kod yapıştırarak eklenir."
       Icon={BadgeDollarSign}
       className="max-w-3xl"
     >

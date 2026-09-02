@@ -8,6 +8,7 @@ import { CookieConsent } from "@/components/consent/CookieConsent";
 import { ConsentModeDefaultScript } from "@/components/consent/ConsentModeDefaultScript";
 import { ConsentModeSync } from "@/components/consent/ConsentModeSync";
 import { GoogleAdSense } from "@/components/ads/GoogleAdSense";
+import { hasActiveAdsenseSlotAds } from "@/lib/ads";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
@@ -81,7 +82,9 @@ export default async function RootLayout({
   const gtmId = settings.googleTagManagerId.trim();
   const adsenseClient = settings.googleAdsenseClient.trim();
   const adsenseAuto = settings.googleAdsenseAutoAds === "1";
-  const googleTagsEnabled = Boolean(gtmId || gaId || (adsenseClient && adsenseAuto));
+  const hasManualAdsense = await hasActiveAdsenseSlotAds();
+  const adsenseEnabled = Boolean(adsenseClient && (adsenseAuto || hasManualAdsense));
+  const googleTagsEnabled = Boolean(gtmId || gaId || adsenseEnabled);
   const customMeta = parseCustomMetaTags(settings.customHeadHtml);
   const customLinks = parseCustomLinkTags(settings.customHeadHtml);
   const customBodyEndHtml = sanitizeCustomBodyEndHtml(settings.customBodyEndHtml);
@@ -125,7 +128,7 @@ export default async function RootLayout({
         <link rel="alternate" type="application/rss+xml" title={`${settings.siteName} RSS`} href="/feed.xml" />
         {googleTagsEnabled ? <ConsentModeDefaultScript /> : null}
         {adsenseClient && adsenseAuto ? (
-          <GoogleAdSense client={adsenseClient} autoAds={adsenseAuto} />
+          <GoogleAdSense client={adsenseClient} enabled={adsenseEnabled} />
         ) : null}
       </head>
       <body className="min-h-full flex flex-col">
@@ -137,7 +140,7 @@ export default async function RootLayout({
           <ConsentModeSync />
           <CookieConsent
             analyticsConfigured={Boolean(gaId || gtmId || customBodyEndHtml)}
-            adsConfigured={Boolean(adsenseClient && adsenseAuto)}
+            adsConfigured={adsenseEnabled}
             gaId={gaId}
             gtmId={gtmId}
             adsenseClient={adsenseClient}

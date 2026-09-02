@@ -24,3 +24,20 @@ export const getActiveAd = cache((code: string) =>
 export function getAllAds() {
   return prisma.adSlot.findMany({ orderBy: { createdAt: "desc" } });
 }
+
+export const hasActiveAdsenseSlotAds = cache(() =>
+  unstable_cache(
+    async () => {
+      try {
+        const count = await prisma.adSlot.count({
+          where: { active: true, kind: "ADSENSE", adsenseSlot: { not: null } },
+        });
+        return count > 0;
+      } catch {
+        return false;
+      }
+    },
+    ["active-adsense-slots"],
+    { revalidate: 120, tags: [CACHE_TAGS.ads] },
+  )(),
+);

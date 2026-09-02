@@ -55,6 +55,9 @@ export default async function AdsPage() {
                           {ad?.active ? "Dolu" : ad ? "Kapalı" : "Boş"}
                         </Badge>
                       </div>
+                      {ad?.kind === "ADSENSE" ? (
+                        <p className="mt-1 text-xs font-semibold text-emerald-700">Google AdSense</p>
+                      ) : null}
                       {size && <p className="mt-2 text-xs text-ink-soft">{size}</p>}
                       {slot.note && <p className="mt-1 text-xs text-ink-soft">{slot.note}</p>}
                       <p className="mt-2 text-sm font-extrabold text-brand">#{slot.code}</p>
@@ -81,6 +84,10 @@ export default async function AdsPage() {
           <li>Açılış (modal) oturum başına bir kez gösterilir.</li>
           <li>Site altı fixed, sayfanın altına yapışır; görsel yoksa gizlenir.</li>
           <li>Boş slot sitede yer kaplamaz.</li>
+          <li>
+            Google AdSense için Reklam Grupları → slota girin → &quot;Google AdSense&quot; seçin →
+            panelden kopyaladığınız kodu yapıştırın.
+          </li>
         </ul>
       </PanelCard>
     </>

@@ -338,16 +338,21 @@ model Page {
 
 // Reklam alanları — katalog kodu (ör. 152, 1003) position alanında tutulur
 model AdSlot {
-  id        String   @id @default(cuid())
-  name      String
-  position  String
-  imageUrl  String
-  targetUrl String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  name           String
+  position       String
+  kind           String   @default("BANNER")
+  imageUrl       String   @default("")
+  targetUrl      String   @default("")
+  adsenseSlot    String?
+  adsenseLayout  String?
+  adsenseFormat  String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
 
   @@unique([position])
   @@index([position, active])
+  @@index([kind, active])
 }
 
 // İhbar Hattı — kimliğini paylaşmak istemeyen kişilerin gönderdiği ihbarlar

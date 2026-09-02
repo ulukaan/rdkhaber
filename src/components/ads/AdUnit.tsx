@@ -1,6 +1,8 @@
 import { getActiveAd } from "@/lib/ads";
+import { getSettings } from "@/lib/settings";
 import { getAdSlotDef, parseSize, formatSlotSize } from "@/lib/ad-slots";
 import { cn } from "@/lib/utils";
+import { GoogleAdUnit } from "@/components/ads/GoogleAdUnit";
 
 export async function AdUnit({
   code,
@@ -14,13 +16,42 @@ export async function AdUnit({
   if (!ad) return null;
 
   const def = getAdSlotDef(code);
+  const label = def?.name ?? code;
+
+  if (ad.kind === "ADSENSE" && ad.adsenseSlot) {
+    const settings = await getSettings();
+    const client = settings.googleAdsenseClient.trim();
+    if (!client) return null;
+
+    return (
+      <aside
+        className={cn("flex justify-center py-3", className)}
+        aria-label={`Reklam ${label}`}
+      >
+        <div className="w-full max-w-full">
+          <span className="mb-1 block text-center text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
+            Reklam
+          </span>
+          <GoogleAdUnit
+            client={client}
+            slot={ad.adsenseSlot}
+            layout={ad.adsenseLayout}
+            format={ad.adsenseFormat}
+          />
+        </div>
+      </aside>
+    );
+  }
+
+  if (!ad.imageUrl || !ad.targetUrl) return null;
+
   const desktop = parseSize(def?.desktop);
   const mobile = parseSize(def?.mobile);
 
   return (
     <aside
       className={cn("flex justify-center py-3", className)}
-      aria-label={`Reklam ${def?.name ?? code}`}
+      aria-label={`Reklam ${label}`}
     >
       <a
         href={ad.targetUrl}

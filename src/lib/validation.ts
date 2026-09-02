@@ -211,17 +211,80 @@ export const pageSchema = z.object({
 });
 
 import { AD_SLOT_CODES } from "@/lib/ad-slots";
+import { parseAdsenseSnippet } from "@/lib/adsense";
 
-export const adSchema = z.object({
-  name: z.string().min(2, "Reklam adı gerekli"),
-  position: z.enum(AD_SLOT_CODES),
-  imageUrl: z.string().min(1, "Görsel gerekli"),
-  targetUrl: z
-    .string()
-    .min(1, "Hedef bağlantı gerekli")
-    .refine(isSafeHttpUrl, "Yalnızca http veya https bağlantıları kullanılabilir"),
-  active: z.coerce.boolean().default(true),
-});
+const adKindSchema = z.enum(["BANNER", "ADSENSE"]);
+
+export const adSchema = z
+  .object({
+    name: z.string().min(2, "Reklam adı gerekli"),
+    position: z.enum(AD_SLOT_CODES),
+    kind: adKindSchema.default("BANNER"),
+    imageUrl: z.string().optional(),
+    targetUrl: z.string().optional(),
+    adsenseCode: z.string().optional(),
+    adsenseSlot: z.string().optional(),
+    adsenseLayout: z.string().optional(),
+    adsenseFormat: z.string().optional(),
+    active: z.coerce.boolean().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (data.kind === "BANNER") {
+      const imageUrl = (data.imageUrl ?? "").trim();
+      const targetUrl = (data.targetUrl ?? "").trim();
+      if (!imageUrl) {
+        ctx.addIssue({ code: "custom", message: "Görsel gerekli", path: ["imageUrl"] });
+      }
+      if (!targetUrl) {
+        ctx.addIssue({ code: "custom", message: "Hedef bağlantı gerekli", path: ["targetUrl"] });
+      } else if (!isSafeHttpUrl(targetUrl)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Yalnızca http veya https bağlantıları kullanılabilir",
+          path: ["targetUrl"],
+        });
+      }
+      return;
+    }
+
+    const parsed = parseAdsenseSnippet(data.adsenseCode ?? "");
+    const slot = (data.adsenseSlot ?? parsed?.slot ?? "").trim();
+    if (!slot) {
+      ctx.addIssue({
+        code: "custom",
+        message: "AdSense kodundan slot bulunamadı. Kodu yapıştırın veya slot numarasını girin.",
+        path: ["adsenseCode"],
+      });
+    }
+  })
+  .transform((data) => {
+    if (data.kind === "BANNER") {
+      return {
+        name: data.name,
+        position: data.position,
+        kind: data.kind,
+        imageUrl: (data.imageUrl ?? "").trim(),
+        targetUrl: (data.targetUrl ?? "").trim(),
+        adsenseSlot: null as string | null,
+        adsenseLayout: null as string | null,
+        adsenseFormat: null as string | null,
+        active: data.active,
+      };
+    }
+
+    const parsed = parseAdsenseSnippet(data.adsenseCode ?? "");
+    return {
+      name: data.name,
+      position: data.position,
+      kind: data.kind,
+      imageUrl: "",
+      targetUrl: "",
+      adsenseSlot: (data.adsenseSlot ?? parsed?.slot ?? "").trim() || null,
+      adsenseLayout: (data.adsenseLayout ?? parsed?.layout ?? "").trim() || null,
+      adsenseFormat: (data.adsenseFormat ?? parsed?.format ?? "").trim() || null,
+      active: data.active,
+    };
+  });
 
 export const gallerySchema = z.object({
   title: z.string().min(2, "Başlık gerekli"),
