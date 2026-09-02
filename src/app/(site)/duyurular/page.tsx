@@ -6,7 +6,7 @@ import { fetchMunicipalityAnnouncements } from "@/lib/municipality-announcements
 
 export const metadata: Metadata = {
   title: "Duyurular",
-  description: "Düzce’de güncel belediye duyuruları, su kesintisi ve altyapı bildirimleri.",
+  description: "Düzce’de güncel duyurular, su kesintisi ve altyapı bildirimleri.",
 };
 
 export default async function AnnouncementsPage({
