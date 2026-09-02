@@ -1,8 +1,9 @@
 import { getActiveAd } from "@/lib/ads";
 import { getSettings } from "@/lib/settings";
+import { resolveAdsensePlacement } from "@/lib/adsense-runtime";
 import { getAdSlotDef, parseSize, formatSlotSize } from "@/lib/ad-slots";
 import { cn } from "@/lib/utils";
-import { GoogleAdUnitGate } from "@/components/ads/GoogleAdUnitGate";
+import { GoogleAdUnit } from "@/components/ads/GoogleAdUnit";
 
 export async function AdUnit({
   code,
@@ -23,12 +24,15 @@ export async function AdUnit({
     const client = settings.googleAdsenseClient.trim();
     if (!client) return null;
 
+    const placement = resolveAdsensePlacement(code, ad.adsenseLayout, ad.adsenseFormat);
+
     return (
-      <GoogleAdUnitGate
+      <GoogleAdUnit
         client={client}
         slot={ad.adsenseSlot}
-        layout={ad.adsenseLayout}
-        format={ad.adsenseFormat}
+        slotCode={code}
+        layout={placement.layout}
+        format={placement.format}
         label={label}
         className={cn("flex justify-center py-3", className)}
       />

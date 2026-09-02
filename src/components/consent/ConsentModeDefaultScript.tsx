@@ -8,9 +8,9 @@ export function ConsentModeDefaultScript() {
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{
-  ad_storage:'denied',
-  ad_user_data:'denied',
-  ad_personalization:'denied',
+  ad_storage:'granted',
+  ad_user_data:'granted',
+  ad_personalization:'granted',
   analytics_storage:'denied',
   functionality_storage:'granted',
   security_storage:'granted',

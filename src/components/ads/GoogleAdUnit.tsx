@@ -1,69 +1,74 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { CONSENT_EVENT, readConsentCookie } from "@/lib/cookie-consent";
+import { useEffect, useId, useRef } from "react";
+import { CONSENT_EVENT } from "@/lib/cookie-consent";
+import {
+  ADSENSE_REFRESH,
+  ADSENSE_SCRIPT_READY,
+  requestAdSenseFill,
+} from "@/lib/adsense-runtime";
 
 type Props = {
   client: string;
   slot: string;
+  slotCode: string;
   layout?: string | null;
   format?: string | null;
+  label: string;
+  className?: string;
 };
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
-  }
-}
-
-function adsConsentGranted() {
-  const consent = readConsentCookie();
-  return consent?.ads === true;
-}
-
-function requestAdFill() {
-  try {
-    window.adsbygoogle = window.adsbygoogle || [];
-    window.adsbygoogle.push({});
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** Google AdSense manuel birimi — script ve çerez onayı sonrası doldurulur. */
-export function GoogleAdUnit({ client, slot, layout, format }: Props) {
+/** Google AdSense manuel birimi — script hazır olunca doldurulur. */
+export function GoogleAdUnit({
+  client,
+  slot,
+  slotCode,
+  layout,
+  format,
+  label,
+  className,
+}: Props) {
   const insRef = useRef<HTMLModElement>(null);
-  const filledRef = useRef(false);
+  const uid = useId();
 
   useEffect(() => {
     let cancelled = false;
     let timer: number | undefined;
+    let attempts = 0;
 
     const tryFill = () => {
-      if (cancelled || filledRef.current) return;
-      if (!adsConsentGranted()) return;
-      if (requestAdFill()) {
-        filledRef.current = true;
-        return;
-      }
-      timer = window.setTimeout(tryFill, 400);
+      if (cancelled || !insRef.current) return;
+      attempts += 1;
+      requestAdSenseFill();
+
+      const filled =
+        insRef.current.querySelector("iframe") ||
+        insRef.current.getAttribute("data-ad-status") === "filled";
+      if (filled || attempts >= 60) return;
+      timer = window.setTimeout(tryFill, 500);
     };
 
-    tryFill();
-
-    const onConsent = () => {
-      filledRef.current = false;
-      tryFill();
+    const schedule = () => {
+      if (cancelled) return;
+      attempts = 0;
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(tryFill);
+      });
     };
-    window.addEventListener(CONSENT_EVENT, onConsent);
+
+    schedule();
+    window.addEventListener(ADSENSE_SCRIPT_READY, schedule);
+    window.addEventListener(ADSENSE_REFRESH, schedule);
+    window.addEventListener(CONSENT_EVENT, schedule);
 
     return () => {
       cancelled = true;
       if (timer) window.clearTimeout(timer);
-      window.removeEventListener(CONSENT_EVENT, onConsent);
+      window.removeEventListener(ADSENSE_SCRIPT_READY, schedule);
+      window.removeEventListener(ADSENSE_REFRESH, schedule);
+      window.removeEventListener(CONSENT_EVENT, schedule);
     };
-  }, [client, slot, layout, format]);
+  }, [client, slot, slotCode, layout, format, uid]);
 
   const attrs: Record<string, string> = {
     className: "adsbygoogle",
@@ -75,10 +80,16 @@ export function GoogleAdUnit({ client, slot, layout, format }: Props) {
   if (!layout) attrs["data-full-width-responsive"] = "true";
 
   return (
-    <ins
-      ref={insRef}
-      {...attrs}
-      style={{ display: "block", textAlign: "center", minHeight: 90 }}
-    />
+    <aside
+      className={className ?? "flex justify-center py-3"}
+      aria-label={`Reklam ${label}`}
+    >
+      <div className="w-full max-w-full">
+        <span className="mb-1 block text-center text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
+          Reklam
+        </span>
+        <ins ref={insRef} {...attrs} style={{ display: "block", textAlign: "center", minHeight: 90 }} />
+      </div>
+    </aside>
   );
 }
