@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { User } from "lucide-react";
 import { authorHref } from "@/lib/author-path";
+import { SafeMediaImage } from "@/components/ui/SafeMediaImage";
 
 export function AuthorByline({
   name,
@@ -15,16 +18,23 @@ export function AuthorByline({
   const label = name.trim();
   if (!label) return null;
 
+  const avatar = author?.avatarUrl ? (
+    <SafeMediaImage
+      src={author.avatarUrl}
+      fallbackName={label}
+      variant="avatar"
+      iconFallback
+      className="h-7 w-7 rounded-full object-cover"
+    />
+  ) : (
+    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface text-ink-soft">
+      <User className="h-3.5 w-3.5" aria-hidden />
+    </span>
+  );
+
   const inner = (
     <>
-      {author?.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={author.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
-      ) : (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface text-ink-soft">
-          <User className="h-3.5 w-3.5" aria-hidden />
-        </span>
-      )}
+      {avatar}
       <span>
         <span className="text-ink-soft">Yazar · </span>
         <span className="font-extrabold text-ink">{label}</span>

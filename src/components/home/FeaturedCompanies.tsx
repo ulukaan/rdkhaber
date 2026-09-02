@@ -1,5 +1,8 @@
+"use client";
+
 import { MoreHorizontal } from "lucide-react";
 import type { FeaturedCompany } from "@/lib/companies";
+import { SafeMediaImage } from "@/components/ui/SafeMediaImage";
 
 const NAVY = "#0a2f5c";
 
@@ -24,12 +27,12 @@ export function FeaturedCompanies({ items }: { items: FeaturedCompany[] }) {
             <>
               <span className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden border border-border bg-white p-3 transition-shadow group-hover:shadow-sm">
                 {company.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <SafeMediaImage
                     src={company.logoUrl}
                     alt={`${company.name} logosu`}
+                    fallbackName={company.name}
+                    variant="logo"
                     className="max-h-full max-w-full object-contain"
-                    loading="lazy"
                   />
                 ) : (
                   <span className="text-xs font-bold text-ink-soft">{company.name}</span>
