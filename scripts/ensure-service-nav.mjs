@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 const SERVICE_LINKS = [
   { label: "Nöbetçi Eczane", href: "/eczane", order: 0 },
   { label: "Trafik Haritası", href: "/trafik", order: 1 },
+  { label: "Vefat Edenler", href: "/vefat", order: 2 },
 ];
 
 async function main() {

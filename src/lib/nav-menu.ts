@@ -127,14 +127,15 @@ export async function getDefaultNav(location: NavLocation): Promise<NavLink[]> {
     return [
       { label: "Nöbetçi Eczane", href: "/eczane", visible: true, order: 0 },
       { label: "Trafik Haritası", href: "/trafik", visible: true, order: 1 },
-      { label: "Yayın Akışı", href: "/yayin-akisi", visible: true, order: 2 },
-      { label: "Burçlar", href: "/burclar", visible: true, order: 3 },
-      { label: "TarifPark", href: "https://tarifpark.com/", visible: true, order: 4 },
-      { label: "Video Haberler", href: "/video-haberler", visible: true, order: 5 },
-      { label: "Foto Galeri", href: "/foto-galeri", visible: true, order: 6 },
-      { label: "Enler", href: "/enler", visible: true, order: 7 },
-      { label: "Haber Gönder", href: "/haber-gonder", visible: true, order: 8 },
-      { label: "İhbar Hattı", href: "/ihbar-hatti", visible: true, order: 9 },
+      { label: "Vefat Edenler", href: "/vefat", visible: true, order: 2 },
+      { label: "Yayın Akışı", href: "/yayin-akisi", visible: true, order: 3 },
+      { label: "Burçlar", href: "/burclar", visible: true, order: 4 },
+      { label: "TarifPark", href: "https://tarifpark.com/", visible: true, order: 5 },
+      { label: "Video Haberler", href: "/video-haberler", visible: true, order: 6 },
+      { label: "Foto Galeri", href: "/foto-galeri", visible: true, order: 7 },
+      { label: "Enler", href: "/enler", visible: true, order: 8 },
+      { label: "Haber Gönder", href: "/haber-gonder", visible: true, order: 9 },
+      { label: "İhbar Hattı", href: "/ihbar-hatti", visible: true, order: 10 },
     ];
   }
 
