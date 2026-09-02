@@ -36,8 +36,15 @@ export function GoogleAdUnit({
     let timer: number | undefined;
     let attempts = 0;
 
+    const scriptReady = () =>
+      Boolean(document.querySelector('script[src*="adsbygoogle.js"]'));
+
     const tryFill = () => {
       if (cancelled || !insRef.current) return;
+      if (!scriptReady()) {
+        timer = window.setTimeout(tryFill, 300);
+        return;
+      }
       attempts += 1;
       requestAdSenseFill();
 

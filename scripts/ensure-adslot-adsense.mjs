@@ -44,9 +44,13 @@ async function main() {
     await prisma.$executeRawUnsafe("ALTER TABLE `AdSlot` ADD COLUMN `adsenseFormat` TEXT NULL");
   }
   if (!(await indexExists("AdSlot", "AdSlot_kind_active_idx"))) {
-    await prisma.$executeRawUnsafe(
-      "CREATE INDEX `AdSlot_kind_active_idx` ON `AdSlot`(`kind`, `active`)",
-    );
+    try {
+      await prisma.$executeRawUnsafe(
+        "CREATE INDEX `AdSlot_kind_active_idx` ON `AdSlot`(`kind`(16), `active`)",
+      );
+    } catch {
+      // Eski MySQL sürümlerinde atlanır — işlevselliği etkilemez.
+    }
   }
 
   console.log("AdSlot AdSense columns ready");
