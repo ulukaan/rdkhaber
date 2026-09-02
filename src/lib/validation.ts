@@ -211,7 +211,7 @@ export const pageSchema = z.object({
 });
 
 import { AD_SLOT_CODES } from "@/lib/ad-slots";
-import { parseAdsenseSnippet } from "@/lib/adsense";
+import { parseAdsenseSnippet, resolveAdsenseSlot } from "@/lib/adsense";
 
 const adKindSchema = z.enum(["BANNER", "ADSENSE"]);
 
@@ -247,8 +247,10 @@ export const adSchema = z
       return;
     }
 
-    const parsed = parseAdsenseSnippet(data.adsenseCode ?? "");
-    const slot = (data.adsenseSlot ?? parsed?.slot ?? "").trim();
+    const slot = resolveAdsenseSlot({
+      code: data.adsenseCode,
+      slot: data.adsenseSlot,
+    });
     if (!slot) {
       ctx.addIssue({
         code: "custom",
@@ -273,13 +275,17 @@ export const adSchema = z
     }
 
     const parsed = parseAdsenseSnippet(data.adsenseCode ?? "");
+    const slot = resolveAdsenseSlot({
+      code: data.adsenseCode,
+      slot: data.adsenseSlot,
+    });
     return {
       name: data.name,
       position: data.position,
       kind: data.kind,
       imageUrl: "",
       targetUrl: "",
-      adsenseSlot: (data.adsenseSlot ?? parsed?.slot ?? "").trim() || null,
+      adsenseSlot: slot || null,
       adsenseLayout: (data.adsenseLayout ?? parsed?.layout ?? "").trim() || null,
       adsenseFormat: (data.adsenseFormat ?? parsed?.format ?? "").trim() || null,
       active: data.active,

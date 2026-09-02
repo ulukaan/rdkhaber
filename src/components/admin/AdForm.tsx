@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { FormCard, FieldHint } from "@/components/admin/FormCard";
 import { FormActions } from "@/components/admin/PanelUI";
 import { AD_GROUPS, formatSlotSize, getAdSlotDef } from "@/lib/ad-slots";
-import { buildAdsenseSnippet } from "@/lib/adsense";
+import { buildAdsenseSnippet, resolveAdsenseSlot } from "@/lib/adsense";
 
 type AdKind = "BANNER" | "ADSENSE";
 
@@ -37,9 +37,7 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
   const [kind, setKind] = useState<AdKind>(
     defaults?.kind === "ADSENSE" ? "ADSENSE" : "BANNER",
   );
-  const isEdit = Boolean(defaults?.id);
-  const def = getAdSlotDef(position);
-  const defaultAdsenseCode = useMemo(
+  const initialAdsenseCode = useMemo(
     () =>
       defaults?.kind === "ADSENSE"
         ? buildAdsenseSnippet({
@@ -50,18 +48,26 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
         : "",
     [defaults],
   );
+  const [adsenseCode, setAdsenseCode] = useState(initialAdsenseCode);
+  const [adsenseSlot, setAdsenseSlot] = useState(defaults?.adsenseSlot ?? "");
+  const isEdit = Boolean(defaults?.id);
+  const def = getAdSlotDef(position);
+  const detectedSlot = useMemo(
+    () => resolveAdsenseSlot({ code: adsenseCode, slot: adsenseSlot }),
+    [adsenseCode, adsenseSlot],
+  );
 
   const onSubmit = async (formData: FormData) => {
     setLoading(true);
     setError(null);
     const raw = {
       name: String(formData.get("name") ?? ""),
-      position: String(formData.get("position") ?? "152"),
-      kind: String(formData.get("kind") ?? "BANNER"),
+      position,
+      kind,
       imageUrl: String(formData.get("imageUrl") ?? ""),
       targetUrl: String(formData.get("targetUrl") ?? ""),
-      adsenseCode: String(formData.get("adsenseCode") ?? ""),
-      adsenseSlot: String(formData.get("adsenseSlot") ?? ""),
+      adsenseCode,
+      adsenseSlot,
       active: formData.get("active") === "on",
     };
     const result = isEdit ? await updateAdAction(defaults!.id!, raw) : await createAdAction(raw);
@@ -81,10 +87,12 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
       className="max-w-xl"
     >
       <form onSubmit={clientFormSubmit(onSubmit)} className="flex flex-col gap-4">
+        <input type="hidden" name="position" value={position} />
+        <input type="hidden" name="kind" value={kind} />
+
         <FieldGroup label="Slot" htmlFor="position">
           <Select
             id="position"
-            name="position"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
           >
@@ -112,7 +120,6 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-ink">
               <input
                 type="radio"
-                name="kind"
                 value="BANNER"
                 checked={kind === "BANNER"}
                 onChange={() => setKind("BANNER")}
@@ -123,7 +130,6 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-ink">
               <input
                 type="radio"
-                name="kind"
                 value="ADSENSE"
                 checked={kind === "ADSENSE"}
                 onChange={() => setKind("ADSENSE")}
@@ -161,27 +167,40 @@ export function AdForm({ defaults }: { defaults?: Defaults }) {
             <FieldGroup label="AdSense kodu" htmlFor="adsenseCode">
               <Textarea
                 id="adsenseCode"
-                name="adsenseCode"
                 rows={8}
-                defaultValue={defaultAdsenseCode}
-                placeholder={'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-..." ...></script>\n<ins class="adsbygoogle" ...></ins>\n<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>'}
+                value={adsenseCode}
+                onChange={(e) => setAdsenseCode(e.target.value)}
+                placeholder={'<ins class="adsbygoogle" data-ad-slot="2422679742" ...></ins>'}
                 className="font-mono text-xs"
                 spellCheck={false}
               />
               <FieldHint>
-                AdSense panelindeki tüm kodu olduğu gibi yapıştırın. Slot numarası otomatik okunur.
+                AdSense panelindeki kodu yapıştırın. Slot numarası otomatik okunur; okunmazsa
+                alttaki kutuya yazın.
               </FieldHint>
+              {detectedSlot ? (
+                <p className="mt-2 text-xs font-semibold text-emerald-700">
+                  Algılanan slot: {detectedSlot}
+                </p>
+              ) : adsenseCode.trim() ? (
+                <p className="mt-2 text-xs font-medium text-brand">
+                  Slot henüz okunamadı — aşağıya slot numarasını elle yazın.
+                </p>
+              ) : null}
             </FieldGroup>
-            <FieldGroup label="Slot numarası (isteğe bağlı)" htmlFor="adsenseSlot">
+            <FieldGroup label="Slot numarası" htmlFor="adsenseSlot">
               <Input
                 id="adsenseSlot"
-                name="adsenseSlot"
-                defaultValue={defaults?.adsenseSlot ?? ""}
-                placeholder="2422679742"
+                value={adsenseSlot}
+                onChange={(e) => setAdsenseSlot(e.target.value)}
+                placeholder="örn. 2422679742"
                 inputMode="numeric"
                 autoComplete="off"
               />
-              <FieldHint>Kod yapıştırdıysanız boş bırakabilirsiniz.</FieldHint>
+              <FieldHint>
+                Gri yazı örnek metindir, dolu değildir. Kod okunmazsa slot numarasını buraya
+                yazın.
+              </FieldHint>
             </FieldGroup>
           </>
         )}
