@@ -33,6 +33,8 @@ export const SERVICE_LINKS: SiteMenuLink[] = [
   { label: "Nöbetçi Eczane", href: "/eczane" },
   { label: "Trafik Haritası", href: "/trafik" },
   { label: "Vefat Edenler", href: "/vefat" },
+  { label: "İmsakiye", href: "/imsakiye" },
+  { label: "Duyurular", href: "/duyurular" },
   { label: "Yayın Akışı", href: "/yayin-akisi" },
   { label: "Burçlar", href: "/burclar" },
   { label: "Video Haberler", href: "/video-haberler" },

@@ -24,9 +24,110 @@ export type PrayerDay = {
   slots: PrayerSlot[];
 };
 
+export type PrayerCalendarDay = {
+  day: number;
+  readable: string;
+  gregorian: string;
+  hijri: string;
+  slots: PrayerSlot[];
+};
+
 function cleanTime(raw: string) {
   return raw.trim().slice(0, 5);
 }
+
+function parseCalendarDay(row: {
+  timings?: Record<string, string>;
+  date?: {
+    readable?: string;
+    gregorian?: { date?: string; day?: string };
+    hijri?: { day?: string; month?: { en?: string }; year?: string };
+  };
+}): PrayerCalendarDay | null {
+  const timings = row.timings;
+  if (!timings) return null;
+
+  const slots: PrayerSlot[] = [];
+  for (const slot of PRAYER_SLOTS) {
+    const time = timings[slot.key];
+    if (!time) continue;
+    slots.push({ key: slot.key, label: slot.label, time: cleanTime(time) });
+  }
+  if (slots.length === 0) return null;
+
+  const hijri = row.date?.hijri;
+  const hijriLabel = hijri?.day
+    ? `${hijri.day} ${hijri.month?.en ?? ""} ${hijri.year ?? ""}`.trim()
+    : "";
+
+  const dayNum = Number(row.date?.gregorian?.day ?? 0);
+  if (!dayNum) return null;
+
+  return {
+    day: dayNum,
+    readable: row.date?.readable ?? "",
+    gregorian: row.date?.gregorian?.date ?? "",
+    hijri: hijriLabel,
+    slots,
+  };
+}
+
+export function currentMonthYearInIstanbul(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+  })
+    .formatToParts(now)
+    .reduce<Record<string, string>>((acc, part) => {
+      if (part.type !== "literal") acc[part.type] = part.value;
+      return acc;
+    }, {});
+  return {
+    month: Number(parts.month),
+    year: Number(parts.year),
+  };
+}
+
+export const getPrayerCalendar = cache(
+  async (
+    cityInput?: CityDef | string | null,
+    month?: number,
+    year?: number,
+  ): Promise<PrayerCalendarDay[] | null> => {
+    const city = typeof cityInput === "string" || cityInput == null ? resolveCity(cityInput) : cityInput;
+    const current = currentMonthYearInIstanbul();
+    const targetMonth = month && month >= 1 && month <= 12 ? month : current.month;
+    const targetYear = year && year >= 2000 ? year : current.year;
+    const url =
+      `https://api.aladhan.com/v1/calendarByCity?city=${encodeURIComponent(city.query)}` +
+      `&country=Turkey&method=13&month=${targetMonth}&year=${targetYear}`;
+    try {
+      const res = await fetch(url, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) return null;
+      const json = (await res.json()) as {
+        data?: Array<{
+          timings?: Record<string, string>;
+          date?: {
+            readable?: string;
+            gregorian?: { date?: string; day?: string };
+            hijri?: { day?: string; month?: { en?: string }; year?: string };
+          };
+        }>;
+      };
+      const rows = json.data ?? [];
+      return rows
+        .map(parseCalendarDay)
+        .filter((row): row is PrayerCalendarDay => Boolean(row));
+    } catch {
+      return null;
+    }
+  },
+);
 
 export function getNextPrayerSlot(day: PrayerDay, now = new Date()): PrayerSlot | null {
   if (day.slots.length === 0) return null;

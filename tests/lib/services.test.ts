@@ -18,6 +18,25 @@ import {
   parseTrDate,
 } from "@/lib/obituaries";
 import { buildYandexTrafficWidgetUrl } from "@/lib/traffic";
+import {
+  filterAnnouncements,
+  isUtilityOutageAnnouncement,
+  parseAnnouncementDetailFromHtml,
+  parseAnnouncementsListFromHtml,
+} from "@/lib/municipality-announcements";
+import { currentMonthYearInIstanbul } from "@/lib/prayer-times";
+
+const ANNOUNCEMENT_LIST_FIXTURE = `<a href="/duyurular/su-kesintisi-duyurusu" class="ilanlar-list-item">
+<div class="ilanlar-list-item-title">MERKEZ MAHALLESİ SU KESİNTİSİ</div></a>
+<a href="/duyurular/2026-gelir-tarifesi" class="ilanlar-list-item">
+<div class="ilanlar-list-item-title">2026 GELİR TARİFESİ</div></a>`;
+
+const ANNOUNCEMENT_DETAIL_FIXTURE = `<h1 class="article-title">2026 GELİR TARİFESİ</h1>
+<div class="article-meta"><span><i class="icon icon-calendar"></i> 13 Ağustos 2026, Perşembe</span></div>
+<div class="article-body"><p>Test duyuru metni.</p></div>
+<div class="article-attachments"><a href="/uploads/ekler/test.pdf" class="article-attachment-item">
+<span class="article-attachment-ext">PDF</span><span class="article-attachment-name">test.pdf</span>
+<span class="article-attachment-size">12 KB</span></a></div>`;
 
 describe("service urls", () => {
   it("builds pharmacy widget url with district", () => {
@@ -48,5 +67,35 @@ describe("obituaries", () => {
     expect(parseTrDate("02.09.2026")).toBe("2026-09-02");
     const entries = parseObituariesFromHtml(FIXTURE);
     expect(filterObituariesByBurialDate(entries, "2026-09-02")).toHaveLength(1);
+  });
+});
+
+describe("municipality announcements", () => {
+  it("parses announcement list", () => {
+    const items = parseAnnouncementsListFromHtml(ANNOUNCEMENT_LIST_FIXTURE);
+    expect(items).toHaveLength(2);
+    expect(items[0]?.slug).toBe("su-kesintisi-duyurusu");
+    expect(isUtilityOutageAnnouncement(items[0]!.title)).toBe(true);
+  });
+
+  it("filters utility announcements", () => {
+    const items = parseAnnouncementsListFromHtml(ANNOUNCEMENT_LIST_FIXTURE);
+    expect(filterAnnouncements(items, null, true)).toHaveLength(1);
+  });
+
+  it("parses announcement detail", () => {
+    const detail = parseAnnouncementDetailFromHtml(ANNOUNCEMENT_DETAIL_FIXTURE, "2026-gelir-tarifesi");
+    expect(detail?.title).toBe("2026 GELİR TARİFESİ");
+    expect(detail?.publishedLabel).toContain("13 Ağustos 2026");
+    expect(detail?.html).toContain("Test duyuru metni");
+    expect(detail?.attachments[0]?.href).toContain("test.pdf");
+  });
+});
+
+describe("prayer calendar helpers", () => {
+  it("returns istanbul month/year", () => {
+    const value = currentMonthYearInIstanbul(new Date("2026-09-02T10:00:00+03:00"));
+    expect(value.month).toBe(9);
+    expect(value.year).toBe(2026);
   });
 });
