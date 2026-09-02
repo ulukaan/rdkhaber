@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { activeBreakingWhere } from "@/lib/breaking-news";
+import { fetchBreakingTickerItems } from "@/lib/breaking-ticker";
 
 function inCategorySlugs(slugs: string[]) {
   return {
@@ -363,13 +364,7 @@ export function getEditorArticles(take = 5) {
 }
 
 export const getBreakingTickerItems = unstable_cache(
-  async () =>
-    prisma.article.findMany({
-      where: { status: "PUBLISHED", ...activeBreakingWhere() },
-      orderBy: { publishedAt: "desc" },
-      take: 10,
-      select: { title: true, slug: true },
-    }),
+  fetchBreakingTickerItems,
   ["breaking-ticker"],
-  { revalidate: 30, tags: [CACHE_TAGS.breaking] },
+  { revalidate: 5, tags: [CACHE_TAGS.breaking] },
 );

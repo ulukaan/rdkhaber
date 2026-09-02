@@ -11,10 +11,12 @@ export function BreakingTickerTrack({
 }) {
   const [paused, setPaused] = useState(false);
   const loop = [...items, ...items];
+  const trackKey = items.map((item) => item.slug).join("|");
 
   return (
     <div className="relative min-w-0 flex-1 overflow-hidden">
       <div
+        key={trackKey}
         className={cn("ticker-track", paused && "is-paused")}
         onTouchStart={() => setPaused(true)}
         onTouchEnd={() => setPaused(false)}
