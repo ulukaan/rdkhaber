@@ -30,6 +30,8 @@ export const DISTRICT_SLUGS = [
 ] as const;
 
 export const SERVICE_LINKS: SiteMenuLink[] = [
+  { label: "Nöbetçi Eczane", href: "/eczane" },
+  { label: "Trafik Haritası", href: "/trafik" },
   { label: "Yayın Akışı", href: "/yayin-akisi" },
   { label: "Burçlar", href: "/burclar" },
   { label: "Video Haberler", href: "/video-haberler" },

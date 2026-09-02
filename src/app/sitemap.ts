@@ -11,6 +11,8 @@ function staticSitemapEntries(base: string): MetadataRoute.Sitemap {
     { url: `${base}/foto-galeri`, changeFrequency: "daily", priority: 0.6 },
     { url: `${base}/video-haberler`, changeFrequency: "daily", priority: 0.6 },
     { url: `${base}/yayin-akisi`, changeFrequency: "hourly", priority: 0.5 },
+    { url: `${base}/eczane`, changeFrequency: "hourly", priority: 0.55 },
+    { url: `${base}/trafik`, changeFrequency: "hourly", priority: 0.55 },
     { url: `${base}/secim`, changeFrequency: "hourly", priority: 0.7 },
     { url: `${base}/burclar`, changeFrequency: "daily", priority: 0.4 },
     { url: `${base}/iletisim`, changeFrequency: "monthly", priority: 0.4 },

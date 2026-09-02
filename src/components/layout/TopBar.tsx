@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, Megaphone, Sun } from "lucide-react";
+import { Cloud, CloudFog, CloudLightning, CloudRain, CloudSnow, Megaphone, Pill, Sun, TrafficCone } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { TodayDate } from "@/components/layout/TodayDate";
 import { CitySelect } from "@/components/layout/CitySelect";
@@ -61,6 +61,14 @@ export function TopBar({
           ) : null}
         </div>
         <nav className="flex shrink-0 items-center gap-4" aria-label="Hızlı erişim">
+          <Link href="/eczane" className={itemClass}>
+            <Pill className="h-3.5 w-3.5" aria-hidden />
+            Nöbetçi Eczane
+          </Link>
+          <Link href="/trafik" className={itemClass}>
+            <TrafficCone className="h-3.5 w-3.5" aria-hidden />
+            Trafik
+          </Link>
           <Link href="/ihbar-hatti" className={itemClass}>
             <Megaphone className="h-3.5 w-3.5" aria-hidden />
             İhbar Hattı
