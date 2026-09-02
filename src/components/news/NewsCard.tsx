@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CoverImage } from "@/components/news/CoverImage";
 import { Badge } from "@/components/ui/Badge";
+import { BreakingBadge } from "@/components/news/BreakingBadge";
+import { isActiveBreaking } from "@/lib/breaking-news";
 import { formatRelativeTime } from "@/lib/utils";
 import type { ArticleSummary } from "@/types/article";
 import { cn } from "@/lib/utils";
@@ -148,9 +150,9 @@ export function NewsCard({
           className="h-full min-h-[inherit]"
           sizes={isHero ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
         />
-        {article.isBreaking && (
+        {isActiveBreaking(article) && (
           <span className="absolute left-3 top-3 z-[2]">
-            <Badge variant="live">Son Dakika</Badge>
+            <BreakingBadge />
           </span>
         )}
       </Link>

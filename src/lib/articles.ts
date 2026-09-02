@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { activeBreakingWhere } from "@/lib/breaking-news";
 
 function inCategorySlugs(slugs: string[]) {
   return {
@@ -114,7 +115,7 @@ export function getFeaturedArticles(take = 5) {
 
 export function getBreakingArticles(take = 5) {
   return prisma.article.findMany({
-    where: { status: "PUBLISHED", isBreaking: true },
+    where: { status: "PUBLISHED", ...activeBreakingWhere() },
     orderBy: { publishedAt: "desc" },
     take,
     select: articleSummarySelect,
@@ -362,25 +363,13 @@ export function getEditorArticles(take = 5) {
 }
 
 export const getBreakingTickerItems = unstable_cache(
-  async () => {
-    let items = await prisma.article.findMany({
-      where: { status: "PUBLISHED", isBreaking: true },
+  async () =>
+    prisma.article.findMany({
+      where: { status: "PUBLISHED", ...activeBreakingWhere() },
       orderBy: { publishedAt: "desc" },
       take: 10,
       select: { title: true, slug: true },
-    });
-
-    if (items.length === 0) {
-      items = await prisma.article.findMany({
-        where: { status: "PUBLISHED" },
-        orderBy: { publishedAt: "desc" },
-        take: 8,
-        select: { title: true, slug: true },
-      });
-    }
-
-    return items;
-  },
+    }),
   ["breaking-ticker"],
   { revalidate: 30, tags: [CACHE_TAGS.breaking] },
 );

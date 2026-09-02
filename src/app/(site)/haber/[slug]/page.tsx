@@ -43,6 +43,8 @@ import { PushSubscribeButton } from "@/components/pwa/PushSubscribeButton";
 import { categoryHref } from "@/lib/category-path";
 import { sharePostPath } from "@/lib/share-post";
 import { getSiteUrl } from "@/lib/site-url";
+import { BreakingBadge } from "@/components/news/BreakingBadge";
+import { isActiveBreaking } from "@/lib/breaking-news";
 
 export async function generateMetadata({
   params,
@@ -179,6 +181,11 @@ export default async function ArticlePage({
             slug={article.category.slug}
             color={article.category.color}
           />
+          {isActiveBreaking(article) ? (
+            <div className="mt-3">
+              <BreakingBadge />
+            </div>
+          ) : null}
           {extraCategories.length > 0 ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {extraCategories.map((c) => (
