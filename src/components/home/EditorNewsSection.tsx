@@ -11,12 +11,42 @@ const NAVY = "#0a2f5c";
 
 type Tab = "authors" | "quoted";
 
+function authorAvatarFallback(name: string) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0a2f5c&color=fff&size=176&bold=true`;
+}
+
+function AuthorAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  const [src, setSrc] = useState(avatarUrl?.trim() || authorAvatarFallback(name));
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <span className="my-4 flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white">
+      {failed ? (
+        <User className="h-10 w-10 text-ink-soft" aria-hidden />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => {
+            if (src !== authorAvatarFallback(name)) {
+              setSrc(authorAvatarFallback(name));
+              return;
+            }
+            setFailed(true);
+          }}
+        />
+      )}
+    </span>
+  );
+}
+
 function AuthorCard({ article }: { article: ArticleSummary }) {
   const name = (article.reporterName?.trim() || article.author?.name || "Yazar").toLocaleUpperCase(
     "tr-TR",
   );
   const profile = authorHref(article.author);
-  const avatar = article.author?.avatarUrl;
 
   return (
     <article
@@ -27,14 +57,7 @@ function AuthorCard({ article }: { article: ArticleSummary }) {
         <h3 className="line-clamp-3 min-h-[3.6em] text-[14px] font-medium leading-snug text-ink">
           {article.title}
         </h3>
-        <span className="my-4 flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white">
-          {avatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <User className="h-10 w-10 text-ink-soft" aria-hidden />
-          )}
-        </span>
+        <AuthorAvatar name={name} avatarUrl={article.author?.avatarUrl} />
       </Link>
       {profile ? (
         <Link

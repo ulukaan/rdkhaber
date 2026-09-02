@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { ChevronDown, MapPin, Phone } from "lucide-react";
-import { DUZCE_DISTRICTS, type DutyPharmacy } from "@/lib/pharmacy";
+import { buildPharmacyWidgetUrl, DUZCE_DISTRICTS, type DutyPharmacy } from "@/lib/pharmacy";
 import { loadDutyPharmaciesAction } from "@/actions/pharmacy";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,8 @@ export function SidebarPharmacy({
   const [openId, setOpenId] = useState(initialPharmacies[0]?.name ?? "");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [useWidget, setUseWidget] = useState(initialPharmacies.length === 0);
+  const widgetUrl = buildPharmacyWidgetUrl(district);
 
   const districtName = useMemo(
     () => DUZCE_DISTRICTS.find((d) => d.slug === district)?.name ?? "Merkez",
@@ -50,15 +52,23 @@ export function SidebarPharmacy({
   function onDistrictChange(slug: string) {
     setDistrict(slug);
     setError(null);
+    if (useWidget) return;
     start(async () => {
       const result = await loadDutyPharmaciesAction(slug);
       if (result && "error" in result) {
-        setError(result.error ?? null);
+        setUseWidget(true);
+        setError(null);
         setItems([]);
         setOpenId("");
         return;
       }
       const next = result?.items ?? [];
+      if (next.length === 0) {
+        setUseWidget(true);
+        setItems([]);
+        setOpenId("");
+        return;
+      }
       setItems(next);
       setOpenId(next[0]?.name ?? "");
     });
@@ -110,6 +120,15 @@ export function SidebarPharmacy({
                 Tüm listeyi aç →
               </Link>
             </div>
+          ) : useWidget ? (
+            <iframe
+              key={widgetUrl}
+              src={widgetUrl}
+              title={`${districtName} nöbetçi eczaneler`}
+              className="min-h-[300px] w-full border-0 bg-white"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           ) : items.length === 0 ? (
             <div className="space-y-2 px-3 py-4 text-center text-sm">
               <p className="text-ink-soft">{districtName} için kayıt bulunamadı.</p>

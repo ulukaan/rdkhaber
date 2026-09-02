@@ -58,7 +58,7 @@ export function SurmansetBanner({ articles }: { articles: ArticleSummary[] }) {
           <span className="absolute inset-0 z-[1] flex items-center justify-center px-5 py-8 sm:px-10 lg:px-14">
             <h2
               className={cn(
-                "max-w-[18ch] text-center text-[1.75rem] font-black uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-[4.25rem]",
+                "max-w-[24ch] text-center text-lg font-black uppercase leading-[1.12] tracking-tight text-white sm:text-xl md:text-2xl lg:text-3xl xl:text-[2rem]",
                 HEADLINE_TITLE_SHADOW,
               )}
             >
