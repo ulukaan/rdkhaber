@@ -32,7 +32,7 @@ function Group({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full min-h-10 items-center justify-between rounded-xl px-3 text-left transition-colors active:bg-surface"
+        className="flex w-full min-h-9 items-center justify-between rounded-lg px-3 text-left transition-colors active:bg-surface"
       >
         <span className="text-[13px] font-bold uppercase tracking-[0.04em] text-ink-soft">
           {title}
@@ -75,7 +75,7 @@ function NavLink({
       href={href}
       onClick={onClick}
       className={cn(
-        "flex min-h-11 items-center rounded-xl px-3 text-[15px] font-medium text-ink transition-colors active:bg-surface",
+        "flex min-h-10 items-center rounded-lg px-3 text-[15px] font-medium text-ink transition-colors active:bg-surface",
         className,
       )}
     >
@@ -106,6 +106,18 @@ function PartyLink({ cat, onClick }: { cat: SiteMenuCategory; onClick: () => voi
   );
 }
 
+function mergeLinks(primary: SiteMenuLink[] | undefined, fallback: SiteMenuLink[]) {
+  const byHref = new Map<string, SiteMenuLink>();
+  for (const link of fallback) byHref.set(link.href, link);
+  for (const link of primary ?? []) byHref.set(link.href, link);
+  // TarifPark gibi dış linkleri en sonda tut
+  return [...byHref.values()].sort((a, b) => {
+    const aExt = /^https?:\/\//i.test(a.href) ? 1 : 0;
+    const bExt = /^https?:\/\//i.test(b.href) ? 1 : 0;
+    return aExt - bExt;
+  });
+}
+
 export function MobileMenuPanels({
   categories,
   services,
@@ -118,8 +130,8 @@ export function MobileMenuPanels({
   onNavigate: () => void;
 }) {
   const sections = buildSiteMenuSections(categories);
-  const serviceLinks = services?.length ? services : SERVICE_LINKS;
-  const corporateLinks = corporate?.length ? corporate : CORPORATE_LINKS;
+  const serviceLinks = mergeLinks(services, SERVICE_LINKS);
+  const corporateLinks = mergeLinks(corporate, CORPORATE_LINKS);
 
   return (
     <div className="pb-1">
