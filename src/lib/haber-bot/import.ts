@@ -1,7 +1,7 @@
 import { ArticleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
-import { applyWordPairs, replaceInHtml, type WordPair } from "@/lib/haber-bot/words";
+import { applyWordPairsCounted, replaceInHtmlCounted, type WordPair } from "@/lib/haber-bot/words";
 import { fetchSourcePosts } from "@/lib/haber-bot/feed";
 
 const UA =
@@ -99,9 +99,14 @@ export async function runHaberBotSource(sourceId: string, authorId: string): Pro
           continue;
         }
 
-        const title = applyWordPairs(post.title, words).trim();
-        const summary = applyWordPairs(post.summary, words).trim();
-        const content = replaceInHtml(post.content, words).trim();
+        const titleResult = applyWordPairsCounted(post.title, words);
+        const summaryResult = applyWordPairsCounted(post.summary, words);
+        const contentResult = replaceInHtmlCounted(post.content, words);
+        const title = titleResult.text.trim();
+        const summary = summaryResult.text.trim();
+        const content = contentResult.text.trim();
+        const wordHits = titleResult.hits + summaryResult.hits + contentResult.hits;
+        const wordNote = wordHits > 0 ? `${wordHits} kelime değişti` : "kelime değişmedi";
 
         const duplicateTitle = await prisma.article.findFirst({
           where: { title },
@@ -163,7 +168,7 @@ export async function runHaberBotSource(sourceId: string, authorId: string): Pro
             sourceUrl: post.url,
             title,
             status: "imported",
-            message: status === ArticleStatus.PUBLISHED ? "Yayınlandı" : "Taslak olarak kaydedildi",
+            message: `${status === ArticleStatus.PUBLISHED ? "Yayınlandı" : "Taslak olarak kaydedildi"} · ${wordNote}`,
             articleId: article.id,
           },
         });

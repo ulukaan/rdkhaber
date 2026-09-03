@@ -200,30 +200,12 @@ function NavSection({
   collapsed: boolean;
 }) {
   const hasActive = items.some((item) => isNavActive(pathname, item.href, home, item.exact));
-  const storageKey = `rdk-panel-section-${id}`;
-  const [open, setOpen] = useState(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored === "closed") return false;
-      if (stored === "open") return true;
-    } catch {
-      // localStorage yoksa geç
-    }
-    return hasActive;
-  });
-  const isOpen = hasActive || open;
+  const [open, setOpen] = useState(false);
+  const isOpen = open;
 
   function toggleOpen() {
     if (collapsed) return;
-    setOpen((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(storageKey, next ? "open" : "closed");
-      } catch {
-        // localStorage yoksa geç
-      }
-      return next;
-    });
+    setOpen((prev) => !prev);
   }
 
   const showItems = collapsed || isOpen;
@@ -241,6 +223,7 @@ function NavSection({
             className={cn(
               "flex w-full items-center justify-between px-2.5 py-2.5 text-left transition-colors hover:bg-panel-alt/60",
               sectionLabelClass,
+              hasActive && "text-white",
             )}
           >
             <span>{label}</span>

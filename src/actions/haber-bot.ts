@@ -154,3 +154,40 @@ export async function fetchAllHaberBotSourcesAction() {
   refresh();
   return result;
 }
+
+async function deleteLogsAndArticles(ids: string[]) {
+  const unique = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+  if (unique.length === 0) return { logs: 0, articles: 0 };
+
+  const logs = await prisma.haberBotLog.findMany({
+    where: { id: { in: unique } },
+    select: { id: true, articleId: true },
+  });
+  const articleIds = [...new Set(logs.map((l) => l.articleId).filter((id): id is string => Boolean(id)))];
+
+  if (articleIds.length > 0) {
+    await prisma.article.deleteMany({ where: { id: { in: articleIds } } });
+  }
+  await prisma.haberBotLog.deleteMany({ where: { id: { in: logs.map((l) => l.id) } } });
+  return { logs: logs.length, articles: articleIds.length };
+}
+
+export async function deleteHaberBotLogAction(id: string) {
+  await requireRole(["ADMIN"]);
+  await deleteLogsAndArticles([id]);
+  refresh();
+}
+
+export async function deleteHaberBotLogsAction(ids: string[]) {
+  await requireRole(["ADMIN"]);
+  if (!Array.isArray(ids) || ids.length === 0) return { error: "Kayıt seçin." };
+  await deleteLogsAndArticles(ids);
+  refresh();
+}
+
+export async function clearHaberBotLogsAction() {
+  await requireRole(["ADMIN"]);
+  const logs = await prisma.haberBotLog.findMany({ select: { id: true, articleId: true } });
+  await deleteLogsAndArticles(logs.map((l) => l.id));
+  refresh();
+}

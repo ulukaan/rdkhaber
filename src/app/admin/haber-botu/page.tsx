@@ -14,7 +14,9 @@ import { HaberBotSourceForm } from "@/components/admin/HaberBotSourceForm";
 import { HaberBotWordForm } from "@/components/admin/HaberBotWordForm";
 import { HaberBotFetchButton } from "@/components/admin/HaberBotFetchButton";
 import { HaberBotToggle } from "@/components/admin/HaberBotToggle";
+import { HaberBotLogsPanel } from "@/components/admin/HaberBotLogsPanel";
 import { SectionHeader } from "@/components/admin/PanelUI";
+import { CollapsibleSection } from "@/components/admin/CollapsibleSection";
 import {
   deleteHaberBotSourceAction,
   deleteHaberBotWordAction,
@@ -22,16 +24,8 @@ import {
   toggleHaberBotWordAction,
 } from "@/actions/haber-bot";
 import { formatRelativeTime } from "@/lib/utils";
-import { Badge } from "@/components/ui/Badge";
-import Link from "next/link";
 
 export const metadata = { title: "Haber Botu" };
-
-const LOG_LABEL: Record<string, { text: string; variant: "brand" | "outline" | "dark" }> = {
-  imported: { text: "Eklendi", variant: "brand" },
-  skipped: { text: "Atlandı", variant: "outline" },
-  error: { text: "Hata", variant: "dark" },
-};
 
 export default async function HaberBotPage() {
   const [categories, sources, words, logs] = await Promise.all([
@@ -43,7 +37,7 @@ export default async function HaberBotPage() {
     prisma.haberBotWord.findMany({ orderBy: { order: "asc" } }),
     prisma.haberBotLog.findMany({
       orderBy: { createdAt: "desc" },
-      take: 40,
+      take: 80,
       include: { source: { select: { name: true } } },
     }),
   ]);
@@ -169,12 +163,12 @@ export default async function HaberBotPage() {
       </div>
 
       <div className="mt-8">
-        <SectionHeader
+        <CollapsibleSection
           title="Kelime listesi"
           description="Çekim sırasında başlık, spot ve metne uygulanır."
-        />
-
-        <PanelMobileOnly>
+          defaultOpen={false}
+        >
+          <PanelMobileOnly>
           {words.length === 0 ? (
             <PanelMobileEmpty>Henüz kural yok. Tek tek ekleyin veya kalıbı yapıştırın.</PanelMobileEmpty>
           ) : (
@@ -245,96 +239,25 @@ export default async function HaberBotPage() {
           </tbody>
         </Table>
         </PanelDesktopOnly>
+        </CollapsibleSection>
       </div>
 
       <div className="mt-8">
-        <SectionHeader title="Çekim kaydı" description="Son çekilen, atlanan ve hatalı haberler." />
-
-        <PanelMobileOnly>
-          {logs.length === 0 ? (
-            <PanelMobileEmpty>Henüz çekim yok.</PanelMobileEmpty>
-          ) : (
-            <PanelMobileList>
-              {logs.map((log) => {
-                const badge = LOG_LABEL[log.status] ?? LOG_LABEL.error;
-                return (
-                  <PanelMobileCard key={log.id}>
-                    <PanelMobileCardBody>
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant={badge.variant}>{badge.text}</Badge>
-                        <span className="text-[11px] text-ink-soft">
-                          {formatRelativeTime(log.createdAt)}
-                        </span>
-                      </div>
-                      {log.articleId ? (
-                        <Link
-                          href={`/admin/makaleler/${log.articleId}`}
-                          className="text-sm font-semibold text-ink hover:text-brand"
-                        >
-                          {log.title}
-                        </Link>
-                      ) : (
-                        <p className="text-sm font-medium text-ink">{log.title}</p>
-                      )}
-                      {log.message ? (
-                        <p className="mt-1 text-xs text-ink-soft">{log.message}</p>
-                      ) : null}
-                      <p className="mt-2 text-xs text-ink-soft">{log.source?.name ?? "—"}</p>
-                    </PanelMobileCardBody>
-                  </PanelMobileCard>
-                );
-              })}
-            </PanelMobileList>
-          )}
-        </PanelMobileOnly>
-
-        <PanelDesktopOnly>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Haber</Th>
-              <Th>Kaynak</Th>
-              <Th>Sonuç</Th>
-              <Th>Zaman</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.length === 0 ? (
-              <EmptyRow colSpan={4}>Henüz çekim yok.</EmptyRow>
-            ) : (
-              logs.map((log) => {
-                const badge = LOG_LABEL[log.status] ?? LOG_LABEL.error;
-                return (
-                  <tr key={log.id}>
-                    <Td className="max-w-sm">
-                      {log.articleId ? (
-                        <Link
-                          href={`/admin/makaleler/${log.articleId}`}
-                          className="font-semibold text-ink hover:text-brand"
-                        >
-                          {log.title}
-                        </Link>
-                      ) : (
-                        <span className="font-medium text-ink">{log.title}</span>
-                      )}
-                      {log.message ? (
-                        <div className="mt-0.5 text-xs text-ink-soft">{log.message}</div>
-                      ) : null}
-                    </Td>
-                    <Td className="text-ink-soft">{log.source?.name ?? "—"}</Td>
-                    <Td>
-                      <Badge variant={badge.variant}>{badge.text}</Badge>
-                    </Td>
-                    <Td className="whitespace-nowrap text-xs text-ink-soft">
-                      {formatRelativeTime(log.createdAt)}
-                    </Td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </Table>
-        </PanelDesktopOnly>
+        <SectionHeader
+          title="Çekim kaydı"
+          description="Son çekilen, atlanan ve hatalı haberler. Silince eklenen haber de gider."
+        />
+        <HaberBotLogsPanel
+          logs={logs.map((log) => ({
+            id: log.id,
+            title: log.title,
+            status: log.status,
+            message: log.message,
+            articleId: log.articleId,
+            sourceName: log.source?.name ?? null,
+            createdAt: log.createdAt.toISOString(),
+          }))}
+        />
       </div>
     </>
   );

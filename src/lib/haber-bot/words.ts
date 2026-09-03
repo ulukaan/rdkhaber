@@ -42,21 +42,37 @@ function replacePlainOnce(
   });
 }
 
+export type WordApplyResult = {
+  text: string;
+  hits: number;
+};
+
 /** HTML etiketlerinin içine dokunmadan metin düğümlerinde değiştirir. */
+export function replaceInHtmlCounted(html: string, pairs: WordPair[]): WordApplyResult {
+  if (!html || pairs.length === 0) return { text: html, hits: 0 };
+  let hits = 0;
+  const text = html.replace(
+    /(<[^>]+>)|([^<]+)/g,
+    (chunk, tag: string | undefined, node: string | undefined) => {
+      if (tag) return tag;
+      const next = applyWordPairsCounted(node ?? "", pairs);
+      hits += next.hits;
+      return next.text;
+    },
+  );
+  return { text, hits };
+}
+
 export function replaceInHtml(html: string, pairs: WordPair[]) {
-  if (!html || pairs.length === 0) return html;
-  return html.replace(/(<[^>]+>)|([^<]+)/g, (chunk, tag: string | undefined, text: string | undefined) => {
-    if (tag) return tag;
-    return applyWordPairs(text ?? "", pairs);
-  });
+  return replaceInHtmlCounted(html, pairs).text;
 }
 
 /**
  * Kelimeleri değiştirir. Yer tutucu kullanarak ters eşleşmelerin
  * (sorun↔problem) birbirini bozmasını engeller.
  */
-export function applyWordPairs(text: string, pairs: WordPair[]) {
-  if (!text || pairs.length === 0) return text;
+export function applyWordPairsCounted(text: string, pairs: WordPair[]): WordApplyResult {
+  if (!text || pairs.length === 0) return { text, hits: 0 };
   const ordered = [...pairs]
     .filter((p) => p.find.trim())
     .sort((a, b) => b.find.length - a.find.length || a.find.localeCompare(b.find, "tr"));
@@ -65,7 +81,14 @@ export function applyWordPairs(text: string, pairs: WordPair[]) {
     (acc, pair) => replacePlainOnce(acc, pair.find.trim(), pair.replace, placeholders),
     text,
   );
-  return result.replace(/\uE000(\d+)\uE001/g, (_, i) => placeholders[Number(i)] ?? "");
+  return {
+    text: result.replace(/\uE000(\d+)\uE001/g, (_, i) => placeholders[Number(i)] ?? ""),
+    hits: placeholders.length,
+  };
+}
+
+export function applyWordPairs(text: string, pairs: WordPair[]) {
+  return applyWordPairsCounted(text, pairs).text;
 }
 
 /**
