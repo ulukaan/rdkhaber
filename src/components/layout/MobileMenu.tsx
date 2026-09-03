@@ -110,7 +110,7 @@ export function MobileMenu({
         aria-label="Menüyü kapat"
         tabIndex={open ? 0 : -1}
         className={cn(
-          "fixed inset-0 z-[70] bg-black/40 transition-opacity duration-200 ease-out motion-reduce:transition-none",
+          "fixed inset-0 z-[90] bg-black/45 transition-opacity duration-200 ease-out motion-reduce:transition-none",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
@@ -121,33 +121,30 @@ export function MobileMenu({
         aria-modal="true"
         aria-label={`${siteName} menü`}
         className={cn(
-          "fixed bottom-3 right-3 top-3 z-[80] flex w-[min(calc(100vw-1.5rem),20rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.18)] transition-all duration-200 ease-out motion-reduce:transition-none",
-          open
-            ? "translate-x-0 opacity-100"
-            : "pointer-events-none translate-x-4 opacity-0",
+          "fixed inset-y-0 right-0 z-[100] flex w-[min(88vw,21rem)] flex-col bg-white transition-transform duration-200 ease-out motion-reduce:transition-none",
+          "shadow-[-8px_0_24px_rgba(0,0,0,0.14)]",
+          open ? "translate-x-0" : "pointer-events-none translate-x-full",
         )}
       >
-        {/* Üst */}
-        <div className="shrink-0 border-b border-border/80 px-4 pb-3 pt-3">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[15px] font-bold tracking-tight text-ink">Menü</p>
+        <div className="shrink-0 border-b border-border px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-[15px] font-bold text-ink">Menü</p>
             <button
               type="button"
               onClick={close}
               aria-label="Menüyü kapat"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-ink-soft transition-colors active:bg-border/50 active:text-ink"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-ink-soft transition-colors active:bg-border/60 active:text-ink"
             >
               <X className="h-4 w-4" strokeWidth={2.25} />
             </button>
           </div>
           <SearchForm
-            className="h-10 rounded-xl border-transparent bg-surface py-2 text-sm shadow-none focus-within:border-brand/30 focus-within:bg-white focus-within:ring-1 focus-within:ring-brand/20"
+            className="h-10 rounded-xl border-transparent bg-surface py-2 text-sm shadow-none focus-within:border-brand/25 focus-within:bg-white focus-within:ring-1 focus-within:ring-brand/15"
             placeholder="Ara..."
           />
         </div>
 
-        {/* Orta — kaydırılabilir */}
-        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-1.5">
           <MobileMenuPanels
             categories={categories}
             services={services}
@@ -156,10 +153,9 @@ export function MobileMenu({
           />
         </nav>
 
-        {/* Alt — sabit */}
-        <div className="shrink-0 border-t border-border/80 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="shrink-0 border-t border-border bg-white px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3">
           {(socials.length > 0 || whatsappNumber) && (
-            <div className="mb-3 flex items-center gap-1">
+            <div className="mb-3 flex items-center gap-0.5">
               {socials.map((s) => (
                 <a
                   key={s.label}

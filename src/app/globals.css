@@ -410,12 +410,18 @@ html[data-theme="dark"] .site-logo-invertible {
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* Mobil menü açıkken yüzen butonlar menünün altına girmesin */
+/* Mobil menü açıkken yüzen butonlar ve çerez bandı menünün altına girmesin */
 body.mobile-menu-open .whatsapp-float,
 body.mobile-menu-open [aria-label="Yukarı çık"] {
   opacity: 0 !important;
   pointer-events: none !important;
   transform: translateY(8px);
+}
+
+body.mobile-menu-open [aria-labelledby="cookie-consent-title"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 .site-sticky-ad main {
