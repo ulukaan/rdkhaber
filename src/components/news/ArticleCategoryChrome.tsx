@@ -8,6 +8,12 @@ import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 import { categoryHref } from "@/lib/category-path";
 
+type CategoryActiveDetail = {
+  name: string;
+  slug: string;
+  color: string | null;
+};
+
 function replaceArticleUrl(url: string, title?: string | null) {
   if (window.location.pathname === url) {
     if (title) document.title = `${title} | Düzce Radikal`;

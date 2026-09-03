@@ -137,7 +137,6 @@ export function ArticleListenButton({ text }: { text: string }) {
   }
 
   function unlockForMobile(audio: HTMLAudioElement) {
-    audio.playsInline = true;
     audio.setAttribute("playsinline", "true");
     audio.setAttribute("webkit-playsinline", "true");
     audio.preload = "auto";
