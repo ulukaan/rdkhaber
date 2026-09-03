@@ -410,6 +410,14 @@ html[data-theme="dark"] .site-logo-invertible {
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+/* Mobil menü açıkken yüzen butonlar menünün altına girmesin */
+body.mobile-menu-open .whatsapp-float,
+body.mobile-menu-open [aria-label="Yukarı çık"] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(8px);
+}
+
 .site-sticky-ad main {
   padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
 }
