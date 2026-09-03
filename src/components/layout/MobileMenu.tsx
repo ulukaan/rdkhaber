@@ -121,8 +121,7 @@ export function MobileMenu({
         aria-modal="true"
         aria-label={`${siteName} menü`}
         className={cn(
-          "fixed inset-y-0 right-0 z-[100] flex w-[min(88vw,21rem)] flex-col bg-white transition-transform duration-200 ease-out motion-reduce:transition-none",
-          "shadow-[-8px_0_24px_rgba(0,0,0,0.14)]",
+          "fixed inset-y-0 right-0 z-[100] flex w-[min(88vw,21rem)] flex-col bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.14)] transition-transform duration-200 ease-out motion-reduce:transition-none",
           open ? "translate-x-0" : "pointer-events-none translate-x-full",
         )}
       >
@@ -144,97 +143,100 @@ export function MobileMenu({
           />
         </div>
 
-        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-1.5">
-          <MobileMenuPanels
-            categories={categories}
-            services={services}
-            corporate={corporate}
-            onNavigate={close}
-          />
-        </nav>
+        {/* Tek kaydırma alanı — içerik üstte peş peşe, ortada boşluk yok */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <nav className="px-2 py-1.5">
+            <MobileMenuPanels
+              categories={categories}
+              services={services}
+              corporate={corporate}
+              onNavigate={close}
+            />
+          </nav>
 
-        <div className="shrink-0 border-t border-border bg-white px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3">
-          {(socials.length > 0 || whatsappNumber) && (
-            <div className="mb-3 flex items-center gap-0.5">
-              {socials.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition-colors active:bg-surface active:text-ink"
-                >
-                  {socialIcon(s.label)}
-                </a>
-              ))}
-              {whatsappNumber ? (
-                <a
-                  href={whatsappUrl(whatsappNumber)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={close}
-                  aria-label="WhatsApp"
-                  className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-[#25D366] transition-colors active:bg-emerald-50"
-                >
-                  <WhatsAppIcon className="h-4 w-4" />
-                </a>
-              ) : null}
-            </div>
-          )}
-
-          {account.authenticated ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Link
-                  href={account.accountHref}
-                  onClick={close}
-                  className="flex min-h-11 flex-1 items-center gap-2.5 rounded-xl bg-surface px-3 text-sm font-semibold text-ink"
-                >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-ink-soft">
-                    <User className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="truncate">{account.name}</span>
-                </Link>
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    aria-label="Çıkış yap"
-                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-ink-soft transition-colors active:bg-border/40"
+          <div className="border-t border-border px-4 pb-[max(0.85rem,env(safe-area-inset-bottom))] pt-3">
+            {(socials.length > 0 || whatsappNumber) && (
+              <div className="mb-3 flex items-center gap-0.5">
+                {socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition-colors active:bg-surface active:text-ink"
                   >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </form>
+                    {socialIcon(s.label)}
+                  </a>
+                ))}
+                {whatsappNumber ? (
+                  <a
+                    href={whatsappUrl(whatsappNumber)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={close}
+                    aria-label="WhatsApp"
+                    className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-[#25D366] transition-colors active:bg-emerald-50"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                  </a>
+                ) : null}
               </div>
-              {account.panelHref ? (
+            )}
+
+            {account.authenticated ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={account.accountHref}
+                    onClick={close}
+                    className="flex min-h-11 flex-1 items-center gap-2.5 rounded-xl bg-surface px-3 text-sm font-semibold text-ink"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-ink-soft">
+                      <User className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="truncate">{account.name}</span>
+                  </Link>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      aria-label="Çıkış yap"
+                      className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-ink-soft transition-colors active:bg-border/40"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </form>
+                </div>
+                {account.panelHref ? (
+                  <Link
+                    href={account.panelHref}
+                    onClick={close}
+                    className="flex min-h-10 items-center justify-center gap-2 rounded-xl text-sm font-medium text-ink-soft transition-colors active:bg-surface"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Yönetim Paneli
+                  </Link>
+                ) : null}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href={account.panelHref}
+                  href="/giris"
                   onClick={close}
-                  className="flex min-h-10 items-center justify-center gap-2 rounded-xl text-sm font-medium text-ink-soft transition-colors active:bg-surface"
+                  className="flex min-h-11 items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white transition-opacity active:opacity-90"
                 >
-                  <LayoutDashboard className="h-4 w-4" />
-                  Yönetim Paneli
+                  Giriş Yap
                 </Link>
-              ) : null}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                href="/giris"
-                onClick={close}
-                className="flex min-h-11 items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white transition-opacity active:opacity-90"
-              >
-                Giriş Yap
-              </Link>
-              <Link
-                href="/kayit"
-                onClick={close}
-                className="flex min-h-11 items-center justify-center rounded-xl border border-border bg-white text-sm font-semibold text-ink transition-colors active:bg-surface"
-              >
-                Kayıt Ol
-              </Link>
-            </div>
-          )}
+                <Link
+                  href="/kayit"
+                  onClick={close}
+                  className="flex min-h-11 items-center justify-center rounded-xl border border-border bg-white text-sm font-semibold text-ink transition-colors active:bg-surface"
+                >
+                  Kayıt Ol
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
