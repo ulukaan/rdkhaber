@@ -8,11 +8,19 @@ import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 import { categoryHref } from "@/lib/category-path";
 
-type CategoryActiveDetail = {
-  name: string;
-  slug: string;
-  color: string | null;
-};
+function replaceArticleUrl(url: string, title?: string | null) {
+  if (window.location.pathname === url) {
+    if (title) document.title = `${title} | Düzce Radikal`;
+    return;
+  }
+  const state = window.history.state;
+  window.history.replaceState(
+    state && typeof state === "object" ? { ...state } : state,
+    "",
+    url,
+  );
+  if (title) document.title = `${title} | Düzce Radikal`;
+}
 
 const STUCK_ON = 120;
 const STUCK_OFF = 24;
@@ -32,67 +40,82 @@ export function ArticleCategoryChrome({
   const [stuck, setStuck] = useState(false);
   const stuckRef = useRef(false);
   const [active, setActive] = useState<CategoryActiveDetail>({ name, slug, color });
+  const originRef = useRef<CategoryActiveDetail>({ name, slug, color });
   const bg = active.color || "var(--brand)";
 
-  if (active.name !== name || active.slug !== slug || active.color !== color) {
+  originRef.current = { name, slug, color };
+
+  useEffect(() => {
     setActive({ name, slug, color });
-  }
+  }, [name, slug, color]);
 
   useEffect(() => {
     let frame = 0;
+    const applyReadingChrome = () => {
+      const y = window.scrollY;
+      let nextStuck = stuckRef.current;
+      if (!stuckRef.current && y > STUCK_ON) nextStuck = true;
+      else if (stuckRef.current && y < STUCK_OFF) nextStuck = false;
+      if (nextStuck !== stuckRef.current) {
+        stuckRef.current = nextStuck;
+        setStuck(nextStuck);
+        document.documentElement.classList.toggle("article-reading", nextStuck);
+      }
+
+      const bandTop = 72;
+      const items = document.querySelectorAll<HTMLElement>(".article-continue-item");
+      let current: HTMLElement | null = null;
+      for (const el of items) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= bandTop && rect.bottom > bandTop + 48) current = el;
+      }
+
+      if (current) {
+        const next = {
+          name: current.dataset.categoryName || originRef.current.name,
+          slug: current.dataset.categorySlug || originRef.current.slug,
+          color: current.dataset.categoryColor || originRef.current.color,
+        };
+        setActive((prev) =>
+          prev.slug === next.slug && prev.name === next.name && prev.color === next.color
+            ? prev
+            : next,
+        );
+        const url = current.dataset.url;
+        const title = current.dataset.title;
+        if (url) replaceArticleUrl(url, title);
+        return;
+      }
+
+      setActive((prev) => {
+        const origin = originRef.current;
+        return prev.slug === origin.slug && prev.name === origin.name && prev.color === origin.color
+          ? prev
+          : origin;
+      });
+      const main = document.getElementById("article-main");
+      const url = main?.getAttribute("data-url");
+      const title = main?.getAttribute("data-title");
+      if (url) replaceArticleUrl(url, title);
+    };
+
     const onScroll = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
-        const y = window.scrollY;
-        let next = stuckRef.current;
-        if (!stuckRef.current && y > STUCK_ON) next = true;
-        else if (stuckRef.current && y < STUCK_OFF) next = false;
-        if (next === stuckRef.current) return;
-        stuckRef.current = next;
-        setStuck(next);
-        document.documentElement.classList.toggle("article-reading", next);
+        applyReadingChrome();
       });
     };
-    onScroll();
+    applyReadingChrome();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       window.cancelAnimationFrame(frame);
       document.documentElement.classList.remove("article-reading");
     };
   }, []);
-
-  useEffect(() => {
-    const onContinue = (event: Event) => {
-      const detail = (event as CustomEvent<CategoryActiveDetail>).detail;
-      if (!detail?.slug) return;
-      setActive(detail);
-    };
-    window.addEventListener("continue-article-active", onContinue);
-    return () => window.removeEventListener("continue-article-active", onContinue);
-  }, []);
-
-  useEffect(() => {
-    const main = document.getElementById("article-main");
-    if (!main) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting || entry.intersectionRatio < 0.25) return;
-        setActive({ name, slug, color });
-        const url = main.getAttribute("data-url");
-        const title = main.getAttribute("data-title");
-        if (url && window.location.pathname !== url) {
-          window.history.replaceState(null, "", url);
-          if (title) document.title = `${title} | Düzce Radikal`;
-        }
-      },
-      { threshold: [0.25] },
-    );
-    observer.observe(main);
-    return () => observer.disconnect();
-  }, [name, slug, color]);
 
   function goBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {

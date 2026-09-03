@@ -126,7 +126,6 @@ function ContinueArticleBlock({
   sidebar: ContinueSidebar;
   index: number;
 }) {
-  const rootRef = useRef<HTMLElement>(null);
   const byline = (article.reporterName?.trim() || article.author?.name?.trim() || "").trim();
   const authorProfileHref = authorHref(article.author);
   const minutes = readingTimeMinutes(article.content);
@@ -134,37 +133,14 @@ function ContinueArticleBlock({
   const articleUrl = `/haber/${article.slug}`;
   const tags = article.tags ?? [];
 
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting || entry.intersectionRatio < 0.28) return;
-        if (window.location.pathname !== articleUrl) {
-          window.history.replaceState(null, "", articleUrl);
-          document.title = `${article.title} | Düzce Radikal`;
-        }
-        window.dispatchEvent(
-          new CustomEvent("continue-article-active", {
-            detail: {
-              name: article.category.name,
-              slug: article.category.slug,
-              color: article.category.color,
-            },
-          }),
-        );
-      },
-      { threshold: [0.28] },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [article, articleUrl]);
-
   return (
     <article
-      ref={rootRef}
       data-slug={article.slug}
+      data-url={articleUrl}
+      data-title={article.title}
+      data-category-name={article.category.name}
+      data-category-slug={article.category.slug}
+      data-category-color={article.category.color ?? ""}
       className={cn("article-continue-item border-t border-border", index === 0 && "mt-10")}
     >
       <header className="border-b border-border bg-white">
@@ -190,23 +166,21 @@ function ContinueArticleBlock({
           {byline ? <AuthorByline name={byline} author={article.author} /> : null}
         </Container>
 
-        {article.publishedAt ? (
-          <ArticleMetaBar
-            publishedAt={article.publishedAt}
-            minutes={minutes}
-            authorName={byline}
-            authorHref={authorProfileHref}
-            shareUrl={articleUrl}
-            shareTitle={article.title}
-            viewCount={article.viewCount}
-            articleId={article.id}
-            listenText={articleListenText({
-              title: article.title,
-              summary: article.summary,
-              html: article.content,
-            })}
-          />
-        ) : null}
+        <ArticleMetaBar
+          publishedAt={article.publishedAt ?? new Date()}
+          minutes={minutes}
+          authorName={byline}
+          authorHref={authorProfileHref}
+          shareUrl={articleUrl}
+          shareTitle={article.title}
+          viewCount={article.viewCount}
+          articleId={article.id}
+          listenText={articleListenText({
+            title: article.title,
+            summary: article.summary,
+            html: article.content,
+          })}
+        />
         <RecordArticleRead articleId={article.id} />
       </header>
 

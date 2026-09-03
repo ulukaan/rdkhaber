@@ -12,14 +12,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: origin.error }, { status: 403 });
   }
 
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
-  }
-
   const ip = clientIp(req.headers);
-  const limited = await rateLimit(`tts:${session.user.id}:${ip}`, {
-    limit: 10,
+  const session = await auth();
+  const limited = await rateLimit(`tts:${session?.user?.id ?? ip}`, {
+    limit: session?.user ? 10 : 6,
     windowMs: 5 * 60_000,
   });
   if (!limited.ok) {

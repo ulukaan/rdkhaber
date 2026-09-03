@@ -31,6 +31,11 @@ export async function assertSameOriginRequest() {
     }
   }
 
+  const site = h.get("sec-fetch-site");
+  if (site === "same-origin" || site === "same-site") {
+    return { ok: true as const };
+  }
+
   // Bazı tarayıcılar same-site FormData’da Origin göndermeyebilir; host varlığı yeterli değil.
   // API upload için Origin veya Referer zorunlu tutuyoruz.
   return { ok: false as const, error: "İstek doğrulanamadı" };
