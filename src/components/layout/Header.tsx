@@ -56,24 +56,25 @@ export async function Header() {
       }
       main={
         <>
-          <div className="relative border-b border-border">
-            <Container className="flex h-14 items-center gap-2 sm:gap-3">
-              <Logo siteName={settings.siteName} logoUrl={settings.logoUrl} />
+          <div className="relative border-b border-brand bg-brand text-white lg:border-border lg:bg-background lg:text-ink">
+            <Container className="flex h-14 min-w-0 items-center gap-2 sm:gap-3">
+              <span className="shrink-0 lg:hidden">
+                <Logo siteName={settings.siteName} logoUrl={settings.logoUrl} variant="light" />
+              </span>
+              <span className="hidden shrink-0 lg:contents">
+                <Logo siteName={settings.siteName} logoUrl={settings.logoUrl} />
+              </span>
               <CategoryNav items={headerNav} />
-              <nav
-                className="hidden shrink-0 items-center gap-3 border-l border-border pl-3 xl:flex"
-                aria-label="Servisler"
-              >
-                <TarifParkLink />
-              </nav>
-              <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-                <ThemeToggle />
-                <div className="hidden md:block">
+              <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+                <div className="hidden lg:block">
+                  <TarifParkLink />
+                </div>
+                <ThemeToggle className="border-white/35 bg-white/15 hover:border-white lg:border-border lg:bg-surface lg:hover:border-brand" />
+                <span className="hidden h-6 w-px bg-border md:block" aria-hidden />
+                <div className="hidden items-center gap-1 md:flex">
                   <Suspense fallback={null}>
                     <NotificationBellServer />
                   </Suspense>
-                </div>
-                <div className="hidden md:block">
                   <Suspense fallback={null}>
                     <AccountMenu />
                   </Suspense>

@@ -125,15 +125,18 @@ export function LoginForm() {
 
       <TurnstileWidget onToken={setCaptchaToken} />
 
-      <div className="-mt-1 text-right">
-        <Link href="/sifremi-unuttum" className="text-xs font-semibold text-brand hover:underline">
+      <div className="-mt-1 flex justify-end">
+        <Link
+          href="/sifremi-unuttum"
+          className="text-[12px] font-extrabold uppercase tracking-wide text-brand transition-opacity hover:opacity-80"
+        >
           Şifremi unuttum
         </Link>
       </div>
 
       {serverError && <p className="text-sm font-medium text-brand">{serverError}</p>}
 
-      <Button type="submit" disabled={loading} className="mt-2 w-full">
+      <Button type="submit" disabled={loading} className="mt-1 h-12 w-full rounded-none text-[13px] font-extrabold uppercase tracking-[0.08em]">
         {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
       </Button>
 

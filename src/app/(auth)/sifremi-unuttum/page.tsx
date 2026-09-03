@@ -8,12 +8,12 @@ export default function ForgotPasswordPage() {
   return (
     <AuthCard
       title="Şifremi Unuttum"
-      subtitle="Kayıtlı e-posta adresinize sıfırlama bağlantısı gönderelim."
+      subtitle="Kayıtlı e-posta adresinize güvenli bir sıfırlama bağlantısı gönderelim."
     >
       <ForgotPasswordForm />
-      <p className="mt-6 border-t border-border/80 pt-5 text-center text-sm text-ink-soft">
-        <Link href="/giris" className="font-semibold text-brand hover:underline">
-          Giriş sayfasına dön
+      <p className="mt-8 border-t border-border pt-5 text-sm text-ink-soft">
+        <Link href="/giris" className="font-extrabold text-brand hover:underline">
+          ← Giriş sayfasına dön
         </Link>
       </p>
     </AuthCard>

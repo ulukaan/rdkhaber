@@ -28,19 +28,19 @@ function MenuToggleIcon({ open }: { open: boolean }) {
     <span className="relative flex h-5 w-[22px] flex-col items-center justify-center" aria-hidden>
       <span
         className={cn(
-          "absolute block h-[2.5px] w-[22px] rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
+          "absolute block h-[2.5px] w-[22px] bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
           open ? "rotate-45" : "-translate-y-[6px]",
         )}
       />
       <span
         className={cn(
-          "absolute block h-[2.5px] w-[22px] rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
+          "absolute block h-[2.5px] w-[22px] bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
           open ? "scale-x-0 opacity-0" : "opacity-100",
         )}
       />
       <span
         className={cn(
-          "absolute block h-[2.5px] w-[22px] rounded-full bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
+          "absolute block h-[2.5px] w-[22px] bg-current transition-all duration-300 ease-out motion-reduce:transition-none",
           open ? "-rotate-45" : "translate-y-[6px]",
         )}
       />
@@ -99,7 +99,7 @@ export function MobileMenu({
         aria-expanded={open}
         aria-controls="site-mobile-menu"
         aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-        className="relative z-[120] flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors active:bg-surface"
+        className="relative z-[120] flex h-10 w-10 items-center justify-center text-white transition-colors active:bg-white/15 lg:text-ink lg:active:bg-surface"
       >
         <MenuToggleIcon open={open} />
       </button>

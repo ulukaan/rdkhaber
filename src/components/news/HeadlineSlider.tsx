@@ -58,7 +58,7 @@ export function HeadlineSlider({
 
       {slides.length > 1 ? (
         <div
-          className="absolute inset-x-0 bottom-0 z-10 flex"
+          className="absolute inset-x-0 bottom-0 z-10 flex border-t border-white/15"
           style={{ backgroundColor: barColor }}
           role="tablist"
           aria-label="Manşet seç"
@@ -75,10 +75,13 @@ export function HeadlineSlider({
                 onMouseEnter={() => setIndex(i)}
                 onFocus={() => setIndex(i)}
                 className={cn(
-                  "flex-1 py-1.5 text-center text-[11px] font-bold text-white transition-colors duration-200 md:py-2 md:text-xs",
-                  active ? "bg-black/35" : "hover:bg-black/15",
+                  "relative flex-1 py-2 text-center text-[11px] font-extrabold tabular-nums tracking-wide text-white/75 transition-colors duration-200 md:py-2.5 md:text-xs",
+                  active ? "bg-black/40 text-white" : "hover:bg-black/20 hover:text-white",
                 )}
               >
+                {active ? (
+                  <span className="absolute inset-x-1 top-0 h-0.5 rounded-b-sm bg-white" aria-hidden />
+                ) : null}
                 {i + 1}
               </button>
             );

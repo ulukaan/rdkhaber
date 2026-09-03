@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { HeaderAdBanner } from "@/components/layout/HeaderAdBanner";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
+import { BackToTopButton } from "@/components/layout/BackToTopButton";
 import { getSettings } from "@/lib/settings";
 import { AdTowers } from "@/components/ads/AdTowers";
 import { StickyFooterAd } from "@/components/ads/StickyFooterAd";
@@ -29,6 +30,7 @@ export default async function SiteLayout({
       <Footer />
       {!suppressHouseAds ? <StickyFooterAd /> : null}
       {!suppressHouseAds ? <OpeningAd /> : null}
+      <BackToTopButton />
       <WhatsAppFloatButton whatsappNumber={settings.whatsappNumber} />
     </div>
   );

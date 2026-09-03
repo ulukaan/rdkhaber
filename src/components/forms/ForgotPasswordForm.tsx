@@ -43,7 +43,7 @@ export function ForgotPasswordForm() {
       {serverError && <p className="text-sm font-medium text-brand">{serverError}</p>}
       {success && <p className="text-sm font-medium text-emerald-700">{success}</p>}
 
-      <Button type="submit" disabled={loading} className="mt-2 w-full">
+      <Button type="submit" disabled={loading} className="mt-1 h-12 w-full rounded-none text-[13px] font-extrabold uppercase tracking-[0.08em]">
         {loading ? "Gönderiliyor..." : "Sıfırlama Bağlantısı Gönder"}
       </Button>
     </form>

@@ -16,11 +16,8 @@ export function MobileCategoryStrip({ items }: { items: NavLink[] }) {
   if (links.length === 0) return null;
 
   return (
-    <nav
-      aria-label="Kategoriler"
-      className="border-b border-border bg-white lg:hidden"
-    >
-      <div className="scrollbar-none flex gap-1 overflow-x-auto px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Kategoriler" className="border-b border-border bg-white lg:hidden">
+      <div className="scrollbar-none flex overflow-x-auto px-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {links.map((item, index) => {
           const key = `${item.href}-${index}`;
           const children = item.children?.filter((c) => c.visible !== false) ?? [];
@@ -28,10 +25,10 @@ export function MobileCategoryStrip({ items }: { items: NavLink[] }) {
             isActiveNavHref(pathname, item.href) ||
             children.some((child) => isActiveNavHref(pathname, child.href));
           const className = cn(
-            "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+            "shrink-0 border-b-2 px-3 py-2.5 text-xs font-extrabold tracking-tight transition-colors",
             active
-              ? "bg-brand text-white"
-              : "bg-surface text-ink hover:bg-brand/10 hover:text-brand",
+              ? "border-brand text-brand"
+              : "border-transparent text-ink/75 hover:text-brand",
           );
 
           if (isExternal(item.href)) {

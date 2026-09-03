@@ -559,3 +559,77 @@ html.article-reading header.sticky {
     justify-content: center;
   }
 }
+
+/* Auth sayfaları — form alanı */
+.auth-form label {
+  margin-bottom: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink, #111) 70%, transparent);
+}
+
+.auth-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* Yerli Üretim — açık/koyu tema */
+.yerli-logo-dark {
+  opacity: 0;
+}
+html[data-theme="dark"] .yerli-logo-light {
+  opacity: 0;
+}
+html[data-theme="dark"] .yerli-logo-dark {
+  opacity: 1;
+}
+
+/* Auth sol panel — hafif kayan efekt */
+.auth-brand-drift {
+  opacity: 0.12;
+  background-image:
+    linear-gradient(135deg, transparent 40%, #000 40%, #000 41%, transparent 41%),
+    linear-gradient(45deg, transparent 60%, #fff 60%, #fff 61%, transparent 61%);
+  background-size: 32px 32px;
+  animation: auth-brand-drift 28s linear infinite;
+}
+
+.auth-brand-sheen {
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.1) 48%,
+    transparent 62%
+  );
+  background-size: 220% 100%;
+  animation: auth-brand-sheen 14s ease-in-out infinite;
+}
+
+@keyframes auth-brand-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 32px 32px, -32px 32px;
+  }
+}
+
+@keyframes auth-brand-sheen {
+  0%,
+  100% {
+    background-position: 100% 0;
+  }
+  50% {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-brand-drift,
+  .auth-brand-sheen {
+    animation: none;
+  }
+}

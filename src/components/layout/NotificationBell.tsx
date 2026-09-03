@@ -81,18 +81,18 @@ export function NotificationBell({
         }}
         aria-expanded={open}
         aria-label={count > 0 ? `${count} okunmamış bildirim` : "Bildirimler"}
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors hover:bg-surface"
+        className="relative flex h-9 w-9 items-center justify-center border border-border bg-white text-ink transition-colors hover:border-brand hover:text-brand"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-4 w-4" />
         {count > 0 ? (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center bg-brand px-1 text-[10px] font-bold text-white">
             {count > 9 ? "9+" : count}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,22rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+        <div className="absolute right-0 z-50 mt-2 w-[min(100vw-2rem,22rem)] overflow-hidden border border-border bg-card shadow-xl">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-sm font-bold text-ink">Bildirimler</span>
             {count > 0 ? (

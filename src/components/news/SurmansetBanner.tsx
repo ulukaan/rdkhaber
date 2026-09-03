@@ -50,15 +50,15 @@ export function SurmansetBanner({ articles }: { articles: ArticleSummary[] }) {
             sizes="100vw"
           />
           <span
-            className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/60"
+            className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/20"
             aria-hidden
           />
           {isActiveBreaking(current) ? <BreakingImageStamp /> : null}
 
-          <span className="absolute inset-0 z-[1] flex items-center justify-center px-5 py-8 sm:px-10 lg:px-14">
+          <span className="absolute inset-x-0 bottom-0 z-[1] flex items-end px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
             <h2
               className={cn(
-                "max-w-[24ch] text-center text-lg font-black uppercase leading-[1.12] tracking-tight text-white sm:text-xl md:text-2xl lg:text-3xl xl:text-[2rem]",
+                "w-full text-left text-lg font-black uppercase leading-[1.15] tracking-tight text-white text-balance sm:text-xl md:text-2xl lg:text-[1.85rem] xl:text-[2.15rem]",
                 HEADLINE_TITLE_SHADOW,
               )}
             >
@@ -68,7 +68,7 @@ export function SurmansetBanner({ articles }: { articles: ArticleSummary[] }) {
         </Link>
 
         <div
-          className="z-[2] flex w-9 shrink-0 flex-col border-l border-black/10 sm:w-11"
+          className="z-[2] flex w-10 shrink-0 flex-col bg-[#f0f2f5] sm:w-12"
           role="tablist"
           aria-label="Sürmanşet seç"
         >
@@ -86,12 +86,19 @@ export function SurmansetBanner({ articles }: { articles: ArticleSummary[] }) {
                 onClick={() => article && setIndex(i)}
                 onMouseEnter={() => article && setIndex(i)}
                 className={cn(
-                  "relative flex flex-1 items-center justify-center border-b border-black/5 text-sm font-bold tabular-nums transition-colors last:border-b-0 disabled:cursor-default disabled:opacity-35",
-                  active ? "bg-[#4a1530] text-white" : "bg-[#eceff3] text-ink hover:bg-[#e0e4ea]",
+                  "relative flex flex-1 items-center justify-center border-b border-black/[0.06] text-[13px] font-extrabold tabular-nums tracking-wide transition-colors last:border-b-0 disabled:cursor-default disabled:opacity-30",
+                  active
+                    ? "bg-brand text-white"
+                    : "bg-transparent text-ink-soft hover:bg-white hover:text-ink",
                 )}
               >
-                {active ? <span className="absolute inset-x-0 top-0 h-0.5 bg-brand" aria-hidden /> : null}
-                {i + 1}
+                {active ? (
+                  <span
+                    className="absolute inset-y-1 left-0 w-[3px] rounded-r-sm bg-white/90"
+                    aria-hidden
+                  />
+                ) : null}
+                <span className={cn(active && "drop-shadow-sm")}>{i + 1}</span>
               </button>
             );
           })}

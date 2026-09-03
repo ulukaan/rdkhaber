@@ -83,17 +83,16 @@ export function TarifParkLink({
       rel="noopener noreferrer"
       aria-label="TarifPark"
       title="TarifPark"
-      className="flex h-full items-center gap-1.5 whitespace-nowrap px-2 xl:px-2.5"
+      className="inline-flex h-9 shrink-0 items-center gap-1.5 border border-[#e92d28]/25 bg-[#fff5f4] px-2 text-[11px] font-extrabold uppercase tracking-wide transition-colors hover:bg-[#ffe8e6] xl:px-2.5"
+      style={{ color: TARIFPARK_RED }}
     >
       <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white shadow-sm"
+        className="flex h-6 w-6 shrink-0 items-center justify-center text-white"
         style={{ background: TARIFPARK_RED }}
       >
         <UtensilsMark className="h-3.5 w-3.5" />
       </span>
-      <span className="text-xs font-bold" style={{ color: TARIFPARK_RED }}>
-        TarifPark
-      </span>
+      <span className="hidden xl:inline">TarifPark</span>
     </a>
   );
 }

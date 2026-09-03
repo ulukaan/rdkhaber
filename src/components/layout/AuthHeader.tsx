@@ -2,44 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/layout/Logo";
 
-const links = [
+const tabs = [
   { href: "/giris", label: "Giriş" },
-  { href: "/kayit", label: "Kayıt Ol" },
-  { href: "/", label: "Anasayfa" },
+  { href: "/kayit", label: "Kayıt" },
 ] as const;
 
-export function AuthHeader({
-  siteName,
-  logoUrl,
-}: {
-  siteName: string;
-  logoUrl?: string;
-}) {
+export function AuthHeader(_props: { siteName: string; logoUrl?: string }) {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-brand/15 bg-white shadow-[0_2px_16px_rgba(208,2,27,0.06)]">
-      <div className="h-1 bg-brand" aria-hidden />
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-        <Logo siteName={siteName} logoUrl={logoUrl} />
-        <nav className="flex items-center gap-2 sm:gap-3" aria-label="Hesap menüsü">
-          {links.map(({ href, label }) => {
-            const active = href !== "/" && pathname === href;
-            const isCta = href === "/kayit";
+    <header className="shrink-0 border-b border-border bg-white">
+      <div className="flex h-12 w-full items-center justify-between gap-4 px-5 sm:h-14 sm:px-8">
+        <nav className="flex h-full items-stretch" aria-label="Hesap menüsü">
+          {tabs.map(({ href, label }) => {
+            const active = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
-                  isCta
-                    ? "bg-brand text-white hover:bg-brand-dark"
-                    : active
-                      ? "bg-brand/10 text-brand"
-                      : "text-ink/80 hover:bg-surface hover:text-brand",
+                  "flex h-full items-center border-b-[3px] px-3 text-[12px] font-extrabold uppercase tracking-[0.08em] transition-colors sm:px-4",
+                  active
+                    ? "border-brand text-brand"
+                    : "border-transparent text-ink/55 hover:text-ink",
                 )}
                 aria-current={active ? "page" : undefined}
               >
@@ -48,6 +36,13 @@ export function AuthHeader({
             );
           })}
         </nav>
+        <Link
+          href="/"
+          className="inline-flex shrink-0 items-center gap-1.5 text-[12px] font-extrabold uppercase tracking-wide text-ink/60 transition-colors hover:text-brand"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          Anasayfa
+        </Link>
       </div>
     </header>
   );

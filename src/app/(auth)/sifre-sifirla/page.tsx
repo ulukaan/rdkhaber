@@ -14,9 +14,9 @@ export default async function ResetPasswordPage({
   if (!token || token.length < 20) {
     return (
       <AuthCard title="Geçersiz bağlantı" subtitle="Şifre sıfırlama bağlantısı eksik veya hatalı.">
-        <p className="text-sm text-ink-soft">
+        <p className="text-sm leading-relaxed text-ink-soft">
           Lütfen{" "}
-          <Link href="/sifremi-unuttum" className="font-semibold text-brand hover:underline">
+          <Link href="/sifremi-unuttum" className="font-extrabold text-brand hover:underline">
             şifremi unuttum
           </Link>{" "}
           sayfasından yeni bir bağlantı isteyin.
@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({
   }
 
   return (
-    <AuthCard title="Yeni Şifre" subtitle="Hesabınız için yeni bir şifre belirleyin.">
+    <AuthCard title="Yeni Şifre" subtitle="Hesabınız için güçlü bir şifre belirleyin.">
       <ResetPasswordForm token={token} />
     </AuthCard>
   );

@@ -77,7 +77,7 @@ export function RegisterForm() {
       {serverError ? <p className="text-sm font-medium text-brand">{serverError}</p> : null}
       {serverInfo ? <p className="text-sm font-medium text-ink-soft">{serverInfo}</p> : null}
 
-      <Button type="submit" disabled={loading} className="mt-2 w-full">
+      <Button type="submit" disabled={loading} className="mt-1 h-12 w-full rounded-none text-[13px] font-extrabold uppercase tracking-[0.08em]">
         {loading ? "Kayıt olunuyor..." : "Kayıt Ol"}
       </Button>
     </form>

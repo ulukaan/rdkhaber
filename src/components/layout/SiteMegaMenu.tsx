@@ -115,7 +115,7 @@ export function SiteMegaMenu({
         aria-expanded={open}
         aria-controls="site-mega-menu"
         aria-label={open ? "Menüyü kapat" : "Tüm menüyü aç"}
-        className="relative z-[120] flex h-10 w-10 items-center justify-center rounded-md text-ink transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        className="relative z-[120] flex h-9 w-9 items-center justify-center border border-border bg-white text-ink transition-colors hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
         <MenuToggleIcon open={open} />
       </button>

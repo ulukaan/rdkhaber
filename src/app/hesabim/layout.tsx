@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { HeaderAdBanner } from "@/components/layout/HeaderAdBanner";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloatButton } from "@/components/layout/WhatsAppFloatButton";
+import { BackToTopButton } from "@/components/layout/BackToTopButton";
 import { Container } from "@/components/ui/Container";
 import { AccountNav } from "@/components/account/AccountNav";
 import { getSettings } from "@/lib/settings";
@@ -30,6 +31,7 @@ export default async function AccountLayout({
         </Container>
       </main>
       <Footer />
+      <BackToTopButton />
       <WhatsAppFloatButton whatsappNumber={settings.whatsappNumber} />
     </div>
   );

@@ -1,5 +1,3 @@
-import { Container } from "@/components/ui/Container";
-
 export function AuthCard({
   title,
   subtitle,
@@ -10,23 +8,17 @@ export function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <Container className="flex min-h-[70vh] items-center justify-center py-10 sm:py-14">
-      <div className="relative w-full max-w-md">
-        <div
-          className="pointer-events-none absolute -inset-4 rounded-2xl bg-brand/[0.04] blur-2xl"
-          aria-hidden
-        />
-        <div className="relative overflow-hidden rounded-xl border border-border bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-          <div className="h-1 bg-brand" aria-hidden />
-          <div className="border-b border-border/80 bg-gradient-to-r from-brand/[0.06] via-white to-white px-6 py-5 sm:px-8">
-            <h1 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h1>
-            {subtitle ? (
-              <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{subtitle}</p>
-            ) : null}
-          </div>
-          <div className="px-6 py-6 sm:px-8 sm:py-7">{children}</div>
+    <div className="flex flex-1 items-start justify-center px-5 py-10 sm:px-8 sm:py-14 lg:items-center">
+      <div className="w-full max-w-md">
+        <div className="mb-8">
+          <span className="mb-3 block h-1 w-10 bg-brand" aria-hidden />
+          <h1 className="text-3xl font-black tracking-tight text-ink sm:text-[2rem]">{title}</h1>
+          {subtitle ? (
+            <p className="mt-2 max-w-[36ch] text-sm leading-relaxed text-ink-soft">{subtitle}</p>
+          ) : null}
         </div>
+        <div className="auth-form">{children}</div>
       </div>
-    </Container>
+    </div>
   );
 }
