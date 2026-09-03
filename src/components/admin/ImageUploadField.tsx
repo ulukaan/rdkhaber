@@ -9,11 +9,13 @@ export function ImageUploadField({
   name,
   defaultValue,
   variant = "cover",
+  compact = false,
   onValueChange,
 }: {
   name: string;
   defaultValue?: string | null;
   variant?: "cover" | "avatar";
+  compact?: boolean;
   onValueChange?: (url: string) => void;
 }) {
   const [url, setUrl] = useState(defaultValue ?? "");
@@ -49,7 +51,9 @@ export function ImageUploadField({
           className={
             variant === "avatar"
               ? "relative mb-2 h-32 w-32 overflow-hidden rounded-full border border-border bg-surface"
-              : "relative mb-2 h-40 w-full overflow-hidden rounded border border-border"
+              : compact
+                ? "relative mb-1.5 h-20 w-full overflow-hidden rounded border border-border bg-surface"
+                : "relative mb-2 h-40 w-full overflow-hidden rounded border border-border"
           }
         >
           <Image
@@ -67,9 +71,9 @@ export function ImageUploadField({
               setUrl("");
               onValueChange?.("");
             }}
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : (
@@ -77,11 +81,15 @@ export function ImageUploadField({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="mb-2 flex h-32 w-full flex-col items-center justify-center gap-1 rounded border border-dashed border-border text-ink-soft hover:border-brand hover:text-brand"
+          className={
+            compact
+              ? "mb-1.5 flex h-16 w-full items-center justify-center gap-2 rounded border border-dashed border-border text-ink-soft hover:border-brand hover:text-brand"
+              : "mb-2 flex h-32 w-full flex-col items-center justify-center gap-1 rounded border border-dashed border-border text-ink-soft hover:border-brand hover:text-brand"
+          }
         >
-          <Upload className="h-5 w-5" />
+          <Upload className={compact ? "h-4 w-4" : "h-5 w-5"} />
           <span className="text-xs font-semibold">
-            {uploading ? "Yükleniyor..." : variant === "avatar" ? "Fotoğraf yükle" : "Görsel Yükle"}
+            {uploading ? "Yükleniyor..." : variant === "avatar" ? "Fotoğraf yükle" : "Görsel yükle"}
           </span>
         </button>
       )}
@@ -96,13 +104,14 @@ export function ImageUploadField({
         }}
       />
       <Input
-        placeholder="veya görsel URL'i yapıştırın"
+        placeholder="veya URL yapıştır"
         value={url}
         onChange={(e) => {
           setPreviewFailed(false);
           setUrl(e.target.value);
           onValueChange?.(e.target.value);
         }}
+        className={compact ? "py-2 text-xs" : undefined}
       />
       {previewFailed && url ? (
         <p className="mt-1 text-xs text-ink-soft">Önizleme yüklenemedi; adres kayıtlı duruyor.</p>

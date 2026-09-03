@@ -13,9 +13,11 @@ export type GalleryImageItem = {
 export function MultiImageUploadField({
   name,
   defaultValue = [],
+  compact = false,
 }: {
   name: string;
   defaultValue?: GalleryImageItem[];
+  compact?: boolean;
 }) {
   const [items, setItems] = useState<GalleryImageItem[]>(defaultValue);
   const [uploading, setUploading] = useState(false);
@@ -58,63 +60,92 @@ export function MultiImageUploadField({
       <input type="hidden" name={name} value={JSON.stringify(items)} />
 
       {items.length > 0 ? (
-        <ul className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <ul
+          className={
+            compact
+              ? "mb-1.5 flex flex-wrap gap-1.5"
+              : "mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3"
+          }
+        >
           {items.map((item, index) => (
-            <li key={`${item.url}-${index}`} className="overflow-hidden border border-border bg-surface">
-              <div className="relative aspect-[4/3]">
-                <Image src={item.url} alt="" fill className="object-cover" sizes="200px" unoptimized />
-                <button
-                  type="button"
-                  onClick={() => persist(items.filter((_, i) => i !== index))}
-                  className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center bg-black/60 text-white hover:bg-black/80"
-                  aria-label="Görseli kaldır"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-                <span className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center bg-black/50 text-[10px] font-bold text-white">
-                  {index + 1}
-                </span>
-              </div>
-              <div className="p-2">
-                <Input
-                  placeholder="Açıklama (isteğe bağlı)"
-                  value={item.caption}
-                  onChange={(e) => {
-                    const next = [...items];
-                    next[index] = { ...item, caption: e.target.value };
-                    persist(next);
-                  }}
-                  className="text-xs"
-                />
-                <div className="mt-1.5 flex gap-1">
+            <li
+              key={`${item.url}-${index}`}
+              className={
+                compact
+                  ? "relative h-14 w-14 overflow-hidden rounded border border-border bg-surface"
+                  : "overflow-hidden border border-border bg-surface"
+              }
+            >
+              {compact ? (
+                <>
+                  <Image src={item.url} alt="" fill className="object-cover" sizes="56px" unoptimized />
                   <button
                     type="button"
-                    disabled={index === 0}
-                    onClick={() => {
-                      if (index === 0) return;
-                      const next = [...items];
-                      [next[index - 1], next[index]] = [next[index], next[index - 1]];
-                      persist(next);
-                    }}
-                    className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-semibold text-ink-soft hover:text-brand disabled:opacity-30"
+                    onClick={() => persist(items.filter((_, i) => i !== index))}
+                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded bg-black/60 text-white"
+                    aria-label="Görseli kaldır"
                   >
-                    <GripVertical className="h-3 w-3" /> Yukarı
+                    <X className="h-3 w-3" />
                   </button>
-                  <button
-                    type="button"
-                    disabled={index === items.length - 1}
-                    onClick={() => {
-                      if (index >= items.length - 1) return;
-                      const next = [...items];
-                      [next[index + 1], next[index]] = [next[index], next[index + 1]];
-                      persist(next);
-                    }}
-                    className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-semibold text-ink-soft hover:text-brand disabled:opacity-30"
-                  >
-                    Aşağı
-                  </button>
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  <div className="relative aspect-[4/3]">
+                    <Image src={item.url} alt="" fill className="object-cover" sizes="200px" unoptimized />
+                    <button
+                      type="button"
+                      onClick={() => persist(items.filter((_, i) => i !== index))}
+                      className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center bg-black/60 text-white hover:bg-black/80"
+                      aria-label="Görseli kaldır"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center bg-black/50 text-[10px] font-bold text-white">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div className="p-2">
+                    <Input
+                      placeholder="Açıklama (isteğe bağlı)"
+                      value={item.caption}
+                      onChange={(e) => {
+                        const next = [...items];
+                        next[index] = { ...item, caption: e.target.value };
+                        persist(next);
+                      }}
+                      className="text-xs"
+                    />
+                    <div className="mt-1.5 flex gap-1">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => {
+                          if (index === 0) return;
+                          const next = [...items];
+                          [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                          persist(next);
+                        }}
+                        className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-semibold text-ink-soft hover:text-brand disabled:opacity-30"
+                      >
+                        <GripVertical className="h-3 w-3" /> Yukarı
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === items.length - 1}
+                        onClick={() => {
+                          if (index >= items.length - 1) return;
+                          const next = [...items];
+                          [next[index + 1], next[index]] = [next[index], next[index + 1]];
+                          persist(next);
+                        }}
+                        className="inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-semibold text-ink-soft hover:text-brand disabled:opacity-30"
+                      >
+                        Aşağı
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -124,11 +155,15 @@ export function MultiImageUploadField({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="mb-2 flex h-24 w-full flex-col items-center justify-center gap-1 border border-dashed border-border text-ink-soft hover:border-brand hover:text-brand"
+        className={
+          compact
+            ? "mb-1.5 flex h-10 w-full items-center justify-center gap-2 rounded border border-dashed border-border text-xs font-semibold text-ink-soft hover:border-brand hover:text-brand"
+            : "mb-2 flex h-24 w-full flex-col items-center justify-center gap-1 border border-dashed border-border text-ink-soft hover:border-brand hover:text-brand"
+        }
       >
-        <Upload className="h-5 w-5" />
-        <span className="text-xs font-semibold">
-          {uploading ? "Yükleniyor…" : "Birden fazla görsel seç"}
+        <Upload className={compact ? "h-3.5 w-3.5" : "h-5 w-5"} />
+        <span className={compact ? undefined : "text-xs font-semibold"}>
+          {uploading ? "Yükleniyor…" : compact ? "Galeri ekle" : "Birden fazla görsel seç"}
         </span>
       </button>
       <input
@@ -139,15 +174,17 @@ export function MultiImageUploadField({
         className="hidden"
         onChange={(e) => void handleFiles(e.target.files)}
       />
-      <Input
-        placeholder="veya görsel URL ekle (Enter)"
-        onKeyDown={(e) => {
-          if (e.key !== "Enter") return;
-          e.preventDefault();
-          addByUrl((e.target as HTMLInputElement).value);
-          (e.target as HTMLInputElement).value = "";
-        }}
-      />
+      {!compact ? (
+        <Input
+          placeholder="veya görsel URL ekle (Enter)"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            addByUrl((e.target as HTMLInputElement).value);
+            (e.target as HTMLInputElement).value = "";
+          }}
+        />
+      ) : null}
       {error ? <p className="mt-1 text-xs font-medium text-brand">{error}</p> : null}
     </div>
   );

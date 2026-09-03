@@ -14,10 +14,12 @@ export function AnaManset10({
   slides,
   side,
   accent,
+  compact = false,
 }: {
   slides: ArticleSummary[];
   side: ArticleSummary[];
   accent?: string | null;
+  compact?: boolean;
 }) {
   if (slides.length === 0) return null;
 
@@ -32,12 +34,17 @@ export function AnaManset10({
           hasSide ? "lg:grid-cols-2" : "lg:grid-cols-1",
         )}
       >
-        <div className="min-h-[280px] lg:min-h-[420px]">
-          <HeadlineSlider articles={slides.slice(0, 10)} accent={accent} max={10} />
+        <div className={cn("min-h-[240px]", compact ? "lg:min-h-[360px]" : "lg:min-h-[420px]")}>
+          <HeadlineSlider
+            articles={slides.slice(0, 10)}
+            accent={accent}
+            max={10}
+            compact={compact}
+          />
         </div>
 
         {hasSide ? (
-          <div className="grid grid-cols-2 grid-rows-3 gap-1">
+          <div className="grid grid-cols-2 grid-rows-3 gap-1" aria-label="Öne çıkanlar">
             {sideItems.map((article) => {
               const face = headlineFromArticle(article);
               return (

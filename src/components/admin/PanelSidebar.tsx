@@ -41,10 +41,10 @@ export function PanelSidebar({
       : "py-2 text-[13px] leading-snug";
   const iconClass = touchFriendly ? "h-4 w-4" : "h-4 w-4";
   const sectionLabelClass = touchFriendly
-    ? "text-sm font-extrabold uppercase tracking-[0.08em] text-white/90"
+    ? "text-[15px] font-extrabold uppercase tracking-[0.1em] text-white"
     : collapsed
       ? "sr-only"
-      : "text-sm font-extrabold uppercase tracking-[0.08em] text-white/90";
+      : "text-[15px] font-extrabold uppercase tracking-[0.1em] text-white";
 
   return (
     <aside
@@ -233,24 +233,26 @@ function NavSection({
       {collapsed ? (
         <div className="mx-auto mb-1.5 h-px w-8 bg-panel-line/80" aria-hidden />
       ) : (
-        <button
-          type="button"
-          onClick={toggleOpen}
-          aria-expanded={isOpen}
-          className={cn(
-            "mb-1.5 flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-panel-alt/60",
-            sectionLabelClass,
-          )}
-        >
-          <span>{label}</span>
-          <ChevronDown
+        <div className="mb-2 border-y border-panel-line/70">
+          <button
+            type="button"
+            onClick={toggleOpen}
+            aria-expanded={isOpen}
             className={cn(
-              "h-4 w-4 shrink-0 text-white/60 transition-transform duration-200",
-              isOpen && "rotate-180",
+              "flex w-full items-center justify-between px-2.5 py-2.5 text-left transition-colors hover:bg-panel-alt/60",
+              sectionLabelClass,
             )}
-            aria-hidden
-          />
-        </button>
+          >
+            <span>{label}</span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-white/60 transition-transform duration-200",
+                isOpen && "rotate-180",
+              )}
+              aria-hidden
+            />
+          </button>
+        </div>
       )}
 
       {showItems ? (

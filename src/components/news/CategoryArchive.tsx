@@ -15,7 +15,11 @@ import {
   type CategoryPageTemplate,
 } from "@/lib/category-path";
 import type { ArticleSummary } from "@/types/article";
+import type { MarketGroup, MarketItem } from "@/lib/rates";
+import type { ParityDesign } from "@/lib/settings";
 import { partyLogoUrl } from "@/lib/party-logos";
+import { ParityStrip } from "@/components/home/ParityStrip";
+import { EconomyCategoryAside } from "@/components/news/EconomyCategoryAside";
 
 export type CategoryArchiveData = {
   name: string;
@@ -153,15 +157,25 @@ function CategoryHeroHeader({
 export function CategoryArchive({
   category,
   headlines,
+  mansetSide,
   articles,
   currentPage,
   mode = "template",
+  financeRail,
 }: {
   category: CategoryArchiveData;
   headlines: ArticleSummary[];
+  /** Verilirse Ana Manşet sağ ızgarası (Öne Çıkan); yoksa headlines bölünür. */
+  mansetSide?: ArticleSummary[];
   articles: ArticleSummary[];
   currentPage: number;
   mode?: CategoryArchiveMode;
+  financeRail?: {
+    parityItems: MarketItem[];
+    marketGroups?: MarketGroup[];
+    mostRead: ArticleSummary[];
+    parityDesign?: ParityDesign;
+  };
 }) {
   const pageSize = category.boxCount || 18;
   const headerBg = category.color || "#d0021b";
@@ -170,8 +184,58 @@ export function CategoryArchive({
   const hover = category.hoverColor || headerBg;
   const title = category.headingH1?.trim() || category.name;
   const template = resolveCategoryPageTemplate(category.fixedTemplate);
-  const { slides, side } = splitAnaMansetHeadlines(headlines);
+  const split = splitAnaMansetHeadlines(headlines);
+  const slides = mansetSide !== undefined ? headlines : split.slides;
+  const side = mansetSide !== undefined ? mansetSide : split.side;
   const showManset = mode === "template" && slides.length > 0;
+  const compact = Boolean(financeRail);
+
+  const archiveMain = (
+    <>
+      {mode === "video" ? (
+        articles.length === 0 ? (
+          <EmptyState categoryName={category.name} finance={compact} />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+            {articles.map((a) => (
+              <VideoCard key={a.id} article={a} />
+            ))}
+          </div>
+        )
+      ) : mode === "photo" ? (
+        articles.length === 0 ? (
+          <EmptyState categoryName={category.name} finance={compact} />
+        ) : (
+          <PhotoGrid articles={articles} />
+        )
+      ) : articles.length === 0 && !showManset ? (
+        <EmptyState categoryName={category.name} finance={compact} />
+      ) : articles.length === 0 ? null : (
+        <TemplateBody template={template} articles={articles} compact={compact} />
+      )}
+
+      <AdUnit code="150" />
+
+      <div className="mt-6 flex justify-center gap-3">
+        {currentPage > 1 && (
+          <a
+            href={`?page=${currentPage - 1}`}
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
+          >
+            Önceki
+          </a>
+        )}
+        {articles.length === pageSize && (
+          <a
+            href={`?page=${currentPage + 1}`}
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
+          >
+            Sonraki
+          </a>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div
@@ -192,72 +256,102 @@ export function CategoryArchive({
         headerHover={headerHover}
       />
 
-      {showManset ? (
-        <div className="border-b border-border">
-          <Container className="py-3 md:py-4">
-            <AnaManset10 slides={slides} side={side} accent={headerBg} />
-          </Container>
-        </div>
-      ) : null}
+      {compact && financeRail ? (
+        <Container className="py-4">
+          <div className="space-y-3">
+            {financeRail.parityItems.length > 0 ? (
+              <ParityStrip items={financeRail.parityItems} design="3" />
+            ) : null}
 
-      <Container className="py-6">
-        {mode === "video" ? (
-          articles.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {articles.map((a) => (
-                <VideoCard key={a.id} article={a} />
-              ))}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+              <div className="min-w-0 space-y-4">
+                {showManset ? (
+                  <AnaManset10 slides={slides} side={side} accent={headerBg} compact />
+                ) : null}
+                {showManset ? <AdUnit code="151" /> : null}
+                {archiveMain}
+              </div>
+              <EconomyCategoryAside
+                parityItems={financeRail.parityItems}
+                marketGroups={financeRail.marketGroups}
+                mostRead={financeRail.mostRead}
+                latest={articles.slice(0, 5)}
+                categoryName={category.name}
+                categorySlug={category.slug ?? "ekonomi"}
+              />
             </div>
-          )
-        ) : mode === "photo" ? (
-          articles.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <PhotoGrid articles={articles} />
-          )
-        ) : articles.length === 0 && !showManset ? (
-          <EmptyState />
-        ) : articles.length === 0 ? null : (
-          <TemplateBody template={template} articles={articles} />
-        )}
+          </div>
+        </Container>
+      ) : (
+        <>
+          {showManset ? (
+            <div className="border-b border-border">
+              <Container className="py-3 md:py-4">
+                <AnaManset10 slides={slides} side={side} accent={headerBg} />
+              </Container>
+            </div>
+          ) : null}
 
-        <AdUnit code="150" />
-
-        <div className="mt-8 flex justify-center gap-3">
-          {currentPage > 1 && (
-            <a
-              href={`?page=${currentPage - 1}`}
-              className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
-            >
-              Önceki
-            </a>
-          )}
-          {articles.length === pageSize && (
-            <a
-              href={`?page=${currentPage + 1}`}
-              className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-surface"
-            >
-              Sonraki
-            </a>
-          )}
-        </div>
-      </Container>
+          <Container className="py-6">{archiveMain}</Container>
+        </>
+      )}
     </div>
   );
 }
 
-function EmptyState() {
-  return <p className="py-10 text-center text-ink-soft">Bu kategoride henüz haber bulunmuyor.</p>;
+function EmptyState({
+  categoryName,
+  finance = false,
+}: {
+  categoryName?: string;
+  finance?: boolean;
+}) {
+  return (
+    <div className="border border-border bg-white px-5 py-8 text-center">
+      <p className="text-base font-extrabold text-ink">
+        {categoryName
+          ? `${categoryName} kategorisinde henüz yayınlanmış haber yok`
+          : "Bu kategoride henüz haber bulunmuyor"}
+      </p>
+      <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">
+        {finance
+          ? "Piyasa göstergeleri sağda ve üstte güncellenmeye devam eder. Yeni ekonomi haberleri yayınlandıkça burada listelenir."
+          : "Yeni içerikler yayınlandıkça bu sayfada görünecek."}
+      </p>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <Link
+          href="/"
+          className="border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-brand hover:text-brand"
+        >
+          Anasayfa
+        </Link>
+        <Link
+          href={categoryHref("gundem")}
+          className="border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-brand hover:text-brand"
+        >
+          Gündem
+        </Link>
+        {finance ? null : (
+          <Link
+            href={categoryHref("ekonomi")}
+            className="border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink hover:border-brand hover:text-brand"
+          >
+            Ekonomi
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TemplateBody({
   template,
   articles,
+  compact = false,
 }: {
   template: CategoryPageTemplate;
   articles: ArticleSummary[];
+  compact?: boolean;
 }) {
   if (template === "liste") {
     return (
@@ -295,7 +389,13 @@ function TemplateBody({
 
   // klasik
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+    <div
+      className={
+        compact
+          ? "grid grid-cols-2 gap-3 md:grid-cols-3"
+          : "grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"
+      }
+    >
       {articles.map((a) => (
         <NewsCard key={a.id} article={a} variant="poster" />
       ))}

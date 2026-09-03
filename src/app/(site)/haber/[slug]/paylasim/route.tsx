@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveShareCardPhoto } from "@/lib/share-post";
 import { renderSharePostImage } from "@/lib/share-post-image";
 
 export const runtime = "nodejs";
@@ -18,6 +19,9 @@ export async function GET(req: Request, { params }: Params) {
       summary: true,
       status: true,
       coverImageUrl: true,
+      imageSocial: true,
+      imageMainHeadline: true,
+      imageFiveHeadline: true,
       headlineSub: true,
       publishedAt: true,
       category: { select: { name: true } },
@@ -33,18 +37,20 @@ export async function GET(req: Request, { params }: Params) {
     }
   }
 
+  const photoUrl = resolveShareCardPhoto(article);
+
   const image = await renderSharePostImage({
     title: article.title,
     summary: article.summary,
     categoryName: article.category.name,
     publishedAt: article.publishedAt,
     headlineSub: article.headlineSub,
-    coverImageUrl: article.coverImageUrl,
+    coverImageUrl: photoUrl,
   });
 
   const download = new URL(req.url).searchParams.get("indir") === "1";
   const headers = new Headers(image.headers);
-  headers.set("Cache-Control", article.status === "PUBLISHED" ? "public, max-age=300" : "private, no-store");
+  headers.set("Cache-Control", article.status === "PUBLISHED" ? "public, max-age=60" : "private, no-store");
   if (download) {
     headers.set("Content-Disposition", `attachment; filename="duzce-radikal-${slug}.png"`);
   }

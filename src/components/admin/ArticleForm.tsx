@@ -2,14 +2,16 @@
 
 import { clientFormSubmit } from "@/lib/client-form";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ExternalLink,
   FileText,
   Image as ImageIcon,
   LayoutGrid,
+  MonitorPlay,
   Search,
+  Share2,
   UserRound,
   Video,
 } from "lucide-react";
@@ -86,9 +88,12 @@ function toDatetimeLocal(value?: string | Date | null) {
 export function ArticleForm({
   categories,
   defaults,
+  quickMode = false,
 }: {
   categories: Category[];
   defaults?: ArticleDefaults;
+  /** Dashboard “Hızlı haber” — doğrudan yazıma odaklanır. */
+  quickMode?: boolean;
 }) {
   const router = useRouter();
   const [slug, setSlug] = useState(defaults?.slug ?? "");
@@ -99,6 +104,14 @@ export function ArticleForm({
   const [loading, setLoading] = useState(false);
 
   const isEdit = Boolean(defaults?.id);
+
+  useEffect(() => {
+    if (!quickMode || isEdit) return;
+    const el = document.getElementById("title") as HTMLInputElement | null;
+    if (!el) return;
+    el.focus({ preventScroll: false });
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [quickMode, isEdit]);
 
   const onSubmit = async (formData: FormData) => {
     setLoading(true);
@@ -154,6 +167,35 @@ export function ArticleForm({
 
   return (
     <form onSubmit={clientFormSubmit(onSubmit)} className={cn("flex flex-col gap-5", PANEL_FORM_BOTTOM_PAD)}>
+      <section
+        id="galeri"
+        className="rounded-xl border border-border bg-white px-3 py-2.5 shadow-sm sm:px-4"
+      >
+        <div className="mb-2 flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 text-brand" aria-hidden />
+          <h3 className="text-sm font-bold text-ink">Fotoğraf</h3>
+          <span className="text-xs text-ink-soft">Kapak · galeri</span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-start">
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+              Ana görsel
+            </p>
+            <ImageUploadField compact name="coverImageUrl" defaultValue={defaults?.coverImageUrl} />
+          </div>
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+              Galeri
+            </p>
+            <MultiImageUploadField
+              compact
+              name="galleryImages"
+              defaultValue={defaults?.galleryImages ?? []}
+            />
+          </div>
+        </div>
+      </section>
+
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
         <div className="flex flex-col gap-5 lg:col-span-2">
           <FormCard title="Haber" description="Okuyucunun göreceği metin." Icon={FileText}>
@@ -164,6 +206,7 @@ export function ArticleForm({
                   name="title"
                   defaultValue={defaults?.title}
                   required
+                  autoFocus={quickMode}
                   placeholder="Haber başlığını yazın"
                   onChange={(e) => {
                     if (!slugTouched) setSlug(slugify(e.target.value));
@@ -219,24 +262,13 @@ export function ArticleForm({
             </div>
           </FormCard>
 
-          <FormCard id="galeri" title="Fotoğraf" description="Kapak ve haber altı galeri." Icon={ImageIcon}>
-            <div className="flex flex-col gap-4">
-              <FieldGroup label="Ana görsel" htmlFor="coverImageUrl">
-                <ImageUploadField name="coverImageUrl" defaultValue={defaults?.coverImageUrl} />
-                <FieldHint>Liste ve kapakta görünür. Yatay (16:9) önerilir.</FieldHint>
-              </FieldGroup>
-
-              <FieldGroup label="Haber galerisi" htmlFor="galleryImages">
-                <MultiImageUploadField
-                  name="galleryImages"
-                  defaultValue={defaults?.galleryImages ?? []}
-                />
-                <FieldHint>Ana görselin altında sıralanır.</FieldHint>
-              </FieldGroup>
-            </div>
-          </FormCard>
-
-          <FormCard title="Video" description="Video haberse burayı doldurun." Icon={Video}>
+          <FormCard
+            title="Video"
+            description="Video haberse burayı doldurun."
+            Icon={Video}
+            collapsible
+            defaultOpen={false}
+          >
             <div className="flex flex-col gap-4">
               <FieldGroup label="Video bağlantısı" htmlFor="videoUrl">
                 <Input
@@ -262,7 +294,13 @@ export function ArticleForm({
             </div>
           </FormCard>
 
-          <FormCard title="Google ve paylaşım" description="Boş bırakırsanız başlık ve spot kullanılır." Icon={Search}>
+          <FormCard
+            title="Google ve paylaşım"
+            description="Boş bırakırsanız başlık ve spot kullanılır."
+            Icon={Search}
+            collapsible
+            defaultOpen={false}
+          >
             <div className="flex flex-col gap-4">
               <FieldGroup label="Google başlığı" htmlFor="seoTitle">
                 <Input
@@ -294,187 +332,242 @@ export function ArticleForm({
           </FormCard>
         </div>
 
-        <aside className="order-first lg:order-none lg:col-span-1 lg:self-start">
-          <div className="flex flex-col gap-5 lg:sticky lg:top-16 lg:z-10 lg:max-h-[calc(100dvh-4rem-5rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
-          <FormCard title="Yayın" description="Nerede ve ne zaman çıksın." Icon={LayoutGrid}>
-            <div className="flex flex-col gap-4">
-              <FieldGroup label="Kategori">
-                <CategoryCheckboxes
-                  categories={categories}
-                  defaultIds={defaults?.categoryIds?.length ? defaults.categoryIds : defaults?.categoryId ? [defaults.categoryId] : []}
-                />
-              </FieldGroup>
+        <aside
+          className={cn(
+            "lg:col-span-1 lg:self-start",
+            quickMode ? "order-last lg:order-none" : "order-first lg:order-none",
+          )}
+        >
+          <div className="flex flex-col gap-6 lg:sticky lg:top-16 lg:z-10">
+            <AsideGroup label="Yayın">
+              <FormCard
+                title="Yayın ayarları"
+                description="Kategori, durum ve zaman."
+                Icon={LayoutGrid}
+                collapsible
+                defaultOpen
+              >
+                <div className="flex flex-col gap-4">
+                  <FieldGroup label="Kategori">
+                    <CategoryCheckboxes
+                      categories={categories}
+                      defaultIds={
+                        defaults?.categoryIds?.length
+                          ? defaults.categoryIds
+                          : defaults?.categoryId
+                            ? [defaults.categoryId]
+                            : []
+                      }
+                    />
+                  </FieldGroup>
 
-              <FieldGroup label="Yayın durumu" htmlFor="status">
-                <Select
-                  id="status"
-                  name="status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </Select>
-                <FieldHint>
-                  {status === "PUBLISHED"
-                    ? "Sitede herkese açık."
-                    : status === "REVIEW"
-                      ? "Onay bekliyor, sitede yok."
-                      : status === "ARCHIVED"
-                        ? "Arşivde, listelenmez."
-                        : "Taslak; sitede görünmez."}
-                </FieldHint>
-              </FieldGroup>
+                  <FieldGroup label="Yayın durumu" htmlFor="status">
+                    <Select
+                      id="status"
+                      name="status"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      {STATUS_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <FieldHint>
+                      {status === "PUBLISHED"
+                        ? "Sitede herkese açık."
+                        : status === "REVIEW"
+                          ? "Onay bekliyor, sitede yok."
+                          : status === "ARCHIVED"
+                            ? "Arşivde, listelenmez."
+                            : "Taslak; sitede görünmez."}
+                    </FieldHint>
+                  </FieldGroup>
 
-              <FieldGroup label="Yayın zamanı" htmlFor="publishedAt">
-                <Input
-                  id="publishedAt"
-                  name="publishedAt"
-                  type="datetime-local"
-                  defaultValue={toDatetimeLocal(defaults?.publishedAt)}
-                />
-                <FieldHint>Boşsa yayına alınca şu anki saat yazılır.</FieldHint>
-              </FieldGroup>
+                  <FieldGroup label="Yayın zamanı" htmlFor="publishedAt">
+                    <Input
+                      id="publishedAt"
+                      name="publishedAt"
+                      type="datetime-local"
+                      defaultValue={toDatetimeLocal(defaults?.publishedAt)}
+                    />
+                    <FieldHint>Boşsa yayına alınca şu anki saat yazılır.</FieldHint>
+                  </FieldGroup>
 
-              <FieldGroup label="Zamanlanmış yayın" htmlFor="scheduledAt">
-                <Input
-                  id="scheduledAt"
-                  name="scheduledAt"
-                  type="datetime-local"
-                  defaultValue={toDatetimeLocal(defaults?.scheduledAt)}
-                />
-                <FieldHint>Gelecek tarih seçilirse haber o saatte otomatik yayınlanır.</FieldHint>
-              </FieldGroup>
+                  <FieldGroup label="Zamanlanmış yayın" htmlFor="scheduledAt">
+                    <Input
+                      id="scheduledAt"
+                      name="scheduledAt"
+                      type="datetime-local"
+                      defaultValue={toDatetimeLocal(defaults?.scheduledAt)}
+                    />
+                    <FieldHint>Gelecek tarih seçilirse haber o saatte otomatik yayınlanır.</FieldHint>
+                  </FieldGroup>
 
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-semibold text-ink">
-                <input
-                  type="checkbox"
-                  name="isLiveBlog"
-                  defaultChecked={defaults?.isLiveBlog}
-                  className="h-4 w-4 accent-brand"
-                />
-                Canlı anlatım modu
-              </label>
+                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-semibold text-ink">
+                    <input
+                      type="checkbox"
+                      name="isLiveBlog"
+                      defaultChecked={defaults?.isLiveBlog}
+                      className="h-4 w-4 accent-brand"
+                    />
+                    Canlı anlatım modu
+                  </label>
 
-              <FieldGroup label="Etiketler" htmlFor="tagNames">
-                <Input
-                  id="tagNames"
-                  name="tagNames"
-                  defaultValue={defaults?.tagNames}
-                  placeholder="Düzce, emniyet"
-                />
-                <FieldHint>Virgülle ayırın.</FieldHint>
-              </FieldGroup>
+                  <FieldGroup label="Etiketler" htmlFor="tagNames">
+                    <Input
+                      id="tagNames"
+                      name="tagNames"
+                      defaultValue={defaults?.tagNames}
+                      placeholder="Düzce, emniyet"
+                    />
+                    <FieldHint>Virgülle ayırın.</FieldHint>
+                  </FieldGroup>
 
-              {typeof defaults?.viewCount === "number" ? (
-                <p className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-ink-soft">
-                  Okunma: <span className="font-bold text-ink">{defaults.viewCount}</span>
-                </p>
-              ) : null}
+                  {typeof defaults?.viewCount === "number" ? (
+                    <p className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-ink-soft">
+                      Okunma: <span className="font-bold text-ink">{defaults.viewCount}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </FormCard>
+            </AsideGroup>
 
-              <div className="flex flex-col gap-2 border-t border-border pt-4">
-                <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-                  Anasayfada göster
-                </p>
-                <ToggleRow
-                  name="isBreaking"
-                  defaultChecked={defaults?.isBreaking}
-                  label="Son dakika bandı"
-                  hint="Üstteki kırmızı kayan yazıda görünür. Yayınlandıktan sonra 24 saat aktif kalır."
-                />
-                <ToggleRow
-                  name="isFeatured"
-                  defaultChecked={defaults?.isFeatured}
-                  label="Büyük manşet"
-                  hint="Ana sayfadaki büyük slayt."
-                />
-                <ToggleRow
-                  name="inFiveHeadline"
-                  defaultChecked={defaults?.inFiveHeadline}
-                  label="Sürmanşet"
-                  hint="Ana sayfadaki büyük sürmanşet şeridinde (1–10) listelenir."
-                />
-                <ToggleRow
-                  name="inSpotlight"
-                  defaultChecked={defaults?.inSpotlight}
-                  label="Öne çıkanlar"
-                  hint="Öne çıkan haber kutuları."
-                />
-              </div>
-            </div>
-          </FormCard>
+            <AsideGroup label="Anasayfa">
+              <FormCard
+                title="Vitrin konumları"
+                description="Nerede görünsün ve özel görseller."
+                Icon={MonitorPlay}
+                collapsible
+                defaultOpen={false}
+              >
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                      Nerede görünsün
+                    </p>
+                    <ToggleRow
+                      name="isBreaking"
+                      defaultChecked={defaults?.isBreaking}
+                      label="Son dakika bandı"
+                      hint="Üstteki kırmızı kayan yazı. Yayından sonra 24 saat."
+                    />
+                    <ToggleRow
+                      name="isFeatured"
+                      defaultChecked={defaults?.isFeatured}
+                      label="Büyük manşet"
+                      hint="Ana sayfadaki büyük slayt."
+                    />
+                    <ToggleRow
+                      name="inFiveHeadline"
+                      defaultChecked={defaults?.inFiveHeadline}
+                      label="Sürmanşet"
+                      hint="Büyük sürmanşet şeridi (1–10)."
+                    />
+                    <ToggleRow
+                      name="inSpotlight"
+                      defaultChecked={defaults?.inSpotlight}
+                      label="Öne çıkanlar"
+                      hint="Öne çıkan haber kutuları."
+                    />
+                  </div>
 
-          <PlacementImages
-            excludeCover
-            showToggles={false}
-            showVideoNote={false}
-            title="Anasayfa görselleri"
-            description="İstersen her yer için ayrı fotoğraf."
-            defaults={{
-              imageMainHeadline: defaults?.imageMainHeadline,
-              imageTopHeadline: defaults?.imageTopHeadline,
-              imageSpotlight: defaults?.imageSpotlight,
-              imageFiveHeadline: defaults?.imageFiveHeadline,
-              imageSocial: defaults?.imageSocial,
-              imageStory: defaults?.imageStory,
-            }}
-          />
+                  <div>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                      Konuma özel görsel
+                    </p>
+                    <PlacementImages
+                      bare
+                      excludeCover
+                      showToggles={false}
+                      showVideoNote={false}
+                      defaults={{
+                        imageMainHeadline: defaults?.imageMainHeadline,
+                        imageTopHeadline: defaults?.imageTopHeadline,
+                        imageSpotlight: defaults?.imageSpotlight,
+                        imageFiveHeadline: defaults?.imageFiveHeadline,
+                        imageSocial: defaults?.imageSocial,
+                        imageStory: defaults?.imageStory,
+                      }}
+                    />
+                    <FieldHint>Boş bırakılan yerde ana görsel kullanılır.</FieldHint>
+                  </div>
+                </div>
+              </FormCard>
+            </AsideGroup>
 
-          <SharePostPreview slug={defaults?.id ? slug : undefined} title={defaults?.title} />
+            <AsideGroup label="Paylaşım">
+              <FormCard
+                title="Instagram kartı"
+                description="Kaydettikten sonra indirip paylaş."
+                Icon={Share2}
+                collapsible
+                defaultOpen={false}
+              >
+                <SharePostPreview bare slug={defaults?.id ? slug : undefined} title={defaults?.title} />
+              </FormCard>
+            </AsideGroup>
 
-          <FormCard title="Künye" description="Yazar ve haber kaynağı." Icon={UserRound}>
-            <div className="flex flex-col gap-4">
-              <FieldGroup label="Yazar" htmlFor="reporterName">
-                <Input
-                  id="reporterName"
-                  name="reporterName"
-                  defaultValue={defaults?.reporterName ?? ""}
-                  placeholder="Örn. Düzce Radikal"
-                />
-                <FieldHint>Haber sayfasında yazar olarak görünür.</FieldHint>
-              </FieldGroup>
-              <FieldGroup label="Ajans / kaynak" htmlFor="sourceName">
-                <Input
-                  id="sourceName"
-                  name="sourceName"
-                  defaultValue={defaults?.sourceName ?? ""}
-                  placeholder="AA, DHA…"
-                />
-              </FieldGroup>
-              <FieldGroup label="Kaynak bağlantısı" htmlFor="sourceUrl">
-                <Input
-                  id="sourceUrl"
-                  name="sourceUrl"
-                  defaultValue={defaults?.sourceUrl ?? ""}
-                  placeholder="https://..."
-                />
-              </FieldGroup>
-              <FieldGroup label="Başka sayfaya git" htmlFor="redirectUrl">
-                <Input
-                  id="redirectUrl"
-                  name="redirectUrl"
-                  defaultValue={defaults?.redirectUrl ?? ""}
-                  placeholder="https://..."
-                />
-                <FieldHint>Doluysa bu haber o adrese gider.</FieldHint>
-              </FieldGroup>
-            </div>
-          </FormCard>
+            <AsideGroup label="Künye">
+              <FormCard
+                key="kunye-collapsed"
+                title="Künye"
+                description="Yazar ve haber kaynağı."
+                Icon={UserRound}
+                collapsible
+                defaultOpen={false}
+              >
+                <div className="flex flex-col gap-4">
+                  <FieldGroup label="Yazar" htmlFor="reporterName">
+                    <Input
+                      id="reporterName"
+                      name="reporterName"
+                      defaultValue={defaults?.reporterName ?? ""}
+                      placeholder="Örn. Düzce Radikal"
+                    />
+                    <FieldHint>Haber sayfasında yazar olarak görünür.</FieldHint>
+                  </FieldGroup>
+                  <FieldGroup label="Ajans / kaynak" htmlFor="sourceName">
+                    <Input
+                      id="sourceName"
+                      name="sourceName"
+                      defaultValue={defaults?.sourceName ?? ""}
+                      placeholder="AA, DHA…"
+                    />
+                  </FieldGroup>
+                  <FieldGroup label="Kaynak bağlantısı" htmlFor="sourceUrl">
+                    <Input
+                      id="sourceUrl"
+                      name="sourceUrl"
+                      defaultValue={defaults?.sourceUrl ?? ""}
+                      placeholder="https://..."
+                    />
+                  </FieldGroup>
+                  <FieldGroup label="Başka sayfaya git" htmlFor="redirectUrl">
+                    <Input
+                      id="redirectUrl"
+                      name="redirectUrl"
+                      defaultValue={defaults?.redirectUrl ?? ""}
+                      placeholder="https://..."
+                    />
+                    <FieldHint>Doluysa bu haber o adrese gider.</FieldHint>
+                  </FieldGroup>
+                </div>
+              </FormCard>
+            </AsideGroup>
 
-          {isEdit && slug ? (
-            <a
-              href={`/haber/${slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink-soft shadow-sm transition-colors hover:border-brand hover:text-brand"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Haberi sitede görüntüle
-            </a>
-          ) : null}
+            {isEdit && slug ? (
+              <a
+                href={`/haber/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink-soft shadow-sm transition-colors hover:border-brand hover:text-brand"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Haberi sitede görüntüle
+              </a>
+            ) : null}
           </div>
         </aside>
       </div>
@@ -489,6 +582,17 @@ export function ArticleForm({
         </Button>
       </PanelFormFooter>
     </form>
+  );
+}
+
+function AsideGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2.5">
+      <p className="px-0.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink-soft/80">
+        {label}
+      </p>
+      {children}
+    </div>
   );
 }
 

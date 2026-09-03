@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -21,10 +21,12 @@ export function ArticleCategoryChrome({
   name,
   slug,
   color,
+  children,
 }: {
   name: string;
   slug: string;
   color: string | null;
+  children?: ReactNode;
 }) {
   const router = useRouter();
   const [stuck, setStuck] = useState(false);
@@ -102,13 +104,16 @@ export function ArticleCategoryChrome({
 
   return (
     <>
-      <Link
-        href={categoryHref(slug)}
-        className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
-        style={{ backgroundColor: color || "var(--brand)" }}
-      >
-        {name}
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href={categoryHref(slug)}
+          className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+          style={{ backgroundColor: color || "var(--brand)" }}
+        >
+          {name}
+        </Link>
+        {children}
+      </div>
 
       <div
         className={cn(

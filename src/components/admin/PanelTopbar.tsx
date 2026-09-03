@@ -96,9 +96,20 @@ export function PanelTopbar({
           </Link>
 
           <div className="flex items-center gap-2 border-l border-border pl-2 md:gap-2.5 md:pl-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-xs font-bold uppercase text-white">
-              {initials(user.name)}
-            </span>
+            {user.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.image}
+                alt={user.name ? `${user.name} profil fotoğrafı` : "Profil fotoğrafı"}
+                width={36}
+                height={36}
+                className="h-9 w-9 rounded-full object-cover ring-1 ring-border"
+              />
+            ) : (
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-xs font-bold uppercase text-white">
+                {initials(user.name)}
+              </span>
+            )}
             <div className="hidden text-left text-sm leading-tight md:block">
               <p className="font-semibold text-ink">{user.name}</p>
               <p className="text-xs text-ink-soft">{roleLabel(user.role)}</p>

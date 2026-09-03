@@ -11,7 +11,9 @@ export function sanitizeArticleHtml(content: string) {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
       a: ["href", "target", "rel"],
-      img: ["src", "alt", "width", "height"],
+      img: ["src", "alt", "width", "height", "class", "title", "loading"],
+      figure: ["class"],
+      figcaption: ["class"],
     },
     allowedSchemes: ["http", "https", "mailto"],
     allowedSchemesByTag: {

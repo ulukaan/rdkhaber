@@ -180,24 +180,21 @@ export default async function ArticlePage({
             name={article.category.name}
             slug={article.category.slug}
             color={article.category.color}
-          />
+          >
+            {extraCategories.map((c) => (
+              <Link
+                key={c.slug}
+                href={categoryHref(c.slug)}
+                className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: c.color || "var(--brand)" }}
+              >
+                {c.name}
+              </Link>
+            ))}
+          </ArticleCategoryChrome>
           {isActiveBreaking(article) ? (
             <div className="mt-3">
               <BreakingBadge />
-            </div>
-          ) : null}
-          {extraCategories.length > 0 ? (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {extraCategories.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={categoryHref(c.slug)}
-                  className="inline-flex items-center px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: c.color || "var(--brand)" }}
-                >
-                  {c.name}
-                </Link>
-              ))}
             </div>
           ) : null}
 

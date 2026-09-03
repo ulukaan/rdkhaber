@@ -1,12 +1,10 @@
-import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 
 export function isStaffRole(role: Role) {
   return role === "ADMIN" || role === "EDITOR";
 }
 
-/** Personel 2FA kurulum sayfası — panel içinde kalır, public hesap sayfasına gitmez. */
+/** Personel 2FA ayar sayfası — panel içinde kalır. */
 export function staffSecuritySetupPath(role: Role) {
   if (role === "ADMIN") return "/admin/guvenlik";
   if (role === "EDITOR") return "/editor/guvenlik";
@@ -18,17 +16,14 @@ export function isStaffSecuritySetupPath(pathname: string, role: Role) {
   return pathname === setupPath || pathname.startsWith(`${setupPath}/`);
 }
 
-/** Personel paneline erişim için 2FA zorunlu (prod). */
-export async function enforceStaff2FA(userId: string, role: Role, pathname?: string) {
-  if (!isStaffRole(role)) return;
-  if (process.env.NODE_ENV !== "production") return;
-  if (pathname && isStaffSecuritySetupPath(pathname, role)) return;
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { totpEnabled: true },
-  });
-  if (!user?.totpEnabled) {
-    redirect(staffSecuritySetupPath(role));
-  }
+/**
+ * Eskiden personelde 2FA zorunluydu; artık isteğe bağlı.
+ * Layout çağrıları kırılmasın diye no-op bırakıldı.
+ */
+export async function enforceStaff2FA(
+  _userId: string,
+  _role: Role,
+  _pathname?: string,
+) {
+  return;
 }

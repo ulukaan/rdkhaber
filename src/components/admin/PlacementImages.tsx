@@ -36,6 +36,7 @@ export function PlacementImages({
   showVideoNote = true,
   title = "Anasayfa görselleri",
   description = "Boş bırakılan yerde ana görsel kullanılır.",
+  bare = false,
 }: {
   defaults?: PlacementValues;
   excludeCover?: boolean;
@@ -43,10 +44,38 @@ export function PlacementImages({
   showVideoNote?: boolean;
   title?: string;
   description?: string;
+  /** Dış kart yok — FormCard içine gömmek için. */
+  bare?: boolean;
 }) {
   const items = PLACEMENTS.filter((p) => !(excludeCover && p.imageName === "coverImageUrl")).map(
     (p) => (showToggles ? p : { ...p, toggleName: undefined }),
   );
+
+  const list = (
+    <ul className={bare ? "divide-y divide-border rounded-lg border border-border" : "divide-y divide-border"}>
+      {items.map((p) => (
+        <PlacementRow
+          key={p.imageName}
+          def={p}
+          defaultImage={(defaults?.[p.imageName] as string | null) ?? ""}
+          defaultChecked={Boolean(p.toggleName && defaults?.[p.toggleName])}
+        />
+      ))}
+      {showVideoNote ? (
+        <li className="flex items-center gap-3 px-5 py-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-ink-soft">
+            <Video className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-ink">Video</span>
+            <span className="text-xs text-ink-soft">Video alanı soldaki Video bölümünden doldurulur</span>
+          </span>
+        </li>
+      ) : null}
+    </ul>
+  );
+
+  if (bare) return list;
 
   return (
     <div className="rounded-xl border border-border bg-white shadow-sm">
@@ -54,27 +83,7 @@ export function PlacementImages({
         <h3 className="text-sm font-bold text-ink">{title}</h3>
         <p className="mt-0.5 text-xs text-ink-soft">{description}</p>
       </header>
-      <ul className="divide-y divide-border">
-        {items.map((p) => (
-          <PlacementRow
-            key={p.imageName}
-            def={p}
-            defaultImage={(defaults?.[p.imageName] as string | null) ?? ""}
-            defaultChecked={Boolean(p.toggleName && defaults?.[p.toggleName])}
-          />
-        ))}
-        {showVideoNote ? (
-          <li className="flex items-center gap-3 px-5 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-ink-soft">
-              <Video className="h-4 w-4" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-ink">Video</span>
-              <span className="text-xs text-ink-soft">Video alanı “Medya” bölümünden doldurulur</span>
-            </span>
-          </li>
-        ) : null}
-      </ul>
+      {list}
     </div>
   );
 }

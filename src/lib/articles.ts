@@ -116,6 +116,16 @@ export function getFeaturedArticles(take = 5) {
   });
 }
 
+/** Öne çıkan — `inSpotlight` işaretli haberler. */
+export function getSpotlightArticles(take = 6) {
+  return prisma.article.findMany({
+    where: { status: "PUBLISHED", inSpotlight: true },
+    orderBy: { publishedAt: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
 /** Sürmanşet / beşli manşet — `inFiveHeadline` işaretli haberler (en fazla 10). */
 export function getSurmansetArticles(take = 10) {
   return prisma.article.findMany({
@@ -124,6 +134,53 @@ export function getSurmansetArticles(take = 10) {
     take,
     select: articleSummarySelect,
   });
+}
+
+function uniqueArticlesById<T extends { id: string }>(items: T[]) {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    out.push(item);
+  }
+  return out;
+}
+
+/**
+ * Kategori manşeti: yalnızca bu kategoride işaretlenenler.
+ * Sol = isFeatured (Ana Manşet), sağ = inSpotlight (Öne Çıkan).
+ * Liste ayrı kalır; buraya son haberler çekilmez.
+ */
+export async function getCategoryArchiveManset(
+  categorySlug: string,
+  extra?: { childSlugs?: string[] },
+) {
+  const slugs = [categorySlug, ...(extra?.childSlugs ?? [])];
+  const inCat = inCategorySlugs(slugs);
+
+  const [featuredCat, spotlightCat] = await Promise.all([
+    prisma.article.findMany({
+      where: { status: "PUBLISHED", isFeatured: true, ...inCat },
+      orderBy: { publishedAt: "desc" },
+      take: 10,
+      select: articleSummarySelect,
+    }),
+    prisma.article.findMany({
+      where: { status: "PUBLISHED", inSpotlight: true, ...inCat },
+      orderBy: { publishedAt: "desc" },
+      take: 6,
+      select: articleSummarySelect,
+    }),
+  ]);
+
+  const slides = uniqueArticlesById(featuredCat).slice(0, 10);
+  const slideIds = new Set(slides.map((a) => a.id));
+  const side = uniqueArticlesById(spotlightCat)
+    .filter((a) => !slideIds.has(a.id))
+    .slice(0, 6);
+
+  return { slides, side };
 }
 
 export function getBreakingArticles(take = 5) {
@@ -138,6 +195,23 @@ export function getBreakingArticles(take = 5) {
 export function getMostReadArticles(take = 5) {
   return prisma.article.findMany({
     where: { status: "PUBLISHED" },
+    orderBy: { viewCount: "desc" },
+    take,
+    select: articleSummarySelect,
+  });
+}
+
+export function getMostReadByCategory(
+  categorySlug: string,
+  take = 8,
+  extra?: { childSlugs?: string[] },
+) {
+  const slugs = [categorySlug, ...(extra?.childSlugs ?? [])];
+  return prisma.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      ...inCategorySlugs(slugs),
+    },
     orderBy: { viewCount: "desc" },
     take,
     select: articleSummarySelect,
@@ -213,13 +287,15 @@ export function getArticlesByCategory(
   categorySlug: string,
   take = 12,
   skip = 0,
-  extra?: { videoOnly?: boolean; childSlugs?: string[] },
+  extra?: { videoOnly?: boolean; childSlugs?: string[]; excludeIds?: string[] },
 ) {
   const slugs = [categorySlug, ...(extra?.childSlugs ?? [])];
+  const excludeIds = extra?.excludeIds?.filter(Boolean) ?? [];
   return prisma.article.findMany({
     where: {
       status: "PUBLISHED",
       ...inCategorySlugs(slugs),
+      ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
       ...(extra?.videoOnly
         ? { AND: [{ videoUrl: { not: null } }, { videoUrl: { not: "" } }] }
         : {}),

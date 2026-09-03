@@ -53,6 +53,8 @@ export function TwoFactorForm({
       if (redirectAfterEnable) {
         router.push(redirectAfterEnable);
         router.refresh();
+      } else {
+        router.refresh();
       }
     });
   };
@@ -69,6 +71,7 @@ export function TwoFactorForm({
       setSetup(null);
       setCode("");
       await getTotpStatusAction();
+      router.refresh();
     });
   };
 
@@ -78,7 +81,8 @@ export function TwoFactorForm({
         <div className="min-w-0">
           <h2 className="text-sm font-bold text-ink">İki adımlı doğrulama (TOTP)</h2>
           <p className="mt-1 text-xs text-ink-soft">
-            Google Authenticator veya benzeri uygulama ile personel girişini koruyun.
+            İsteğe bağlıdır. Google Authenticator veya benzeri uygulama ile hesabı ek
+            koruyabilirsiniz; istediğiniz zaman kapatabilirsiniz.
           </p>
         </div>
         <Badge variant={enabled ? "brand" : "outline"} className="self-start">
@@ -88,7 +92,7 @@ export function TwoFactorForm({
 
       {!enabled && !setup ? (
         <Button type="button" onClick={onStart} disabled={pending} className="w-full sm:w-auto">
-          {pending ? "Hazırlanıyor..." : "2FA kurulumunu başlat"}
+          {pending ? "Hazırlanıyor..." : "2FA’yı aç"}
         </Button>
       ) : null}
 
@@ -112,14 +116,14 @@ export function TwoFactorForm({
             />
           </FieldGroup>
           <Button type="button" onClick={onEnable} disabled={pending || code.length < 6}>
-            {pending ? "Doğrulanıyor..." : "2FA'yı etkinleştir"}
+            {pending ? "Doğrulanıyor..." : "2FA’yı etkinleştir"}
           </Button>
         </div>
       ) : null}
 
-      {enabled && process.env.NODE_ENV !== "production" ? (
+      {enabled ? (
         <div className="space-y-3 border-t border-border pt-4">
-          <p className="text-xs text-ink-soft">Devre dışı bırakmak için mevcut kodu girin.</p>
+          <p className="text-xs text-ink-soft">Kapatmak için uygulamadaki 6 haneli kodu girin.</p>
           <FieldGroup label="Doğrulama kodu" htmlFor="disable-code">
             <Input
               id="disable-code"
@@ -129,8 +133,13 @@ export function TwoFactorForm({
               onChange={(e) => setCode(e.target.value)}
             />
           </FieldGroup>
-          <Button type="button" variant="outline" onClick={onDisable} disabled={pending || code.length < 6}>
-            {pending ? "İşleniyor..." : "2FA'yı kapat"}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onDisable}
+            disabled={pending || code.length < 6}
+          >
+            {pending ? "İşleniyor..." : "2FA’yı kapat"}
           </Button>
         </div>
       ) : null}

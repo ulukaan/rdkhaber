@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import path from "path";
+import type { CSSProperties } from "react";
 import { ImageResponse } from "next/og";
 import { readUploadedFile } from "@/lib/upload-path";
 import { buildSharePostCopy, type SharePostInput } from "@/lib/share-post";
@@ -11,19 +12,34 @@ const NAVY = "#1b2a4a";
 const MUTED = "#6b7280";
 const SOFT_RED = "#e35d6a";
 
-type FontPack = { regular: ArrayBuffer; bold: ArrayBuffer; italic: ArrayBuffer };
+type FontPack = {
+  regular: ArrayBuffer[];
+  bold: ArrayBuffer[];
+  italic: ArrayBuffer[];
+};
 let fonts: FontPack | null = null;
 
 async function loadFonts(): Promise<FontPack | null> {
   if (fonts) return fonts;
   try {
-    const base = "https://cdn.jsdelivr.net/fontsource/fonts/inter@5.2.8";
-    const [regular, bold, italic] = await Promise.all([
-      fetch(`${base}/latin-ext-400-normal.woff`).then((r) => r.arrayBuffer()),
-      fetch(`${base}/latin-ext-700-normal.woff`).then((r) => r.arrayBuffer()),
-      fetch(`${base}/latin-ext-400-italic.woff`).then((r) => r.arrayBuffer()),
-    ]);
-    fonts = { regular, bold, italic };
+    // latin + latin-ext: Türkçe glifler (İ ı ş ğ ü ö ç) için şart
+    const base = "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@5.2.8";
+    const urls = [
+      `${base}/latin-400-normal.woff`,
+      `${base}/latin-ext-400-normal.woff`,
+      `${base}/latin-700-normal.woff`,
+      `${base}/latin-ext-700-normal.woff`,
+      `${base}/latin-400-italic.woff`,
+      `${base}/latin-ext-400-italic.woff`,
+    ];
+    const [rL, rE, bL, bE, iL, iE] = await Promise.all(
+      urls.map((u) => fetch(u).then((r) => r.arrayBuffer())),
+    );
+    fonts = {
+      regular: [rL, rE],
+      bold: [bL, bE],
+      italic: [iL, iE],
+    };
     return fonts;
   } catch {
     return null;
@@ -63,7 +79,43 @@ async function mediaDataUri(url: string | null | undefined) {
   }
 }
 
+/** Satori flex içinde kelime ortası kırılmasını önlemek için kelime kelime span. */
+function WordLine({
+  text,
+  style,
+}: {
+  text: string;
+  style: CSSProperties;
+}) {
+  const words = text.split(/\s+/).filter(Boolean);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignContent: "flex-start",
+        width: "100%",
+        ...style,
+      }}
+    >
+      {words.map((word, i) => (
+        <span
+          key={`${i}-${word.slice(0, 8)}`}
+          style={{
+            display: "flex",
+            marginRight: i === words.length - 1 ? 0 : "0.28em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {word}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export type SharePostRenderInput = SharePostInput & {
+  /** Kartta kullanılacak foto (kapak / paylaşım görseli). */
   coverImageUrl?: string | null;
 };
 
@@ -75,6 +127,29 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
     mediaDataUri(input.coverImageUrl),
   ]);
 
+  const fontFiles = pack
+    ? [
+        ...pack.regular.map((data) => ({
+          name: "ShareSans" as const,
+          data,
+          weight: 400 as const,
+          style: "normal" as const,
+        })),
+        ...pack.bold.map((data) => ({
+          name: "ShareSans" as const,
+          data,
+          weight: 700 as const,
+          style: "normal" as const,
+        })),
+        ...pack.italic.map((data) => ({
+          name: "ShareSans" as const,
+          data,
+          weight: 400 as const,
+          style: "italic" as const,
+        })),
+      ]
+    : undefined;
+
   return new ImageResponse(
     (
       <div
@@ -85,7 +160,7 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
           display: "flex",
           flexDirection: "column",
           padding: "52px 56px 48px",
-          fontFamily: "Inter",
+          fontFamily: "ShareSans",
           color: "#111111",
         }}
       >
@@ -122,31 +197,27 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
           {copy.category}
         </div>
 
-        <div
+        <WordLine
+          text={copy.title}
           style={{
-            display: "flex",
             marginTop: 22,
             fontSize: 52,
             fontWeight: 700,
-            lineHeight: 1.15,
+            lineHeight: 1.18,
             color: "#111",
           }}
-        >
-          {copy.title}
-        </div>
+        />
 
-        <div
+        <WordLine
+          text={copy.lead}
           style={{
-            display: "flex",
             marginTop: 18,
             fontSize: 26,
             lineHeight: 1.45,
             color: "#222",
             fontWeight: 400,
           }}
-        >
-          {copy.lead}
-        </div>
+        />
 
         <div
           style={{
@@ -160,9 +231,24 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
         >
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt="" width={968} height={520} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+            <img
+              src={photo}
+              alt=""
+              width={968}
+              height={520}
+              style={{ objectFit: "cover", width: "100%", height: "100%" }}
+            />
           ) : (
-            <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", color: MUTED, fontSize: 24 }}>
+            <div
+              style={{
+                display: "flex",
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                color: MUTED,
+                fontSize: 24,
+              }}
+            >
               Düzce Radikal
             </div>
           )}
@@ -176,22 +262,22 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
               </div>
               <div style={{ display: "flex", flex: 1, height: 2, background: RED, marginLeft: 16 }} />
             </div>
-            <div style={{ display: "flex", marginTop: 16, fontSize: 24, lineHeight: 1.45, color: "#111" }}>
-              {copy.whyMain}
-            </div>
+            <WordLine
+              text={copy.whyMain}
+              style={{ marginTop: 16, fontSize: 24, lineHeight: 1.45, color: "#111" }}
+            />
             {copy.whyWatch ? (
-              <div
+              <WordLine
+                text={copy.whyWatch}
                 style={{
-                  display: "flex",
                   marginTop: 12,
                   fontSize: 24,
                   lineHeight: 1.45,
                   color: SOFT_RED,
                   fontStyle: "italic",
+                  fontWeight: 400,
                 }}
-              >
-                {copy.whyWatch}
-              </div>
+              />
             ) : null}
           </div>
         ) : null}
@@ -200,13 +286,7 @@ export async function renderSharePostImage(input: SharePostRenderInput) {
     {
       width: WIDTH,
       height: HEIGHT,
-      fonts: pack
-        ? [
-            { name: "Inter", data: pack.regular, weight: 400, style: "normal" },
-            { name: "Inter", data: pack.bold, weight: 700, style: "normal" },
-            { name: "Inter", data: pack.italic, weight: 400, style: "italic" },
-          ]
-        : undefined,
+      fonts: fontFiles,
     },
   );
 }

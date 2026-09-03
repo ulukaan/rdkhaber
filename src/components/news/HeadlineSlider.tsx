@@ -13,10 +13,12 @@ export function HeadlineSlider({
   articles,
   accent,
   max = 12,
+  compact = false,
 }: {
   articles: ArticleSummary[];
   accent?: string | null;
   max?: number;
+  compact?: boolean;
 }) {
   const slides = articles.slice(0, max);
   const [index, setIndex] = useState(0);
@@ -28,7 +30,12 @@ export function HeadlineSlider({
   const face = headlineFromArticle(current);
 
   return (
-    <div className="relative h-full min-h-[260px] overflow-hidden md:min-h-[380px] lg:min-h-0">
+    <div
+      className={cn(
+        "relative h-full overflow-hidden lg:min-h-0",
+        compact ? "min-h-[220px] md:min-h-[320px]" : "min-h-[260px] md:min-h-[380px]",
+      )}
+    >
       <Link
         href={`/haber/${current.slug}`}
         className="group absolute inset-0 block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"

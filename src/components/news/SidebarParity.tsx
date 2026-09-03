@@ -4,7 +4,7 @@ import { SidebarWidget } from "@/components/news/SidebarWidget";
 
 export function SidebarParity({ items }: { items: MarketItem[] }) {
   if (items.length === 0) return null;
-  const shown = items.slice(0, 6);
+  const shown = items.slice(0, 8);
 
   return (
     <SidebarWidget title="Piyasalar">

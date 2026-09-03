@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
-import { isStaffRole } from "@/lib/staff-security";
 import {
   generateTotpSecret,
   getTotpUri,
@@ -48,14 +47,12 @@ export async function enableTotpAction(code: string) {
   await writeAuditLog({ userId: session.user.id, action: "security.2fa.enabled" });
   revalidatePath("/hesabim/guvenlik");
   revalidatePath("/admin/guvenlik");
+  revalidatePath("/editor/guvenlik");
   return { success: true as const };
 }
 
 export async function disableTotpAction(code: string) {
   const session = await requireRole([...STAFF_ROLES]);
-  if (process.env.NODE_ENV === "production" && isStaffRole(session.user.role)) {
-    return { error: "Personel hesaplarında 2FA kapatılamaz." };
-  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -73,6 +70,7 @@ export async function disableTotpAction(code: string) {
   await writeAuditLog({ userId: session.user.id, action: "security.2fa.disabled" });
   revalidatePath("/hesabim/guvenlik");
   revalidatePath("/admin/guvenlik");
+  revalidatePath("/editor/guvenlik");
   return { success: true as const };
 }
 

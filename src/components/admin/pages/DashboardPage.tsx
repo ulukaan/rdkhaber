@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   BarChart3,
-  Bot,
   ClipboardCheck,
   Eye,
   FileEdit,
@@ -12,10 +11,12 @@ import {
   Megaphone,
   MessageSquare,
   Newspaper,
+  Plus,
   Send,
   Users,
   Zap,
   BadgeDollarSign,
+  Bot,
 } from "lucide-react";
 import type { ArticleStatus, Role } from "@prisma/client";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -24,6 +25,34 @@ import { DashboardGoogleStatus } from "@/components/admin/DashboardGoogleStatus"
 import { PanelCard, SectionHeader } from "@/components/admin/PanelUI";
 import { loadDashboardData } from "@/lib/dashboard-data";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+
+function QuickAction({
+  href,
+  label,
+  Icon,
+  variant = "outline",
+}: {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  variant?: "primary" | "outline";
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+        variant === "primary"
+          ? "bg-brand text-white hover:bg-brand-dark"
+          : "border border-border bg-white text-ink hover:border-brand hover:text-brand",
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {label}
+    </Link>
+  );
+}
 
 export async function DashboardPage({ role }: { role: Role }) {
   const basePath = role === "ADMIN" ? "/admin" : "/editor";
@@ -40,15 +69,25 @@ export async function DashboardPage({ role }: { role: Role }) {
         title={role === "ADMIN" ? "Genel Bakış" : "Editör Panosu"}
         description={description}
         action={
-          role === "ADMIN" ? (
-            <Link
-              href="/admin/istatistikler"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Detaylı istatistikler
-            </Link>
-          ) : null
+          <div className="flex w-full flex-wrap gap-2 sm:justify-end">
+            <QuickAction
+              href={`${basePath}/makaleler/yeni?hizli=1`}
+              label="Hızlı haber"
+              Icon={Plus}
+              variant="primary"
+            />
+            <QuickAction href={`${basePath}/son-dakika`} label="Üst manşet" Icon={Zap} />
+            <QuickAction href={`${basePath}/onay-kuyrugu`} label="Onay kuyruğu" Icon={ClipboardCheck} />
+            {role === "ADMIN" ? (
+              <>
+                <QuickAction href="/admin/medya" label="Medya" Icon={ImageIcon} />
+                <QuickAction href="/admin/manset" label="Ana manşet" Icon={Newspaper} />
+                <QuickAction href="/admin/istatistikler" label="İstatistik" Icon={BarChart3} />
+              </>
+            ) : (
+              <QuickAction href={`${basePath}/yorumlar`} label="Yorumlar" Icon={MessageSquare} />
+            )}
+          </div>
         }
       />
 
