@@ -7,9 +7,14 @@ type Theme = "light" | "dark";
 
 const STORAGE_KEY = "rdk_theme";
 
-const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({
+const ThemeContext = createContext<{
+  theme: Theme;
+  toggle: () => void;
+  setTheme: (theme: Theme) => void;
+}>({
   theme: "light",
   toggle: () => {},
+  setTheme: () => {},
 });
 
 function isStaffPath(path: string) {
@@ -25,7 +30,7 @@ function readStoredTheme(): Theme {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const staff = isStaffPath(pathname);
-  const [theme, setTheme] = useState<Theme>(() => readStoredTheme());
+  const [theme, setThemeState] = useState<Theme>(() => readStoredTheme());
 
   useLayoutEffect(() => {
     if (staff) {
@@ -35,9 +40,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.theme = theme;
   }, [staff, theme]);
 
+  const applyTheme = (next: Theme) => {
+    if (staff) return;
+    window.localStorage.setItem(STORAGE_KEY, next);
+    document.documentElement.dataset.theme = next;
+    setThemeState(next);
+  };
+
   const toggle = () => {
     if (staff) return;
-    setTheme((current) => {
+    setThemeState((current) => {
       const next = current === "light" ? "dark" : "light";
       window.localStorage.setItem(STORAGE_KEY, next);
       document.documentElement.dataset.theme = next;
@@ -45,7 +57,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  return <ThemeContext.Provider value={{ theme: staff ? "light" : theme, toggle }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider
+      value={{ theme: staff ? "light" : theme, toggle, setTheme: applyTheme }}
+    >
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {
