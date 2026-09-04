@@ -43,7 +43,13 @@ import { cn } from "@/lib/utils";
 import { signOutAction } from "@/actions/auth";
 
 type AccountInfo =
-  | { authenticated: true; name: string; accountHref: string; panelHref?: string }
+  | {
+      authenticated: true;
+      name: string;
+      image?: string | null;
+      accountHref: string;
+      panelHref?: string;
+    }
   | { authenticated: false };
 
 type SocialLink = { href: string; label: string };
@@ -246,8 +252,19 @@ function mergeLinks(primary: SiteMenuLink[] | undefined, fallback: SiteMenuLink[
   });
 }
 
-function Avatar({ name }: { name?: string }) {
+function Avatar({ name, image }: { name?: string; image?: string | null }) {
   const initial = (name?.trim()?.[0] ?? "M").toLocaleUpperCase("tr-TR");
+  const src = image?.trim();
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border/60"
+      />
+    );
+  }
   return (
     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-sm font-bold text-ink ring-1 ring-border/60">
       {initial}
@@ -277,6 +294,7 @@ export function MobileMenu({
   const serviceLinks = mergeLinks(services, SERVICE_LINKS);
   const corporateLinks = mergeLinks(corporate, CORPORATE_LINKS);
   const displayName = account.authenticated ? account.name : "Misafir";
+  const avatarImage = account.authenticated ? account.image : undefined;
 
   useEffect(() => {
     if (!open) return;
@@ -331,7 +349,7 @@ export function MobileMenu({
         {/* Profil başlık */}
         <div className="flex shrink-0 items-start justify-between gap-3 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="flex min-w-0 items-center gap-3">
-            <Avatar name={displayName} />
+            <Avatar name={displayName} image={avatarImage} />
             <div className="min-w-0">
               <p className="text-[17px] font-semibold leading-tight text-ink">Merhaba,</p>
               <p className="truncate text-[13px] text-ink-soft">{displayName}</p>
