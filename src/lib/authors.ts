@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { articleSummarySelect } from "@/lib/articles";
-import { authorHref } from "@/lib/author-path";
 
 export { authorHref } from "@/lib/author-path";
 
