@@ -53,12 +53,21 @@ export default async function AuthorsIndexPage() {
                     {roleLabel(author.role)}
                   </p>
                   {author.bio ? (
-                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">
                       {author.bio}
                     </p>
                   ) : null}
+                  {author.latestArticle ? (
+                    <p className="mt-2 line-clamp-2 text-sm font-medium text-ink">
+                      Son haber: {author.latestArticle.title}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs text-ink-soft">Henüz yayında haber yok.</p>
+                  )}
                   <p className="mt-3 text-xs font-bold text-brand">
-                    {author._count.articles} haber →
+                    {author._count.articles > 0
+                      ? `${author._count.articles} haber →`
+                      : "Profili gör →"}
                   </p>
                 </div>
               </Link>

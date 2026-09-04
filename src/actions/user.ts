@@ -38,7 +38,9 @@ export async function createUserAction(raw: Record<string, unknown>) {
   });
 
   revalidatePath("/admin/kullanicilar");
+  revalidatePath("/admin/yazarlar");
   revalidatePath("/yazarlar");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -71,7 +73,9 @@ export async function updateUserAction(id: string, raw: Record<string, unknown>)
   });
 
   revalidatePath("/admin/kullanicilar");
+  revalidatePath("/admin/yazarlar");
   revalidatePath("/yazarlar");
+  revalidatePath("/");
   if (updated.slug) revalidatePath(`/yazar/${updated.slug}`);
   return { success: true };
 }
@@ -87,5 +91,7 @@ export async function deleteUserAction(id: string) {
     return { error: "Bu kullanıcının haberleri var, önce onları başka bir yazara taşıyın." };
   }
   revalidatePath("/admin/kullanicilar");
+  revalidatePath("/admin/yazarlar");
   revalidatePath("/yazarlar");
+  revalidatePath("/");
 }
