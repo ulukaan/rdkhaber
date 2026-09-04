@@ -122,6 +122,7 @@ export function getPanelNav(role: Role): PanelNavGroup[] {
         adminOnly: true,
         items: [
           { href: "/admin/kategoriler", label: "Kategoriler", Icon: FolderTree },
+          { href: "/admin/yazarlar", label: "Yazarlar", Icon: BookUser },
           { href: "/admin/etiketler", label: "Etiketler", Icon: Tags },
           { href: "/admin/sayfalar", label: "Sayfalar", Icon: FileText },
           { href: "/admin/galeriler", label: "Foto Galeri", Icon: Images },

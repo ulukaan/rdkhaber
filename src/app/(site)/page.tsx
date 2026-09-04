@@ -9,10 +9,10 @@ import {
   getTrendingArticles,
   getVideoArticles,
   getArticlesByCategory,
-  getEditorArticles,
   getQuotedAuthorArticles,
   getBreakingArticles,
 } from "@/lib/articles";
+import { getAuthorsWithLatestArticle } from "@/lib/authors";
 import { getGalleries } from "@/lib/galleries";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -153,10 +153,10 @@ export default async function HomePage() {
       ? safeLoad("galleries", () => getGalleries(3), [])
       : Promise.resolve([]),
     settings.showEditorNews !== "0"
-      ? safeLoad("editors", () => getEditorArticles(5), EMPTY_ARTICLES)
-      : Promise.resolve(EMPTY_ARTICLES),
+      ? safeLoad("editors", () => getAuthorsWithLatestArticle(8), [])
+      : Promise.resolve([]),
     settings.showEditorNews !== "0"
-      ? safeLoad("quotedAuthors", () => getQuotedAuthorArticles(5), EMPTY_ARTICLES)
+      ? safeLoad("quotedAuthors", () => getQuotedAuthorArticles(8), EMPTY_ARTICLES)
       : Promise.resolve(EMPTY_ARTICLES),
     settings.showTopHeadlines !== "0" || settings.showFeatured !== "0"
       ? safeLoad("breaking", () => getBreakingArticles(5), EMPTY_ARTICLES)
@@ -257,9 +257,9 @@ export default async function HomePage() {
 
   const dayHeadlines = takeUnused(latest, 5);
   const gundemUnique = takeUnused(gundem, 5);
-  const editorsUnique = editors.slice(0, 5);
+  const authorLatestIds = new Set(editors.map((row) => row.article.id));
   const quotedUnique = quotedAuthors
-    .filter((a) => !editorsUnique.some((e) => e.id === a.id))
+    .filter((a) => !authorLatestIds.has(a.id))
     .slice(0, 5);
   const interviewsUnique = takeUnused(interviews, 4);
   const latestFeed = latest.filter((a) => !usedIds.has(a.id));
@@ -404,7 +404,7 @@ export default async function HomePage() {
           {settings.showPhotoGallery !== "0" ? <PhotoGallerySection items={galleryItems} /> : null}
 
           {settings.showEditorNews !== "0" ? (
-            <EditorNewsSection articles={editorsUnique} quotedArticles={quotedUnique} />
+            <EditorNewsSection authors={editors} quotedArticles={quotedUnique} />
           ) : null}
 
           {settings.showCategoryCards !== "0" && categoryRest.length > 0 ? (
