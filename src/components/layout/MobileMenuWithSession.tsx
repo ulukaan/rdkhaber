@@ -28,7 +28,8 @@ export async function MobileMenuWithSession({
   const account = session?.user
     ? {
         authenticated: true as const,
-        name: session.user.name?.split(" ")[0] ?? "Hesabım",
+        name: session.user.name?.trim() || "Hesabım",
+        image: session.user.image ?? null,
         accountHref: "/hesabim",
         panelHref:
           session.user.role === "ADMIN" || session.user.role === "EDITOR"
