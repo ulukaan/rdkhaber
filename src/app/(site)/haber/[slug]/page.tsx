@@ -10,8 +10,8 @@ import {
   getLatestArticles,
   getBreakingArticles,
   getRandomSpotlightArticles,
-  incrementViewCount,
 } from "@/lib/articles";
+import { TrackArticleView } from "@/components/news/TrackArticleView";
 import { getSettings } from "@/lib/settings";
 import { getRates, pickParityItems } from "@/lib/rates";
 import { getPrayerTimes } from "@/lib/prayer-times";
@@ -88,8 +88,6 @@ export default async function ArticlePage({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) notFound();
-
-  incrementViewCount(article.id).catch(() => {});
 
   const extraCategories = article.extraCategories
     .map((row) => row.category)
@@ -230,6 +228,7 @@ export default async function ArticlePage({
             html: article.content,
           })}
         />
+        <TrackArticleView articleId={article.id} />
         <RecordArticleRead articleId={article.id} />
         <AdUnit code="1001" />
       </header>

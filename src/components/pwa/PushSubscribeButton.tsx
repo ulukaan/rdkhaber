@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { savePushSubscriptionAction } from "@/actions/push-subscription";
 import { getVapidPublicKeyClient } from "@/lib/web-push-client";
 import { Button } from "@/components/ui/Button";
@@ -13,12 +13,37 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushSubscribeButton({ className = "" }: { className?: string }) {
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported">("idle");
-  const publicKey = getVapidPublicKeyClient();
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported" | "hidden">(
+    "hidden",
+  );
+  const [publicKey, setPublicKey] = useState("");
 
-  if (!publicKey || typeof window === "undefined" || !("Notification" in window)) {
-    return null;
-  }
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
+      setStatus("unsupported");
+      return;
+    }
+    const fromEnv = getVapidPublicKeyClient();
+    if (fromEnv) {
+      setPublicKey(fromEnv);
+      setStatus("idle");
+      return;
+    }
+    void fetch("/api/push/vapid-public")
+      .then((r) => r.json())
+      .then((data: { enabled?: boolean; publicKey?: string | null }) => {
+        if (data.enabled && data.publicKey) {
+          setPublicKey(data.publicKey);
+          setStatus("idle");
+        } else {
+          setStatus("hidden");
+        }
+      })
+      .catch(() => setStatus("hidden"));
+  }, []);
+
+  if (status === "hidden") return null;
+  if (status === "unsupported") return null;
 
   const subscribe = async () => {
     setStatus("loading");
@@ -54,7 +79,7 @@ export function PushSubscribeButton({ className = "" }: { className?: string }) 
       size="sm"
       variant="outline"
       className={className}
-      disabled={status === "loading"}
+      disabled={status === "loading" || !publicKey}
       onClick={subscribe}
     >
       {status === "loading" ? "Açılıyor..." : "Son dakika bildirimleri"}
