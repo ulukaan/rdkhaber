@@ -145,6 +145,28 @@ Workflow sunucuda `git pull → npm ci → npm run build → tablo ensure` çal�
 
 Örnek: `curl -H "Authorization: Bearer $CRON_SECRET" https://site.com/api/cron/publish-scheduled`
 
+### Haber yazma API (`POST /api/haberler`)
+
+Dış sistemler (ChatGPT / otomasyon) taslak haber girebilir.
+
+Auth: `Authorization: Bearer $HABER_API_SECRET` (yoksa `CRON_SECRET`)
+
+```bash
+curl -X POST https://duzceradikal.com/api/haberler \
+  -H "Authorization: Bearer $HABER_API_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "baslik": "Haber başlığı",
+    "spot": "Haber spotu en az on karakter",
+    "icerik": "Özgün haber metni...",
+    "kategori": "gundem",
+    "etiketler": ["Düzce", "Haber"],
+    "durum": "taslak"
+  }'
+```
+
+Başarılı cevap (`201`): `{ "ok": true, "article": { "id", "slug", "status", "adminUrl" } }`
+
 ### Haber sitesi olmazsa olmaz modülleri
 
 - Zamanlanmış yayın + editör onay kuyruğu

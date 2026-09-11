@@ -49,3 +49,26 @@ export function verifyCronSecret(header: string | null) {
     return header.trim() === expected;
   }
 }
+
+/**
+ * Haber yazma API kimliği.
+ * Önce HABER_API_SECRET, yoksa CRON_SECRET kabul edilir.
+ */
+export function verifyHaberApiSecret(header: string | null) {
+  const haber = process.env.HABER_API_SECRET?.trim();
+  const cron = process.env.CRON_SECRET?.trim();
+  const provided = header?.trim();
+  if (!provided) return false;
+
+  const candidates = [haber, cron].filter((v): v is string => Boolean(v));
+  for (const expected of candidates) {
+    try {
+      const a = Buffer.from(provided);
+      const b = Buffer.from(expected);
+      if (a.length === b.length && timingSafeEqual(a, b)) return true;
+    } catch {
+      if (provided === expected) return true;
+    }
+  }
+  return false;
+}
