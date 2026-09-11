@@ -12,38 +12,43 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
 }
 
+function readEnvKey() {
+  if (typeof window === "undefined") return "";
+  return getVapidPublicKeyClient();
+}
+
 export function PushSubscribeButton({ className = "" }: { className?: string }) {
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported" | "hidden">(
-    "hidden",
-  );
-  const [publicKey, setPublicKey] = useState("");
+  const envKey = readEnvKey();
+  const [publicKey, setPublicKey] = useState(envKey);
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported" | "hidden">(() => {
+    if (typeof window === "undefined") return "hidden";
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return "unsupported";
+    return envKey ? "idle" : "loading";
+  });
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
-      setStatus("unsupported");
-      return;
-    }
-    const fromEnv = getVapidPublicKeyClient();
-    if (fromEnv) {
-      setPublicKey(fromEnv);
-      setStatus("idle");
-      return;
-    }
+    if (publicKey) return;
+    let cancelled = false;
     void fetch("/api/push/vapid-public")
       .then((r) => r.json())
       .then((data: { enabled?: boolean; publicKey?: string | null }) => {
+        if (cancelled) return;
         if (data.enabled && data.publicKey) {
           setPublicKey(data.publicKey);
           setStatus("idle");
-        } else {
-          setStatus("hidden");
+          return;
         }
+        setStatus("hidden");
       })
-      .catch(() => setStatus("hidden"));
-  }, []);
+      .catch(() => {
+        if (!cancelled) setStatus("hidden");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicKey]);
 
-  if (status === "hidden") return null;
-  if (status === "unsupported") return null;
+  if (status === "hidden" || status === "unsupported") return null;
 
   const subscribe = async () => {
     setStatus("loading");
