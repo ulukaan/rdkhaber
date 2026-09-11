@@ -10,8 +10,17 @@ function vapidConfigured() {
   );
 }
 
+export function isWebPushEnabled() {
+  return vapidConfigured() && Boolean(getVapidPublicKey());
+}
+
 function configureVapid() {
-  if (!vapidConfigured()) return false;
+  if (!vapidConfigured()) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn("[web-push] VAPID anahtarları eksik — son dakika bildirimi kapalı");
+    }
+    return false;
+  }
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!.trim(),
     process.env.VAPID_PUBLIC_KEY!.trim(),
@@ -29,7 +38,7 @@ export async function sendPushToAll(payload: {
   body: string;
   url?: string;
 }) {
-  if (!configureVapid()) return { sent: 0, failed: 0 };
+  if (!configureVapid()) return { sent: 0, failed: 0, skipped: true as const };
 
   const subs = await prisma.pushSubscription.findMany({ take: 5000 });
   let sent = 0;
