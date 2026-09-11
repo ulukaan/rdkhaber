@@ -5,9 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function WebPushStatusCard() {
   const enabled = isWebPushEnabled();
   const hasPublic = Boolean(getVapidPublicKey());
-  const count = enabled
-    ? await prisma.pushSubscription.count()
-    : 0;
+  const count = enabled ? await prisma.pushSubscription.count() : 0;
 
   return (
     <div className="mt-6 rounded-xl border border-border bg-white p-4">
