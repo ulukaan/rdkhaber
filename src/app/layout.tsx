@@ -18,6 +18,7 @@ import {
   sanitizeCustomBodyEndHtml,
 } from "@/lib/custom-code";
 import { buildWebSiteJsonLd } from "@/lib/json-ld";
+import { normalizeGoogleSiteVerification } from "@/lib/google-site-verification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,9 +57,10 @@ export async function generateMetadata(): Promise<Metadata> {
           apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
         }
       : undefined,
-    verification: settings.googleSiteVerification
-      ? { google: settings.googleSiteVerification }
-      : undefined,
+    verification: (() => {
+      const google = normalizeGoogleSiteVerification(settings.googleSiteVerification);
+      return google ? { google } : undefined;
+    })(),
     openGraph: {
       siteName: settings.siteName,
       title: settings.siteName,

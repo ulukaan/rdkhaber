@@ -66,10 +66,18 @@ import { DailyNewspapers } from "@/components/home/DailyNewspapers";
 import { getFeaturedCompanies } from "@/lib/companies";
 import { FeaturedCompanies } from "@/components/home/FeaturedCompanies";
 import { getOfficialAdsBundle } from "@/lib/official-ads";
+import type { Metadata } from "next";
 
 const EMPTY_ARTICLES: Awaited<ReturnType<typeof getLatestArticles>> = [];
 
 export const revalidate = 60;
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    alternates: { canonical: "/" },
+    openGraph: { url: "/" },
+  };
+}
 
 export default async function HomePage() {
   const settings = await getSettings();
