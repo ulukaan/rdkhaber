@@ -54,28 +54,46 @@ export async function generateMetadata({
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) return { title: "Haber Bulunamadı" };
-  const shareImage = `${getSiteUrl()}${sharePostPath(article.slug)}`;
+  const siteUrl = getSiteUrl();
+  const shareImage = `${siteUrl}${sharePostPath(article.slug)}`;
+  const coverImage = article.coverImageUrl
+    ? article.coverImageUrl.startsWith("http")
+      ? article.coverImageUrl
+      : `${siteUrl}${article.coverImageUrl}`
+    : null;
+  // Google Görseller için kapak; paylaşım kartı yedek
+  const ogImages = [
+    ...(coverImage
+      ? [{ url: coverImage, width: 1200, height: 630, alt: article.title }]
+      : []),
+    { url: shareImage, width: 1080, height: 1350, alt: article.title },
+  ];
+  const title = article.seoTitle?.trim() || article.title;
+  const description = article.seoDescription?.trim() || article.summary;
   return {
-    title: article.seoTitle?.trim() || article.title,
-    description: article.seoDescription?.trim() || article.summary,
+    title,
+    description,
     keywords: article.seoKeywords?.trim() || undefined,
     alternates: {
       canonical: `/haber/${article.slug}`,
     },
     openGraph: {
       type: "article",
-      title: article.seoTitle?.trim() || article.title,
-      description: article.seoDescription?.trim() || article.summary,
-      images: [{ url: shareImage, width: 1080, height: 1350, alt: article.title }],
-      publishedTime: article.publishedAt?.toISOString(),
+      title,
+      description,
+      url: `${siteUrl}/haber/${article.slug}`,
+      images: ogImages,
+      publishedTime: (article.publishedAt ?? article.updatedAt).toISOString(),
       modifiedTime: article.updatedAt.toISOString(),
       authors: [article.author.name],
+      section: article.category.name,
+      tags: article.tags.map((t) => t.name),
     },
     twitter: {
       card: "summary_large_image",
-      title: article.seoTitle?.trim() || article.title,
-      description: article.seoDescription?.trim() || article.summary,
-      images: [shareImage],
+      title,
+      description,
+      images: [coverImage || shareImage],
     },
   };
 }
@@ -155,7 +173,10 @@ export default async function ArticlePage({
     updatedAt: article.updatedAt,
     authorName: byline || article.author.name,
     siteName: settings.siteName,
+    logoUrl: settings.logoUrl,
+    section: article.category.name,
     keywords: [
+      article.category.name,
       ...article.tags.map((t) => t.name),
       ...(article.seoKeywords?.split(",").map((k) => k.trim()).filter(Boolean) ?? []),
     ],
