@@ -92,35 +92,40 @@ export type SecimPageMode = "live" | "upcoming" | "archive";
 
 /** /secim: önce canlı/yaklaşan birincil seçim, yoksa tamamlanmış arşiv. */
 export const getSecimPageElection = cache(async () => {
-  const active = await prisma.election.findFirst({
-    where: { isPrimary: true, status: { in: ["LIVE", "UPCOMING"] } },
-    include: electionPageInclude,
-  });
-  if (active) {
-    return {
-      election: active,
-      mode: active.status === "LIVE" ? ("live" as const) : ("upcoming" as const),
-    };
-  }
+  try {
+    const active = await prisma.election.findFirst({
+      where: { isPrimary: true, status: { in: ["LIVE", "UPCOMING"] } },
+      include: electionPageInclude,
+    });
+    if (active) {
+      return {
+        election: active,
+        mode: active.status === "LIVE" ? ("live" as const) : ("upcoming" as const),
+      };
+    }
 
-  const archivedPrimary = await prisma.election.findFirst({
-    where: { isPrimary: true, status: "FINISHED" },
-    include: electionPageInclude,
-  });
-  if (archivedPrimary) {
-    return { election: archivedPrimary, mode: "archive" as const };
-  }
+    const archivedPrimary = await prisma.election.findFirst({
+      where: { isPrimary: true, status: "FINISHED" },
+      include: electionPageInclude,
+    });
+    if (archivedPrimary) {
+      return { election: archivedPrimary, mode: "archive" as const };
+    }
 
-  const latestFinished = await prisma.election.findFirst({
-    where: { status: "FINISHED" },
-    orderBy: [{ electionDate: "desc" }, { updatedAt: "desc" }],
-    include: electionPageInclude,
-  });
-  if (latestFinished) {
-    return { election: latestFinished, mode: "archive" as const };
-  }
+    const latestFinished = await prisma.election.findFirst({
+      where: { status: "FINISHED" },
+      orderBy: [{ electionDate: "desc" }, { updatedAt: "desc" }],
+      include: electionPageInclude,
+    });
+    if (latestFinished) {
+      return { election: latestFinished, mode: "archive" as const };
+    }
 
-  return null;
+    return null;
+  } catch (err) {
+    console.error("[getSecimPageElection]", err);
+    return null;
+  }
 });
 
 export const getElectionBySlug = cache(async (slug: string) => {
