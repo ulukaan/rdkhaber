@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import authConfig from "@/auth.config";
+import { getSiteUrl } from "@/lib/site-url";
 
 const { auth } = NextAuth(authConfig);
 
@@ -14,7 +15,38 @@ function withPathname(req: Parameters<Parameters<typeof auth>[0]>[0], response: 
   });
 }
 
+function stripWww(host: string) {
+  return host.replace(/^www\./i, "");
+}
+
+/** www ↔ apex tekilleştirme — canonical host NEXT_PUBLIC_SITE_URL / SITE_URL. */
+function canonicalHostRedirect(req: Parameters<Parameters<typeof auth>[0]>[0]) {
+  let canonical: URL;
+  try {
+    canonical = new URL(getSiteUrl());
+  } catch {
+    return null;
+  }
+  if (/localhost|127\.0\.0\.1/i.test(canonical.hostname)) return null;
+
+  const rawHost =
+    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    req.headers.get("host")?.split(",")[0]?.trim();
+  if (!rawHost) return null;
+
+  const requestHost = rawHost.toLowerCase();
+  const targetHost = canonical.hostname.toLowerCase();
+  if (requestHost === targetHost) return null;
+  if (stripWww(requestHost) !== stripWww(targetHost)) return null;
+
+  const dest = new URL(req.nextUrl.pathname + req.nextUrl.search, canonical.origin);
+  return NextResponse.redirect(dest, 308);
+}
+
 export default auth((req) => {
+  const hostRedirect = canonicalHostRedirect(req);
+  if (hostRedirect) return hostRedirect;
+
   const { pathname } = req.nextUrl;
   const role = req.auth?.user?.role;
 
@@ -38,5 +70,7 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/editor/:path*", "/hesabim/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|.*\\.(?:ico|png|jpg|jpeg|gif|webp|svg|txt|xml|webmanifest|woff2?)$).*)",
+  ],
 };

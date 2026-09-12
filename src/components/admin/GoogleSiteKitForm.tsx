@@ -86,7 +86,10 @@ export function GoogleSiteKitForm({
             spellCheck={false}
           />
           <FieldHint>
-            search.google.com/search-console → HTML etiketi yöntemindeki content değeri.
+            search.google.com/search-console → HTML etiketi yöntemindeki yalnızca content
+            değeri (ör. <code className="text-xs">AbCdEf...</code>). Tüm meta satırını veya{" "}
+            <code className="text-xs">google-site-verification=</code> önekini yapıştırmayın —
+            kayıtta otomatik temizlenir.
           </FieldHint>
         </FieldGroup>
 
