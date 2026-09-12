@@ -6,6 +6,7 @@ import { revalidatePublicSite } from "@/lib/revalidate-site";
 import { notifyAdmins } from "@/lib/notifications";
 import { notifyAuthorFollowers } from "@/lib/engagement-notify";
 import { saveGeneratedSharePost } from "@/lib/save-share-post";
+import { submitArticleToIndexNow } from "@/lib/indexnow";
 
 /** Yayına alınan haber için yan etkiler: sosyal, push, arama indeksi, takipçi bildirimi. */
 export async function onArticlePublished(
@@ -62,6 +63,7 @@ export async function onArticlePublished(
           }),
         ]
       : []),
+    submitArticleToIndexNow(article.slug).then(() => undefined),
   ]);
 
   revalidatePublicSite();
