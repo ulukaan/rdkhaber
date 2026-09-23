@@ -73,10 +73,6 @@ export function SidebarOfficialAds({ data }: { data: OfficialAdsBundle }) {
   );
 
   useEffect(() => {
-    setIndex(0);
-  }, [activeType]);
-
-  useEffect(() => {
     if (items.length <= 1) return;
     const id = window.setInterval(() => {
       setIndex((prev) => (prev + 1) % items.length);
@@ -95,7 +91,10 @@ export function SidebarOfficialAds({ data }: { data: OfficialAdsBundle }) {
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveType(tab.key)}
+              onClick={() => {
+                setActiveType(tab.key);
+                setIndex(0);
+              }}
               className={cn(
                 "relative flex min-h-[44px] items-center justify-center px-0.5 py-2 text-center text-[9px] font-extrabold uppercase leading-tight tracking-wide text-white sm:text-[10px]",
                 active ? "z-[1]" : "opacity-95 hover:opacity-100",

@@ -15,7 +15,9 @@ import { getSettings } from "@/lib/settings";
 import type { ElectionDistrictView } from "@/components/election/ElectionDistrictGrid";
 
 export const metadata = { title: "Seçim Sonuçları" };
-export const revalidate = 30;
+/** Build sırasında MySQL bağlantı kotasını tüketmemek için ISR yerine dinamik. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type SecimElection = NonNullable<Awaited<ReturnType<typeof getSecimPageElection>>>["election"];
 

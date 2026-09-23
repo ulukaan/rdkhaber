@@ -24,7 +24,6 @@ export function BreakingTickerClient({ initialItems }: { initialItems: BreakingT
   }, []);
 
   useEffect(() => {
-    void refresh();
     const timer = window.setInterval(() => {
       void refresh();
     }, POLL_MS);

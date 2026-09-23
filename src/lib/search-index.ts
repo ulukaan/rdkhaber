@@ -1,15 +1,58 @@
 import { prisma } from "@/lib/prisma";
 import { articleSummarySelect } from "@/lib/articles";
 import type { ArticleSummary } from "@/types/article";
+import { searchQueryVariants } from "@/lib/turkish-fold";
 
-const MEILI_HOST = () => process.env.MEILISEARCH_HOST?.trim() ?? "";
-const MEILI_KEY = () => process.env.MEILISEARCH_API_KEY?.trim() ?? "";
+const MEILI_HOST = () =>
+  process.env.MEILISEARCH_HOST?.trim() || process.env.MEILI_HOST?.trim() || "";
+const MEILI_KEY = () =>
+  process.env.MEILISEARCH_API_KEY?.trim() || process.env.MEILI_API_KEY?.trim() || "";
 
 export function meilisearchConfigured() {
   return Boolean(MEILI_HOST() && MEILI_KEY());
 }
 
-/** Meilisearch veya Prisma fallback ile haber arama. */
+async function ensureMeiliIndex() {
+  if (!meilisearchConfigured()) return;
+  try {
+    await fetch(`${MEILI_HOST()}/indexes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${MEILI_KEY()}`,
+      },
+      body: JSON.stringify({ uid: "articles", primaryKey: "id" }),
+    });
+    await fetch(`${MEILI_HOST()}/indexes/articles/settings`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${MEILI_KEY()}`,
+      },
+      body: JSON.stringify({
+        searchableAttributes: ["title", "summary", "content", "tags"],
+        rankingRules: ["words", "typo", "proximity", "attribute", "sort", "exactness"],
+        typoTolerance: { enabled: true, minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 } },
+      }),
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+function prismaSearchWhere(variants: string[]) {
+  return {
+    status: "PUBLISHED" as const,
+    OR: variants.flatMap((v) => [
+      { title: { contains: v } },
+      { summary: { contains: v } },
+      { content: { contains: v } },
+      { tags: { some: { name: { contains: v } } } },
+    ]),
+  };
+}
+
+/** Meilisearch veya Türkçe-katlamalı Prisma fallback ile haber arama. */
 export async function searchArticlesAdvanced(opts: {
   query: string;
   page?: number;
@@ -22,13 +65,19 @@ export async function searchArticlesAdvanced(opts: {
 
   if (meilisearchConfigured()) {
     try {
+      await ensureMeiliIndex();
       const res = await fetch(`${MEILI_HOST()}/indexes/articles/search`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${MEILI_KEY()}`,
         },
-        body: JSON.stringify({ q, limit: pageSize, offset: (page - 1) * pageSize }),
+        body: JSON.stringify({
+          q,
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+          attributesToSearchOn: ["title", "summary", "content", "tags"],
+        }),
       });
       if (res.ok) {
         const json = (await res.json()) as {
@@ -47,24 +96,17 @@ export async function searchArticlesAdvanced(opts: {
         }
       }
     } catch {
-      /* fallback */
+      /* Prisma'ya düş */
     }
   }
 
-  const where = {
-    status: "PUBLISHED" as const,
-    OR: [
-      { title: { contains: q } },
-      { summary: { contains: q } },
-      { content: { contains: q } },
-      { tags: { some: { name: { contains: q } } } },
-    ],
-  };
+  const variants = searchQueryVariants(q).slice(0, 4);
+  const where = prismaSearchWhere(variants);
 
   const [items, total] = await Promise.all([
     prisma.article.findMany({
       where,
-      orderBy: { publishedAt: "desc" },
+      orderBy: [{ viewCount: "desc" }, { publishedAt: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
       select: articleSummarySelect,
@@ -83,9 +125,11 @@ export async function indexArticleInMeilisearch(article: {
   summary: string;
   content?: string;
   publishedAt: Date | null;
+  tags?: string[];
 }) {
   if (!meilisearchConfigured()) return;
   try {
+    await ensureMeiliIndex();
     await fetch(`${MEILI_HOST()}/indexes/articles/documents`, {
       method: "POST",
       headers: {
@@ -99,9 +143,22 @@ export async function indexArticleInMeilisearch(article: {
           slug: article.slug,
           summary: article.summary,
           content: article.content?.slice(0, 5000),
+          tags: article.tags ?? [],
           publishedAt: article.publishedAt?.toISOString(),
         },
       ]),
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function removeArticleFromMeilisearch(articleId: string) {
+  if (!meilisearchConfigured()) return;
+  try {
+    await fetch(`${MEILI_HOST()}/indexes/articles/documents/${articleId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${MEILI_KEY()}` },
     });
   } catch {
     /* ignore */

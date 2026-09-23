@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { categoryHref } from "@/lib/category-path";
 import { partyColor, partyLogoUrl } from "@/lib/party-logos";
 import {
@@ -15,7 +15,7 @@ import {
 } from "@/lib/site-menu-sections";
 import { cn } from "@/lib/utils";
 
-function AccordionSection({
+function Group({
   title,
   defaultOpen = false,
   children,
@@ -27,18 +27,20 @@ function AccordionSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <section className="border-b border-border/70 last:border-b-0">
+    <div className="mt-1">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full min-h-[48px] items-center justify-between gap-3 px-4 py-3 text-left transition-colors active:bg-surface/80"
+        className="flex w-full min-h-9 items-center justify-between rounded-lg px-3 text-left transition-colors active:bg-surface"
       >
-        <span className="text-[15px] font-semibold tracking-tight text-ink">{title}</span>
-        <ChevronDown
+        <span className="text-[13px] font-bold uppercase tracking-[0.04em] text-ink-soft">
+          {title}
+        </span>
+        <ChevronRight
           className={cn(
-            "h-4 w-4 shrink-0 text-ink-soft transition-transform duration-200 motion-reduce:transition-none",
-            open && "rotate-180",
+            "h-4 w-4 text-ink-soft/70 transition-transform duration-200 ease-out motion-reduce:transition-none",
+            open && "rotate-90",
           )}
           aria-hidden
         />
@@ -50,10 +52,10 @@ function AccordionSection({
         )}
       >
         <div className="overflow-hidden">
-          <div className="space-y-0.5 px-3 pb-3">{children}</div>
+          <div className="pb-1 pl-1">{children}</div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -73,7 +75,7 @@ function NavLink({
       href={href}
       onClick={onClick}
       className={cn(
-        "flex min-h-[44px] items-center rounded-xl px-3 text-[15px] font-medium text-ink/90 transition-colors active:bg-surface",
+        "flex min-h-10 items-center rounded-lg px-3 text-[15px] font-medium text-ink transition-colors active:bg-surface",
         className,
       )}
     >
@@ -90,18 +92,30 @@ function PartyLink({ cat, onClick }: { cat: SiteMenuCategory; onClick: () => voi
     <Link
       href={categoryHref(cat.slug)}
       onClick={onClick}
-      className="flex min-h-[44px] items-center gap-2.5 rounded-xl px-3 text-[14px] font-medium text-ink/90 transition-colors active:bg-surface"
+      className="flex min-h-10 items-center gap-2.5 rounded-xl px-3 text-[14px] font-medium text-ink transition-colors active:bg-surface"
     >
       {logo ? (
-        <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md border border-border/80 bg-white">
-          <Image src={logo} alt="" fill className="object-contain p-0.5" sizes="28px" unoptimized />
+        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-md bg-white ring-1 ring-border/70">
+          <Image src={logo} alt="" fill className="object-contain p-0.5" sizes="24px" unoptimized />
         </span>
       ) : (
-        <span className="h-7 w-1 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+        <span className="h-5 w-1 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
       )}
       <span className="min-w-0 leading-snug">{cat.name}</span>
     </Link>
   );
+}
+
+function mergeLinks(primary: SiteMenuLink[] | undefined, fallback: SiteMenuLink[]) {
+  const byHref = new Map<string, SiteMenuLink>();
+  for (const link of fallback) byHref.set(link.href, link);
+  for (const link of primary ?? []) byHref.set(link.href, link);
+  // TarifPark gibi dış linkleri en sonda tut
+  return [...byHref.values()].sort((a, b) => {
+    const aExt = /^https?:\/\//i.test(a.href) ? 1 : 0;
+    const bExt = /^https?:\/\//i.test(b.href) ? 1 : 0;
+    return aExt - bExt;
+  });
 }
 
 export function MobileMenuPanels({
@@ -116,57 +130,70 @@ export function MobileMenuPanels({
   onNavigate: () => void;
 }) {
   const sections = buildSiteMenuSections(categories);
-  const serviceLinks = services?.length ? services : SERVICE_LINKS;
-  const corporateLinks = corporate?.length ? corporate : CORPORATE_LINKS;
+  const serviceLinks = mergeLinks(services, SERVICE_LINKS);
+  const corporateLinks = mergeLinks(corporate, CORPORATE_LINKS);
 
   return (
-    <div className="pb-2">
-      <AccordionSection title="Haberler" defaultOpen>
-        <NavLink href="/" onClick={onNavigate}>
-          Anasayfa
+    <div className="pb-1">
+      <NavLink href="/" onClick={onNavigate} className="font-semibold">
+        Anasayfa
+      </NavLink>
+      {sections.news.map((c) => (
+        <NavLink key={c.slug} href={categoryHref(c.slug)} onClick={onNavigate}>
+          {c.name}
         </NavLink>
-        {sections.news.map((c) => (
-          <NavLink key={c.slug} href={categoryHref(c.slug)} onClick={onNavigate}>
-            {c.name}
-          </NavLink>
-        ))}
-      </AccordionSection>
+      ))}
 
       {sections.districts.length > 0 ? (
-        <AccordionSection title="Bölge">
-          <div className="grid grid-cols-2 gap-x-1">
+        <Group title="Bölge">
+          <div className="grid grid-cols-2 gap-x-0.5">
             {sections.districts.map((c) => (
-              <NavLink key={c.slug} href={categoryHref(c.slug)} onClick={onNavigate}>
+              <NavLink
+                key={c.slug}
+                href={categoryHref(c.slug)}
+                onClick={onNavigate}
+                className="min-h-10 text-[14px]"
+              >
                 {c.name}
               </NavLink>
             ))}
           </div>
-        </AccordionSection>
+        </Group>
       ) : null}
 
       {sections.parties.length > 0 ? (
-        <AccordionSection title="Siyasi Partiler">
+        <Group title="Siyasi Partiler">
           {sections.parties.map((c) => (
             <PartyLink key={c.slug} cat={c} onClick={onNavigate} />
           ))}
-        </AccordionSection>
+        </Group>
       ) : null}
 
-      <AccordionSection title="Servisler">
+      <Group title="Servisler">
         {serviceLinks.map((link) => (
-          <NavLink key={link.href} href={link.href} onClick={onNavigate}>
+          <NavLink
+            key={link.href}
+            href={link.href}
+            onClick={onNavigate}
+            className="min-h-10 text-[14px]"
+          >
             {link.label}
           </NavLink>
         ))}
-      </AccordionSection>
+      </Group>
 
-      <AccordionSection title="Kurumsal">
+      <Group title="Kurumsal">
         {corporateLinks.map((link) => (
-          <NavLink key={link.href} href={link.href} onClick={onNavigate}>
+          <NavLink
+            key={link.href}
+            href={link.href}
+            onClick={onNavigate}
+            className="min-h-10 text-[14px]"
+          >
             {link.label}
           </NavLink>
         ))}
-      </AccordionSection>
+      </Group>
     </div>
   );
 }

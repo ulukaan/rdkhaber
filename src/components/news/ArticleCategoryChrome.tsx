@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -45,15 +45,20 @@ export function ArticleCategoryChrome({
   const router = useRouter();
   const [stuck, setStuck] = useState(false);
   const stuckRef = useRef(false);
-  const [active, setActive] = useState<CategoryActiveDetail>({ name, slug, color });
-  const originRef = useRef<CategoryActiveDetail>({ name, slug, color });
+  const origin = useMemo(() => ({ name, slug, color }), [name, slug, color]);
+  const originKey = `${name}|${slug}|${color ?? ""}`;
+  const originRef = useRef<CategoryActiveDetail>(origin);
+  const [scrollActive, setScrollActive] = useState<{
+    key: string;
+    detail: CategoryActiveDetail;
+  } | null>(null);
+  const active =
+    scrollActive && scrollActive.key === originKey ? scrollActive.detail : origin;
   const bg = active.color || "var(--brand)";
 
-  originRef.current = { name, slug, color };
-
   useEffect(() => {
-    setActive({ name, slug, color });
-  }, [name, slug, color]);
+    originRef.current = origin;
+  }, [origin]);
 
   useEffect(() => {
     let frame = 0;
@@ -76,16 +81,21 @@ export function ArticleCategoryChrome({
         if (rect.top <= bandTop && rect.bottom > bandTop + 48) current = el;
       }
 
+      const key = `${originRef.current.name}|${originRef.current.slug}|${originRef.current.color ?? ""}`;
+
       if (current) {
         const next = {
           name: current.dataset.categoryName || originRef.current.name,
           slug: current.dataset.categorySlug || originRef.current.slug,
           color: current.dataset.categoryColor || originRef.current.color,
         };
-        setActive((prev) =>
-          prev.slug === next.slug && prev.name === next.name && prev.color === next.color
+        setScrollActive((prev) =>
+          prev?.key === key &&
+          prev.detail.slug === next.slug &&
+          prev.detail.name === next.name &&
+          prev.detail.color === next.color
             ? prev
-            : next,
+            : { key, detail: next },
         );
         const url = current.dataset.url;
         const title = current.dataset.title;
@@ -93,12 +103,7 @@ export function ArticleCategoryChrome({
         return;
       }
 
-      setActive((prev) => {
-        const origin = originRef.current;
-        return prev.slug === origin.slug && prev.name === origin.name && prev.color === origin.color
-          ? prev
-          : origin;
-      });
+      setScrollActive(null);
       const main = document.getElementById("article-main");
       const url = main?.getAttribute("data-url");
       const title = main?.getAttribute("data-title");

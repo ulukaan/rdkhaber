@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { savePushSubscriptionAction } from "@/actions/push-subscription";
 import { getVapidPublicKeyClient } from "@/lib/web-push-client";
 import { Button } from "@/components/ui/Button";
@@ -12,13 +12,43 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
 }
 
-export function PushSubscribeButton({ className = "" }: { className?: string }) {
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported">("idle");
-  const publicKey = getVapidPublicKeyClient();
+function readEnvKey() {
+  if (typeof window === "undefined") return "";
+  return getVapidPublicKeyClient();
+}
 
-  if (!publicKey || typeof window === "undefined" || !("Notification" in window)) {
-    return null;
-  }
+export function PushSubscribeButton({ className = "" }: { className?: string }) {
+  const envKey = readEnvKey();
+  const [publicKey, setPublicKey] = useState(envKey);
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "unsupported" | "hidden">(() => {
+    if (typeof window === "undefined") return "hidden";
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return "unsupported";
+    return envKey ? "idle" : "loading";
+  });
+
+  useEffect(() => {
+    if (publicKey) return;
+    let cancelled = false;
+    void fetch("/api/push/vapid-public")
+      .then((r) => r.json())
+      .then((data: { enabled?: boolean; publicKey?: string | null }) => {
+        if (cancelled) return;
+        if (data.enabled && data.publicKey) {
+          setPublicKey(data.publicKey);
+          setStatus("idle");
+          return;
+        }
+        setStatus("hidden");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("hidden");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publicKey]);
+
+  if (status === "hidden" || status === "unsupported") return null;
 
   const subscribe = async () => {
     setStatus("loading");
@@ -54,7 +84,7 @@ export function PushSubscribeButton({ className = "" }: { className?: string }) 
       size="sm"
       variant="outline"
       className={className}
-      disabled={status === "loading"}
+      disabled={status === "loading" || !publicKey}
       onClick={subscribe}
     >
       {status === "loading" ? "Açılıyor..." : "Son dakika bildirimleri"}

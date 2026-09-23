@@ -19,6 +19,7 @@ import {
   sanitizeCustomBodyEndHtml,
   sanitizeCustomHeadHtml,
 } from "@/lib/custom-code";
+import { normalizeGoogleSiteVerification } from "@/lib/google-site-verification";
 
 const navLocationSchema = z.enum(["header", "footer", "footer_services", "footer_corporate"]);
 
@@ -177,7 +178,7 @@ export async function saveGoogleSiteKitAction(raw: Record<string, string>) {
   await requireRole(["ADMIN"]);
   const ga = (raw.googleAnalyticsId ?? "").trim().toUpperCase();
   const gtm = (raw.googleTagManagerId ?? "").trim().toUpperCase();
-  const verify = (raw.googleSiteVerification ?? "").trim();
+  const verify = normalizeGoogleSiteVerification(raw.googleSiteVerification ?? "");
 
   if (ga && !/^G-[A-Z0-9]+$/.test(ga)) {
     return { error: "Analytics kimliği G- ile başlamalı (ör. G-XXXXXXXX)." };

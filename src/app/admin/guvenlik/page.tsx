@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-guard";
 import { StaffSecurityPanel } from "@/components/admin/StaffSecurityPanel";
+import { WebPushStatusCard } from "@/components/admin/WebPushStatusCard";
 
 export const metadata = { title: "Güvenlik (2FA)" };
 
@@ -12,9 +13,12 @@ export default async function AdminSecurityPage() {
   });
 
   return (
-    <StaffSecurityPanel
-      initialEnabled={Boolean(user?.totpEnabled)}
-      role={session.user.role}
-    />
+    <>
+      <StaffSecurityPanel
+        initialEnabled={Boolean(user?.totpEnabled)}
+        role={session.user.role}
+      />
+      <WebPushStatusCard />
+    </>
   );
 }
