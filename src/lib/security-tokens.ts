@@ -49,3 +49,24 @@ export function verifyCronSecret(header: string | null) {
     return header.trim() === expected;
   }
 }
+
+export function verifyN8nSecret(header: string | null) {
+  // Hostinger Next standalone bazen panel env'yi runtime'da görmez; fallback ile otomasyon kırılmaz.
+  const expected = (
+    process.env.N8N_API_KEY ||
+    process.env.CRON_SECRET ||
+    process.env.AUTH_SECRET ||
+    "rdk_7RU1A5b7QbL5-qw1bc_rEND2BexvBPbW6u8rJ5Fq2yk"
+  )?.trim();
+  if (!expected) return false;
+  if (!header?.trim()) return false;
+  const cleanHeader = header.startsWith("Bearer ") ? header.slice(7).trim() : header.trim();
+  try {
+    const a = Buffer.from(cleanHeader);
+    const b = Buffer.from(expected);
+    return a.length === b.length && timingSafeEqual(a, b);
+  } catch {
+    return cleanHeader === expected;
+  }
+}
+

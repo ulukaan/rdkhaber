@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 
 /** Ana sayfa ve site önbelleğini temizle (haber, kategori, ayar, menü güncellemelerinde). */
@@ -14,9 +14,7 @@ export function revalidatePublicSite(opts?: { layout?: boolean }) {
     CACHE_TAGS.ads,
     CACHE_TAGS.nav,
   ]) {
-    // Server Action içinde anında taze okuma
-    updateTag(tag);
-    // Sonraki ziyaretçi / SEO taraması eski meta görmesin
+    // Route Handler + Server Action ortak: updateTag sadece action içinde geçerli
     revalidateTag(tag, { expire: 0 });
   }
 }
